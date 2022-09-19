@@ -1,5 +1,4 @@
-from operator import gt
-from random import sample
+from ast import arg, parse
 import numpy as np
 import pandas as pd
 from Datasets import *
@@ -14,7 +13,8 @@ from sklearn.utils import shuffle
 from distutils.dir_util import copy_tree
 import shutil
 import imageio
-
+from typing import *
+from PIL.Image import Image
 
 class DataLoader(object):
 
@@ -22,24 +22,30 @@ class DataLoader(object):
     ##################################################################
     class _Data(object):
 
-        __slots__ = ["_sample", "_gt", "_metaclass"]
-        def __init__(self):
+        __slots__ = ["_sample", "_gt", "_class", "_metaclass"]
+        def __init__(self, sample, gt, clas, metaclass= None):
             self._sample = sample
             self._gt = gt
+            self._clas = clas
             self._metaclass = metaclass
-            
+
+
         @property
         def sample(self):
             return self._sample
-        
+
         @property
         def gt(self):
             return self._gt
-        
+
+        @property
+        def clas(self):
+            return self._class
+
         @property
         def metaclass(self):
             return self._metaclass
-        
+
         def __getitem__(self, item):
             pass
 
@@ -48,6 +54,19 @@ class DataLoader(object):
 
     def __init__(self, dataset:str="Midv", type_split:str = "normal", batch_size: int = 1,kfold_split:int=10, normal_split:list=[0.8,0.1,0.1]
 , few_shot_split:str=None, conditioned:bool = True):
+
+        """
+            Input of the class:         dataset --> Define what kind of the different datasets do you want to download [Midv, Dogs, Fungus, Findit, Banknotes]
+                                                    This datasets have been changed in order to the different approach we are working on
+                                        Type_split --> Diferent kind of split for train the models. The diferents splits are [kfold, normal or few_shot]
+
+                                        batch_size --> define the batch of the training set
+
+                                        kfold_, normal, few_shot_ (split) --> define the behaviour of the split based on what kind of split did you put
+
+                                        conditioned --> flag to define if you want to train with the metaclasses inside the dataset thath downloaded 
+        
+        """
 
         ### ASSERTS AND ERROR CONTROL ###
 
@@ -110,7 +129,7 @@ class DataLoader(object):
 
 
 
-    def _kfold_partition(self, new_df):
+    def _kfold_partition(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
         structure_train = []
         structure_val = []
@@ -167,7 +186,7 @@ class DataLoader(object):
     def _shot_partition(self,new_df):
         pass
 
-    def _train_val_test_split(self, new_df):
+    def _train_val_test_split(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
 
         structure_train = []
@@ -294,7 +313,45 @@ class DataLoader(object):
 
 
 if __name__ == "__main__":
-    t = DataLoader(type_split="normal")
+
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--dataset",default="Midv",nargs="?", required=True, type=str, choices=["Midv", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
+    parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
+    parser.add_argument("-ts","--type_split",default="normal",nargs="?", choices=["normal", "kfold", "few_shot"], help="Diferent kind of split for train the models.")
+    parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
+
+    opts, rem_args = parser.parse_known_args()
+
+    conditioned = False if opts.conditioned == 0 else True
+
+    print(conditioned)
+
+    print(opts.type_split)
+    if opts.type_split != "kfold" and opts.type_split != "few_shot":
+        parser.add_argument("--normal_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
+        op = parser.parse_args()
+
+        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, normal_split=op.normal_split)
+
+    elif opts.type_split != "kfold" and opts.type_split != "normal":
+        parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
+        op = parser.parse_args()
+        print(op.few_shot_split)
+        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split)
+
+    else:
+        parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
+        op = parser.parse_args()
+        print(op.kfold_split)
+        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split)
+
+
+
+
+
+
 
 
 
