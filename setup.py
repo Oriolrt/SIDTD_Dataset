@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import codecs
 import os
-
+print(find_packages())
 here = os.path.abspath(os.path.dirname(__file__))
 
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
@@ -16,7 +16,6 @@ setup(
     name="SIDTD",
     version=VERSION,
     author="Carlos Boned, Oriol Ramos, Maxime Talarmain",
-	license_file="LICENSE",
     author_email="<cboned,oriolrt,mtalarmain(@cvc.uab.cat)>",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
