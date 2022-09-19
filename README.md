@@ -1,4 +1,3 @@
-
 # Data Loader
 
 Here you have the font code to download and work with different benchmarks and our own benchmark
@@ -35,6 +34,10 @@ Depend of the partition you define besides get the train, val, test arrays with 
 
 The code will also provide the batch based on the amount of batches did you define (default=1)
 
+
+If you just want to download the dataset and dont want to get any type of training implementation you can download the different datasets from the Datasets file.
+
+Inside the dataset you have the different Classes to download the different datasets, as the example below shows
 ## FAQ
 
 #### To resolve any doubt  
@@ -45,28 +48,33 @@ cboned@cvc.uab.cat
 
 ## Run Locally
 
-Clone the project
+To get the Dataloader package you will need to:
 
 ```bash
-  git clone https://link-to-project
+    pip install git+https://github.com/Oriolrt/SIDTD_Dataset.git
 ```
 
-Go to the project directory
-
+Enter to any python terminal and now you can
 ```bash
-  cd my-project
+  import Loader
+```
+It shouldnt exist any type of error
+
+If you just want to get the benchmark you only need to go to the datasets and choice among [Midv, Dogs, Fungus, Findit, Banknotes]:
+
+```python
+    import Loader.Datasets as ld
+
+    ld.Midv(conditioned=True, download_original=True).dowload_dataset()
 ```
 
-Install dependencies
+if you want to download the dataset to train it with our partitions the Loader_Modules is the file you  have to call
+in this case the example is:
 
-```bash
-  pip install requirements.txt
+```python
+    import Loader.Loader_Modules as lm
+
+    dt = lm.Dataloader(dataset="Midv", type_split="normal", batch_size="64",normal_split=[0.8,0.1,0.1], conditioned=True)
+
+    train, val, test, batch_index = dt.get_structures()
 ```
-
-Execute 
-
-```bash
-    python3 Loader/Loader_Modules.py --dataset Midv --conditioned 1 -ts kfold --kfold_split 10 --batch_size 10
-```
-
-

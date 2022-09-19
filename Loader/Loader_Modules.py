@@ -15,6 +15,7 @@ import shutil
 import imageio
 from typing import *
 from PIL.Image import Image
+from math import *
 
 class DataLoader(object):
 
@@ -119,11 +120,11 @@ class DataLoader(object):
         assert partitions_control == True
 
 
-        train_array, val_array, test_array =  np.array(train), np.array(val), np.array()
+        self._train_array, self._val_array, self._test_array =  np.array(train), np.array(val), np.array()
 
 
         ### defining the batch size ###
-        self._batch = self.make_batches(train_array)
+        self._batch = self.make_batches(self._train_array)
 
 
 
@@ -183,8 +184,37 @@ class DataLoader(object):
         return structure_train, structure_val, structure_test
 
 
-    def _shot_partition(self,new_df):
-        pass
+    def _shot_partition(self,new_df, proportion:list = [0.6,0.4], metaclasses:list = ["id", "passport"]):
+        #TODO Debbug it
+        ngroups = len(metaclasses)
+        assert ngroups >0
+        if ngroups > 1:
+            new_column = np.empty(new_df.shape[0])
+            list_of_images = new_df.loc[:, "image_path"] #list with the paths of the images and his names to get the metaclasses
+            for group in metaclasses:
+                for idx,path_image in enumerate(list_of_images):
+                    name = path_image.split("/")[-1]
+                    if group in name:new_column[idx] = group
+
+            new_df["metaclass"] = new_column
+
+            grouped_pandas = new_df.groupby(["class", "metaclass"])
+
+        else:
+            grouped_pandas = new_df.groupby(["class"])
+
+        different_groups = np.arange(grouped_pandas.ngroups)
+        np.random.shuffle(different_groups)
+
+        train = grouped_pandas[grouped_pandas.ngroup().isin(different_groups[:ceil(len(different_groups)*proportion[0])])]
+        test = grouped_pandas[grouped_pandas.ngroup().isin(different_groups[ceil(len(different_groups)*proportion[0]):])]
+            
+        return train.reset_index(), test.reset_index()
+
+
+
+    def _ranking_shot_partition(self, new_df, proportion, metaclasses:list = ["dni", "passport"]):
+        àss
 
     def _train_val_test_split(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
@@ -311,6 +341,9 @@ class DataLoader(object):
                 res.append(fold)
         return res
 
+    @property
+    def get_structures(self):
+        return self._train_array, self._val_array, self._test_array, self._batch
 
 if __name__ == "__main__":
 
