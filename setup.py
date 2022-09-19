@@ -13,9 +13,10 @@ LONG_DESCRIPTION = 'This package allows to download 5 different benchmarks inclu
 
 # Setting up
 setup(
-    name="SIDTD_Dataset",
+    name="SIDTD",
     version=VERSION,
     author="Carlos Boned, Oriol Ramos, Maxime Talarmain",
+	license_file="LICENSE",
     author_email="<cboned,oriolrt,mtalarmain(@cvc.uab.cat)>",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
