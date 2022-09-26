@@ -1,0 +1,10 @@
+{
+    "C_Cpp.codeAnalysis.exclude": {
+    },
+    "code-runner.executorMapByGlob": {
+
+        "pom.xml": "cd $dir && mvn clean package"
+        
+    },
+    "code-runner.runInTerminal": true
+}
