@@ -2,8 +2,8 @@ from ast import Str
 import copy
 from typing import *
 from unicodedata import name
-from Fake_Generator.Fake_Loader.Midv  import Midv
-from Fake_Generator.Fake_Loader.utils import *
+from Midv  import Midv
+from utils import *
 import os
 import numpy as np
 import random
@@ -14,7 +14,7 @@ from PIL import ImageFont, ImageDraw, Image
 
 class Template_Generator(Midv):
 
-    __slots__ = ["_img_loader", "_classes", "_fake_metadata", "_transformations","_fake_img_loader","_annotations_path","_imgs_path","_delta_boundary","_static_path"]
+    __slots__ = ["_img_loader", "_classes", "_fake_template", "_transformations","_fake_img_loader","_annotations_path","_imgs_path","_delta_boundary","_static_path"]
 
     def __init__(self, absolute_path:str ,fake_template = None, delta_boundary:int=10):
 
@@ -25,21 +25,12 @@ class Template_Generator(Midv):
         """
 
         if fake_template is None:
-            fake_template = {
-                            "name": "None",
-                            "ctype": "None",
-                            "loader": "None",
-                            "shift": "None",
-                            "src": "None",
-                            "second_src": "None",
-                            "field": "None",
-                            "second_field": "None"
-                            }
+            self._fake_template = super().MetaData
 
-        assert isinstance(fake_template, dict), "The metadata template to save the information must be a dict"
+        #assert isinstance(fake_template, dict), "The metadata template to save the information must be a dict"
 
 
-        super().__init__(absolute_path,fake_template)
+        super().__init__(absolute_path)
 
         path_template = super().get_template_path()
         self._delta_boundary = delta_boundary
@@ -52,6 +43,9 @@ class Template_Generator(Midv):
         
         #static path
         self._static_path = "/dataset/MIDV2020/dataset/templates/images"
+        
+        #print(self._imgs_path)
+        #print(self._static_path)
 
 
         self.create_loader()
@@ -68,7 +62,7 @@ class Template_Generator(Midv):
             for im in os.listdir(path_classes):
                 ninf = path_classes.split("/")
                 name_img = ninf[-1] + "_" + im
-                src_img = os.path.join(self._static_path,ninf[-1],im)
+                src_img = os.path.join(self._imgs_path,ninf[-1],im)
                 img = read_img(src_img)
 
                 self._img_loader[ninf[-1]].append(super(Template_Generator, self).Img(img,class_template,name_img,src_img))
@@ -92,10 +86,10 @@ class Template_Generator(Midv):
             field_to_change1 = random.randint(2, len((fields1))-2)
             field_to_change2 = random.randint(2, len((fields2))-2)
             while field_to_change2 == field_to_change1:
-                field_to_change2 = random.randint(2, 12)
+                field_to_change2 = random.randint(2, len((fields2))-2)
 
         fake_document1, fake_document2 = replace_info_documents_2020(img1, img2, fields1[field_to_change1],
-                                                                     fields2[field_to_change2], delta1, delta2)
+                                                                        fields2[field_to_change2], delta1, delta2)
 
         return fake_document1, fake_document2, fields1[field_to_change1]["region_attributes"]["field_name"], fields2[field_to_change2]["region_attributes"]["field_name"]
 
@@ -150,7 +144,7 @@ class Template_Generator(Midv):
                 name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(idx)
 
                 #Creating the dict with the metadata
-                fake_meta = vars(super().MetaData(src=img._relative_path, type_transformation="Inpaint_and_Rewrite",field=field,loader="Midv2020",name=name_fake_generated))
+                fake_meta = vars(self._fake_template(src=img._relative_path, type_transformation="Inpaint_and_Rewrite",field=field,loader="Midv2020",name=name_fake_generated))
 
                 generated_img = super().Img(img._img, img._meta, img._name)
 
@@ -164,7 +158,6 @@ class Template_Generator(Midv):
             # equal generation
             for smpl in tqdm.tqdm(range(sample//len(self._classes))):
 
-                fake_meta = copy.copy(self._fake_metadata)
                 img = random.choice(img_bucket)
                 img_id = int(img._relative_path.split("/")[-1].split(".")[0])
 
@@ -176,7 +169,7 @@ class Template_Generator(Midv):
                     fake_img, field = transformation(img._img, img_id,img._meta)
 
 
-                    fake_meta = vars(super().MetaData(src=img._relative_path, type_transformation=name_transform,field=field,loader="Midv2020",name=name_fake_generated))
+                    fake_meta = vars(self._fake_template(src=img._relative_path, type_transformation=name_transform,field=field,loader="Midv2020",name=name_fake_generated))
 
 
                     # craeting fake img
@@ -196,12 +189,12 @@ class Template_Generator(Midv):
 
                     img2 = random.choice(img_bucket)
                     img_id2 = int(img2._relative_path.split("/")[-1].split(".")[0])
-                    fake_img1, fake_img2 , field1, field2 = transformation(img._img, img_id ,img2._img, img_id2 ,img._meta,delta1,delta2)
+                    fake_img1, fake_img2 , field, field2 = transformation(img._img, img_id ,img2._img, img_id2 ,img._meta,delta1,delta2)
                     
                     #img1 info
-                    name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(sample + 1 +idx)
+                    name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl + 1 +idx)
 
-                    fake_meta = vars(super().MetaData(src=img._relative_path, second_src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,field=field, second_field=field2,loader="Midv2020",name=name_fake_generated))
+                    fake_meta = vars(self._fake_template(src=img._relative_path, second_src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,field=field, second_field=field2,loader="Midv2020",name=name_fake_generated))
             
                     # craeting fake img1
                     generated_img = super().Img(img._img, img._meta, img._name)
@@ -215,8 +208,8 @@ class Template_Generator(Midv):
 
 
                     #img2 info
-                    name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(sample + 2 +idx)
-                    fake_meta = vars(super().MetaData(second_src=img._relative_path, src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,field2=field, field=field2,loader="Midv2020",name=name_fake_generated))
+                    name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl + 2 +idx)
+                    fake_meta = vars(self._fake_template(second_src=img._relative_path, src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,second_field=field, field=field2,loader="Midv2020",name=name_fake_generated))
                     
 
                     # craeting fake img2
@@ -231,4 +224,12 @@ class Template_Generator(Midv):
 
 
     def store_generated_dataset(self):
-        store(self._fake_img_loader)
+        store(self._fake_img_loader, path_store=self.absoulute_path+"/Fake_Benchmark_Generated")
+
+
+if __name__ == "__main__":
+    gen = Template_Generator("/home/cboned/MIDV2020/dataset")
+    
+    gen.fit(1000)
+    
+    gen.store_generated_dataset()

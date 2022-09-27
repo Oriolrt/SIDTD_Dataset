@@ -99,7 +99,7 @@ class DataLoader(object):
         if flag is False:
             logging.warning("The dataset hasnt been found, starting to download")
             time.sleep(1)
-            self._dt.dowload_dataset()
+            self._dt.download_dataset()
             logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], self._dt._uri.split("/")[-1])))
 
         new_df =  self._prepare_csv()

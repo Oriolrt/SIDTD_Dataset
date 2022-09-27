@@ -59,6 +59,7 @@ def generate_inpaint(path_img:str, annotations_path:str, mark=False):
     annotations = read_json(annotations_path)
 
     selected = list(annotations["_via_img_metadata"])[img_id]
+    print(selected)
     fields = annotations["_via_img_metadata"][selected]["regions"]
 
     if not mark:
@@ -85,3 +86,23 @@ def generate_inpaint(path_img:str, annotations_path:str, mark=False):
     fake_text_image = np.array(img_pil)
 
     return fake_text_image, swap_info["region_attributes"]["field_name"]
+
+
+
+if __name__ == "__main__":
+
+    img1, img2, field1, field2 = generate_crop_and_replace("Test_Example/Samples_Test/MIDV2020/alb_id/images/00.jpg",
+                                                           "Test_Example/Samples_Test/MIDV2020/aze_passport/images/01.jpg","Test_Example/Samples_Test/MIDV2020/alb_id/annotations/alb_id.json",
+                                                           additional_annotation_path="Test_Example/Samples_Test/MIDV2020/aze_passport/annotations/aze_passport.json")
+    
+    
+    img, field = generate_inpaint("Test_Example/Samples_Test/MIDV2020/alb_id/images/00.jpg","Test_Example/Samples_Test/MIDV2020/alb_id/annotations/alb_id.json")
+    plt.figure()
+    plt.subplot(1, 2, 1)
+    plt.imshow(img)
+    #plt.subplot(1, 2, 2)
+    plt.imshow(img2)
+    plt.show()
+
+    
+    print(field1, field2)

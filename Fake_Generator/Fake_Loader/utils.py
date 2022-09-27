@@ -85,8 +85,9 @@ def mask_from_info(img, shape:np.ndarray,shaped = False):
 
 
 def read_img(path: str):
-
-    img = np.array(imageio.imread(os.path.dirname(os.path.dirname(__file__))+"/"+path))
+    
+    #os.path.dirname(os.path.dirname(__file__))+"/"+
+    img = np.array(imageio.imread(path))
 
     if img.shape[-1] == 4:
         return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
@@ -115,7 +116,8 @@ def write_json(data:dict, path:str, name:str):
     with open(path_to_save, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
 
-def store(img_loader: list,path_store="/home/carlos/Benchmarking/DataLoader/dataset/fake_dataset"):
+def store(img_loader: list,path_store="/home/carlos/MIDV2020/Fake_Benchmark_Generated"):
+    
 
     advisor = len(img_loader)//10
     for idx, image in enumerate(img_loader):
@@ -128,7 +130,7 @@ def store(img_loader: list,path_store="/home/carlos/Benchmarking/DataLoader/data
             write_json(image.fake_meta, joined_path,image.fake_name)
         
         else:
-            os.mkdir(joined_path)
+            os.makedirs(joined_path)
             path_to_save = os.path.join(joined_path,image.fake_name+".jpg")
 
             imageio.imwrite(path_to_save,image.fake_img)

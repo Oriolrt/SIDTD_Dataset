@@ -13,15 +13,15 @@ import os
 
 class Midv(ABC):
 
-    __slots__ = ["_absolute_path","_img_loader", "_fake_img_loader","_fake_template","_transformations"]
+    __slots__ = ["_absolute_path","_img_loader", "_fake_img_loader","_transformations"]
 
-    def __init__(self, path: str,fake_template: dict):
+    def __init__(self, path: str):
         self._absolute_path = path
 
         # PlaceHolders for the fake imgs
         self._img_loader = []
         self._fake_img_loader = []
-        self._fake_metadata = fake_template
+        #self._fake_metadata = fake_template
         self._transformations = [self.Crop_and_Replace, self.Inpaint_and_Rewrite]
 
 
