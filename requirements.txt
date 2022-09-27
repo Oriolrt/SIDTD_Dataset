@@ -3,7 +3,6 @@ numpy
 pandas
 python-abc
 os.path2
-logging
 argparse
 glob2
 sklearn
@@ -15,3 +14,5 @@ Pillow
 python-time
 collection
 python-math
+opencv-python
+tqdm
