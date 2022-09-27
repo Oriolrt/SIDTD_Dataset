@@ -16,3 +16,4 @@ collection
 python-math
 opencv-python
 tqdm
+wget

@@ -50,9 +50,11 @@ def replace_one_document(im_a, im_b, coord_a, H,dx1,dy1,dx2,dy2):
 
     return im_rep
 
-def get_font_scale(inner_path: str = "/usr/share/fonts/truetype/dejavu"):
+def get_font_scale(inner_path: str = "/usr/share/fonts/TTF"):
 
-    selected = random.choice(os.listdir(inner_path))
+    deja = [i for i in os.listdir(inner_path) if "DejaVu" in i]
+    
+    selected = random.choice(deja)
 
     return os.path.join(inner_path,selected)
 
@@ -83,10 +85,9 @@ def mask_from_info(img, shape:np.ndarray,shaped = False):
 
 
 def read_img(path: str):
-    #print(path)
-    #print(os.path.join("..",path))
-    #print(os.path.dirname(os.path.dirname(__file__)))
-    img = np.array(imageio.imread(os.path.dirname(os.path.dirname(__file__))+path))
+
+    img = np.array(imageio.imread(os.path.dirname(os.path.dirname(__file__))+"/"+path))
+
     if img.shape[-1] == 4:
         return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
     else:

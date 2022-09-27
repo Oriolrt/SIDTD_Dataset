@@ -6,5 +6,6 @@
         "pom.xml": "cd $dir && mvn clean package"
         
     },
-    "code-runner.runInTerminal": true
+    "code-runner.runInTerminal": true,
+    "git.ignoreLimitWarning": true
 }

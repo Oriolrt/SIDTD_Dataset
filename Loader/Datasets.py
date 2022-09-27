@@ -42,7 +42,7 @@ class Dataset(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def dowload_dataset(self, output_directory:str = None):
+    def download_dataset(self, output_directory:str = None):
         raise NotImplementedError
 
 
@@ -68,12 +68,13 @@ class Midv(Dataset):
         super().__init__(conditioned=conditioned, download_original=download_original,uri=uri)
         self._map_classes = self.map_classes() if conditioned is True else None
 
-    def dowload_dataset(self, output_directory: str = None):
+    def download_dataset(self):
    
         if self._download_original:
-            files = os.system("bash -c 'wget -erobots=off --level=100 --cut-dirs=4 -nH -P {}  -r {}'".format(os.path.join(self._uri.split("/")[-2],self._uri.split("/")[-1]),self._uri))
+            #os.path.join(self._uri.split("/")[-2],self._uri.split("/")[-1])
+            files = os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format("datasets/"+self._uri.split("/")[-1],self._uri))
         else:
-            files = os.system("bash -c 'wget -nH -P Fake_Midv --cut-dirs=5 -r {}'".format(self._uri+"/fake_dataset"))
+            files = os.system("bash -c 'wget -nH -P Fake_Midv --cut-dirs=1 -m -k {}'".format("datasets/"+self._uri+"/fake_dataset"))
 
     def map_classes(self):
         classes = {"reals":{}, "fakes":{}}
@@ -100,5 +101,5 @@ class Midv(Dataset):
         return len(self.number_of_real_sampling().keys())
 
 if __name__ == "__main__":
-    t = Midv()
-    print(t.num_fake_classes())
+    data = Midv(uri="http://0.0.0.0:8000/MIDV2020")
+    data.download_dataset()
