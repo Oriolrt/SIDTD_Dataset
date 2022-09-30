@@ -23,6 +23,7 @@ class Template_Generator(Midv):
         self.fit(sample)
 
 
+    # TODO: Carlos, this code is the same that in the generate_crop_and_replace function from the generate_fake_test.py file. It must be a single function in the transforms.py file
     def Crop_and_Replace(self, img1, img2, info1, info2, delta1, delta2):
 
         fields1 = list(np.unique(list(info1.keys())))
@@ -58,7 +59,7 @@ class Template_Generator(Midv):
 
         return fake_document1, fake_document2, field_to_change1, field_to_change2
 
-
+    # TODO: Carlos, this code is the same that in the generate_inpaint function from the generate_fake_test.py file. It must be a single function in the transforms.py file 
     def Inpaint_and_Rewrite(self,img: np.ndarray, info: dict):
         fields = list(np.unique(list(info.keys())))
         # The photo  and the signature will be treated different

@@ -116,6 +116,7 @@ def write_json(data:dict, path:str, name:str):
     with open(path_to_save, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
 
+#TODO: Change path_store default value
 def store(img_loader: list,path_store="/home/carlos/MIDV2020/Fake_Benchmark_Generated"):
     
 

@@ -67,6 +67,7 @@ class Template_Generator(Midv):
 
                 self._img_loader[ninf[-1]].append(super(Template_Generator, self).Img(img,class_template,name_img,src_img))
 
+    # TODO: Carlos, this code is the same that in the generate_crop_and_replace function from the generate_fake_test.py file. It must be a single function in the transforms.py file
 
     def Crop_and_Replace(self, img1: np.ndarray, img1_id: int, img2: np.ndarray, img2_id: int, info: dict,
                          delta1: list = [2, 2], delta2: list = [2, 2])-> Tuple[Image.Image, Image.Image, Str, Str]: 
@@ -93,6 +94,7 @@ class Template_Generator(Midv):
 
         return fake_document1, fake_document2, fields1[field_to_change1]["region_attributes"]["field_name"], fields2[field_to_change2]["region_attributes"]["field_name"]
 
+#TODO: Carlos, this code is the same that in the generate_inpaint function from the generate_fake_test.py file. It must be a single function in the transforms.py file
     def Inpaint_and_Rewrite(self, img: np.ndarray, img_id: int, info: dict, mark=False) -> Tuple[Image.Image, Str]:
 
         selected = list(info["_via_img_metadata"])[img_id]
