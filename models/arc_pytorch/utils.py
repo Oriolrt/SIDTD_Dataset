@@ -71,7 +71,41 @@ def plot_loss(opt, training_loss_list, training_acc_list, validation_loss_list, 
     plt.close()
     
     
-def save_results_setup(opt):
+def save_results_test(opt):
+    """
+    Helper function to create the files to save the final results for each iteration of the kfold
+    training as a csv file.
+
+    Parameters
+    ----------
+    args : Arguments
+        args.dataset, args.name : Parameters to decide the name of the output image file
+
+    Returns
+    -------
+    f_test : file for test
+    writer_test : writer for test
+
+    """
+    if not os.path.exists("results_files/{}".format(opt.dataset)):
+        os.makedirs("results_files/{}".format(opt.dataset))
+        
+
+
+    if os.path.isfile('results_files/{}/{}_test_results.csv'.format(opt.dataset, opt.name)):
+        f_test = open('results_files/{}/{}_test_results.csv'.format(opt.dataset, opt.name), 'a')
+        writer_test = csv.writer(f_test)
+    else:
+        f_test = open('results_files/{}/{}_test_results.csv'.format(opt.dataset, opt.name), 'w')
+        # create the csv writer
+        writer_test = csv.writer(f_test)
+        header_test = ['training_iteration', 'loss', 'accuracy', 'roc_auc_score']
+        writer_test.writerow(header_test)
+    
+    return f_test, writer_test
+
+
+def save_results_train(opt):
     """
     Helper function to create the files to save the final results for each iteration of the kfold
     training as a csv file.
@@ -84,9 +118,7 @@ def save_results_setup(opt):
     Returns
     -------
     f_val : file for validation
-    f_test : file for test
     writer_val : writer for validation
-    writer_test : writer for test
 
     """
     if not os.path.exists("results_files/{}".format(opt.dataset)):
@@ -105,14 +137,5 @@ def save_results_setup(opt):
         header_val = ['training_iteration', 'best_loss', 'best_accuracy', 'best_auc_roc'] 
         writer_val.writerow(header_val)
 
-    if os.path.isfile('results_files/{}/{}_test_results.csv'.format(opt.dataset, opt.name)):
-        f_test = open('results_files/{}/{}_test_results.csv'.format(opt.dataset, opt.name), 'a')
-        writer_test = csv.writer(f_test)
-    else:
-        f_test = open('results_files/{}/{}_test_results.csv'.format(opt.dataset, opt.name), 'w')
-        # create the csv writer
-        writer_test = csv.writer(f_test)
-        header_test = ['training_iteration', 'loss', 'accuracy', 'roc_auc_score']
-        writer_test.writerow(header_test)
     
-    return f_val, f_test, writer_val, writer_test
+    return f_val, writer_val

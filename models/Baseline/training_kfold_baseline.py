@@ -48,7 +48,7 @@ import csv
 
 
 @contextmanager 
-def timer(name):
+def timer(LOGGER, name):
     t0 = time.time()
     LOGGER.info(f'[{name}] start')
     yield
@@ -196,9 +196,9 @@ def plot_loss(args, training_loss_list, validation_loss_list, validation_acc_lis
     plt.close()
     
     
-def trainer(training_iteration, model, optimizer, scheduler, criterion, n_epochs, BATCH_SIZE, N_CLASSES,
+def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, criterion, n_epochs, BATCH_SIZE, N_CLASSES,
             accumulation_steps, train_loader, valid_loader, save_model_path, device):
-    with timer('Train model'):
+    with timer(LOGGER, 'Train model'):
         
         model.to(device)
         best_accuracy = 0.
@@ -301,51 +301,9 @@ def trainer(training_iteration, model, optimizer, scheduler, criterion, n_epochs
             losses['val'].append(avg_val_loss)
                 
     return losses, best_loss, best_loss_epoch, best_accuracy, best_accuracy_epoch, best_roc_auc, best_roc_auc_epoch
-
-
-        
-def test(model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
-               
-    #Evaluation
-    model.eval()
-    avg_val_loss = 0.
-    preds = np.zeros((len(test_loader.dataset)))
-    reals = np.zeros((len(test_loader.dataset)))
-    p_preds = []
-    
-    for i, (images, labels) in enumerate(test_loader):
-     
-        images = images.to(device)
-        labels = labels.to(device)
-        reals[i * BATCH_SIZE: (i+1) * BATCH_SIZE] = labels.to('cpu').numpy()     
-     
-        with torch.no_grad():
-            y_preds = model(images)
-                      
-        preds[i * BATCH_SIZE: (i+1) * BATCH_SIZE] = y_preds.argmax(1).to('cpu').numpy()
-
-        p_pred = F.softmax(y_preds, dim=1)
-        p_preds.extend(p_pred[:,1].to('cpu').numpy())
-
-        
-        loss = criterion(y_preds, labels)
-        avg_val_loss += loss.item() / len(test_loader)
-    
-    score = f1_score(reals, preds, average='macro')
-    accuracy = accuracy_score(reals, preds)
-    try: 
-        roc_auc_score = sklearn.metrics.roc_auc_score(reals, p_preds)
-    except:
-        roc_auc_score = -1
-
-    
-    LOGGER.debug(f'TESTING: avg_test_loss: {avg_val_loss:.4f} F1: {score:.6f}  Accuracy: {accuracy:.6f} roc_auc_score: {roc_auc_score:.6f}') 
-
-    return avg_val_loss, accuracy, roc_auc_score
-        
         
 
-def main(args):
+def train_baseline_models(args, LOGGER, iteration):
     
     if args.device=='cuda':
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -368,8 +326,7 @@ def main(args):
     if args.save_results:
         print("Results file: ", 'results_files/{}/{}_val_results.csv'.format(args.dataset, args.name))
         if os.path.isfile('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name)):
-            f_val = open('results_files/{}/{}_val_r    torch.save(model.state_dict(), save_model_path + '/{}_{}_best_100E_n{}.pth'.format(args.dataset, args.name, training_iteration))
-esults.csv'.format(args.dataset, args.name), 'a')
+            f_val = open('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name), 'a')
             writer_val = csv.writer(f_val)
         else:
             f_val = open('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name), 'w')
@@ -378,20 +335,8 @@ esults.csv'.format(args.dataset, args.name), 'a')
             header_val = ['iteration', 'best_loss', 'best_loss_epoch', 'best_accuracy', 'best_accuracy_epoch', 'best_AUC', 'best_AUC_epoch']
             writer_val.writerow(header_val)
         
-        if os.path.isfile('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name)):
-            f_test = open('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name), 'a')
-            writer_test = csv.writer(f_test)
-        else:
-            f_test = open('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name), 'w')
-            # create the csv writer
-            writer_test = csv.writer(f_test)
-            header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score']
-            writer_test.writerow(header_test)
-        
     print("DATASET: ", args.dataset)
-    
-    #print("Train/Val n images: ", len(train_metadata))
-    #print("Test n images: ", len(test_metadata))
+
 
     
     # Adjust BATCH_SIZE and ACCUMULATION_STEPS to values that if multiplied results in 64 !!!!!
@@ -407,114 +352,61 @@ esults.csv'.format(args.dataset, args.name), 'a')
         WIDTH, HEIGHT = 299, 299
         
     dataset_crop = False
-    if args.dataset=='dogs':
-        N_CLASSES = 120
-    elif args.dataset=='DF20M':
-        N_CLASSES = 182
-    elif args.dataset=='banknotes_crop':
-        N_CLASSES = 2
-        dataset_crop = True
-    elif args.dataset=='banknotes_all':
-        N_CLASSES = 20      
-    else:
-        N_CLASSES = 2
-        
-
-
-
-    #iterations for different partitions
-    for training_iteration in range(args.b_low,args.b_high):
-        #load model at every iteration
-        model = setup_model(args, N_CLASSES)
-        mean, std = get_mean_std(args, model)
+    N_CLASSES = args.nclasses
     
-        LOGGER.debug("New iteration {}".format(training_iteration))
-        LOGGER.debug("------------------------------------------------")
-        
-        if os.path.exists("split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration)) and \
-           os.path.exists("split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration)) and \
-           os.path.exists("split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration)):
-            print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, training_iteration))
-            train_metadata_split = pd.read_csv("split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
-            val_metadata_split = pd.read_csv("split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
-            test_metadata_split = pd.read_csv("split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
-           
-        else:
-            print('ERROR : WRONG PATH')
+    #load model at every iteration
+    model = setup_model(args, N_CLASSES)
+    mean, std = get_mean_std(args, model)
 
-        train_paths = train_metadata_split['image_path'].values.tolist()
-        train_ids = train_metadata_split['label'].values.tolist()
+    LOGGER.debug("New iteration {}".format(iteration))
+    LOGGER.debug("------------------------------------------------")
+    
+    if os.path.exists("split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)) and \
+        os.path.exists("split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+        print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
+        train_metadata_split = pd.read_csv("split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+        val_metadata_split = pd.read_csv("split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
         
-        val_paths = val_metadata_split['image_path'].values.tolist()
-        val_ids = val_metadata_split['label'].values.tolist()
+    else:
+        print('ERROR : WRONG PATH')
+
+    train_paths = train_metadata_split['image_path'].values.tolist()
+    train_ids = train_metadata_split['label'].values.tolist()
+    
+    val_paths = val_metadata_split['image_path'].values.tolist()
+    val_ids = val_metadata_split['label'].values.tolist()
+
+    
+    print("Training images: ", len(list(set(train_ids))))
+    print("Validation images: ", len(list(set(val_ids))))
+    
+    train_dataset = TrainDataset(train_paths, train_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'), dataset_crop = dataset_crop)
+    val_dataset = TrainDataset(val_paths, val_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'), dataset_crop = dataset_crop)
+    
+    train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
+    val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
+    
+    #inside loop because it has to reset to default before initialising a new training
+    optimizer = SGD(model.parameters(), lr=lr, momentum=0.9)
+    scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=1, verbose=True, eps=1e-6)
+    criterion = nn.CrossEntropyLoss()
+    
+    losses, best_loss, best_loss_epoch, best_score, best_score_epoch, best_roc_auc, best_roc_auc_epoch = trainer(args,    LOGGER, iteration,
+                        model, optimizer,
+                        scheduler, criterion,
+                        EPOCHS, BATCH_SIZE, N_CLASSES,
+                        ACCUMULATION_STEPS,
+                        train_loader,
+                        val_loader,
+                        save_model_path,
+                        device)
+    
+    
+    if args.save_results:
+        val_res = [iteration, best_loss, best_loss_epoch, best_score, best_score_epoch, best_roc_auc, best_roc_auc_epoch]
         
-        test_paths = test_metadata_split['image_path'].values.tolist()
-        test_ids = test_metadata_split['label'].values.tolist()
+        writer_val.writerow(val_res)
         
-        print("Training images: ", len(list(set(train_ids))))
-        print("Validation images: ", len(list(set(val_ids))))
-        print("Test images: ", len(list(set(test_ids))))
-        
-        train_dataset = TrainDataset(train_paths, train_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'), dataset_crop = dataset_crop)
-        val_dataset = TrainDataset(val_paths, val_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'), dataset_crop = dataset_crop)
-        test_dataset = TrainDataset(test_paths, test_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='valid'), dataset_crop = dataset_crop)
-        
-        train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
-        val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
-        test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=WORKERS)
-        
-        #inside loop because it has to reset to default before initialising a new training
-        optimizer = SGD(model.parameters(), lr=lr, momentum=0.9)
-        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=1, verbose=True, eps=1e-6)
-        criterion = nn.CrossEntropyLoss()
-        
-        losses, best_loss, best_loss_epoch, best_score, best_score_epoch, best_roc_auc, best_roc_auc_epoch = trainer(training_iteration,
-                          model, optimizer,
-                          scheduler, criterion,
-                          EPOCHS, BATCH_SIZE, N_CLASSES,
-                          ACCUMULATION_STEPS,
-                          train_loader,
-                          val_loader,
-                          save_model_path,
-                          device)
-        
-        model.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, training_iteration)))
-        loss, accuracy, roc_auc_score = test(model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE)
-        
-        if args.save_results:
-            val_res = [training_iteration, best_loss, best_loss_epoch, best_score, best_score_epoch, best_roc_auc, best_roc_auc_epoch]
-            test_res = [training_iteration, loss, accuracy, roc_auc_score]
-            
-            writer_val.writerow(val_res)
-            writer_test.writerow(test_res)
-        
-        training_iteration += 1 
 
     if args.save_results:
         f_val.close()
-        f_test.close() 
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--name", default='ResNet50_rectified_kfold', type=str, help='Name of the experiment')
-    parser.add_argument("--dataset", default = 'dataset_raw', type=str, help='Name of the dataset to use. Must be the exact same name as the dataset directory name')
-    parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')
-    parser.add_argument("--save_model_path", default =  os.getcwd() + '/trained_models/', type=str, help="Path where you wish to store the trained models")
-    parser.add_argument("--nsplits", default = 10, type=int, help="Number of k-fold partition")
-    parser.add_argument("--batch_size", default = 32, type=int)
-    parser.add_argument("--accumulation_steps", default = 2, type=int)
-    parser.add_argument("--epochs", default = 100, type=int)
-    parser.add_argument("--workers", default = 4, type=int)
-    parser.add_argument("--learning_rate", default = 0.01, type=float)
-    parser.add_argument("--save_results", default = True, type=bool, help="Save results performance in csv or not.")
-    parser.add_argument("--b_low", default = 0, type=int, help="lowest k fold iteration limit")
-    parser.add_argument("--b_high", default = 10, type=int, help="highest k fold iteration limit")
-    parser.add_argument("--model", choices = ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
-    args = parser.parse_args()
-    
-    #global
-    LOG_FILE = '{}_{}.log'.format(args.name, args.dataset) 
-    LOGGER = init_logger(LOG_FILE)
-        
-    main(args)
