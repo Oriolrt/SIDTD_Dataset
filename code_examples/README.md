@@ -17,7 +17,7 @@ code_examples
 
 # Train Models
 
-The script __train.py__ train a model on the training partitions and save it in the _location_ folder.
+The script __train.py__ train a model on the training partitions and save it in the trained_models folder.
 
 # Test Models
 
