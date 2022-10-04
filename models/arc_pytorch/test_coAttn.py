@@ -1,14 +1,13 @@
 import os
-import argparse
+import random
 import pandas as pd
+import numpy as np
 import torch
 from torch.autograd import Variable
-from datetime import datetime, timedelta
-from sklearn import metrics
-from sklearn.utils import shuffle
 import batcher_kfold_binary as batcher
 from batcher_kfold_binary import Batcher
 from utils import *
+from sklearn.metrics import roc_auc_score, accuracy_score
 
 import models_binary
 from models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
@@ -44,11 +43,9 @@ def one_shot_eval(pred, truth):
     corrects = (pred == truth).sum().item()
     return corrects 
 
-def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, window, bce, loss_test, acc_test, auc_test):
+def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, paths, prob, prediction, y_true):
 
-    row0 = labels
-    row2 = images    
-    X_test, Y_test = loader.fetch_batch(part = "test", labels = row0, image_paths = row2, batch_size = opt.batchSize)
+    X_test, Y_test = loader.fetch_batch(part = "test", labels = labels, image_paths = images, batch_size = opt.batchSize)
     if opt.cuda:
         X_test = X_test.cuda()
         Y_test = Y_test.cuda()
@@ -77,14 +74,12 @@ def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, 
     pred_test = torch.reshape(pred_test, (-1,))
     Y_test = torch.reshape(Y_test, (-1,))
     
-    acc = one_shot_eval(pred_test.cpu().detach().numpy(), Y_test.cpu().detach().numpy())
-    auc = sklearn.metrics.roc_auc_score(Y_test.cpu().detach().numpy(), pred_test.cpu().detach().numpy())
-    
-    auc_test = auc_test + auc
-    acc_test = acc_test + (acc/window)
-    loss_test = loss_test + bce(pred_test, Y_test.float())
+    paths_list = paths + list(images)
+    prob_list = prob + list(pred_test.to('cpu').numpy())
+    prediction_list = prediction + list(pred_test.to('cpu').numpy().round())
+    y_true_list = y_true + list(Y_test.to('cpu').numpy())
 
-    return loss_test, acc_test, auc_test
+    return paths_list, prob_list, prediction_list, y_true_list
 
 
 def test(opt, save_model_path, iteration):
@@ -142,36 +137,38 @@ def test(opt, save_model_path, iteration):
     if opt.use_coAttn:
         coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
         coAtten.eval()
-    path_test = opt.csv_dataset_path + opt.dataset + '/test_split_' +  opt.dataset + '_it_' + str(iteration) + '.csv'
+    
+    path_test = opt.csv_dataset_path + "{}/train_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
     df_test = pd.read_csv(path_test)
     image_paths = df_test.image_path.values
     label_name = df_test.label_name.values
-    acc_test = 0
-    loss_test = 0
-    auc_test = 0
+    p_preds = []
+    preds = []
+    reals = []
+    test_paths = []
     i = 0
     while window*(i+1) < len(df_test):
         labels = label_name[window*i]
         images = image_paths[window*(i+1)]
-        loss_test, acc_test, auc_test = test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, window, bce, loss_test, acc_test, auc_test)
+        test_paths, p_preds, preds, reals = test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, test_paths, p_preds, preds, reals)
         i = i + 1  
         
     labels = label_name[-window:]
     images = image_paths[-window:]
-    loss_test, acc_test, auc_test = test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, window, bce, loss_test, acc_test, auc_test)    
+    test_paths, p_preds, preds, reals = test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, test_paths, p_preds, preds, reals)    
 
+    my_array = np.asarray([ test_paths, reals, preds, p_preds]).T
+    df = pd.DataFrame(my_array, columns = ['Path_image','Label_image','Pred_label_image','Proba_label_image'])
+    df.drop_duplicates(subset=['Path_image'], inplace=True)
 
-    n_total = i + 1
-    acc_test = (acc_test / n_total)*100
-    loss_test = loss_test / n_total
-    test_auc = auc_test / n_total
-    test_loss = loss_test.item()
+    test_auc = roc_auc_score(df['Label_image'].astype(int),df['Proba_label_image'])
+    acc_test = accuracy_score(df['Label_image'],df['Pred_label_image'])
     
     print('****** TEST COMPLETED ******')
     print('Kfold number:',iteration)
-    print('Final accuracy:', acc_test, 'test AUC:', test_auc, 'test loss:', test_loss)
+    print('Final accuracy:', acc_test, 'test AUC:', test_auc)
     
-    return test_loss, acc_test, test_auc
+    return acc_test, test_auc
 
 
 def test_coAttn_models(opt, iteration) -> None:
@@ -185,13 +182,13 @@ def test_coAttn_models(opt, iteration) -> None:
     
     #writers to write the results obtained for each split
     f_test, writer_test = save_results_test(opt)
-    save_model_path = opt.save_model_path + opt.model + "_trained_models/"
+    save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     
         
-    test_loss, acc_test, test_auc = test(opt, save_model_path, iteration)
+    acc_test, test_auc = test(opt, save_model_path, iteration)
     
     #save results on the output cvs file
-    test_res = [iteration, test_loss, acc_test, test_auc]
+    test_res = [iteration, acc_test, test_auc]
     writer_test.writerow(test_res)
 
     if opt.save_results:

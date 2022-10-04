@@ -1,44 +1,33 @@
 import matplotlib
 matplotlib.use('Agg')
 
-import gc
 import os
-import pickle
 import cv2
-import sys 
-import json 
-import timm
 import time 
+import timm
 import torch 
 import random
-import argparse
 import sklearn.metrics 
 import matplotlib.pyplot as plt 
 
-from PIL import Image 
-from pathlib import Path 
-from functools import partial 
 from contextlib import contextmanager 
-from sklearn.model_selection import KFold, StratifiedKFold
 
 import numpy as np 
-import scipy as sp 
 import pandas as pd 
 import torch.nn as nn 
 
-from torch.optim import Adam, SGD, AdamW 
-from torch.optim.lr_scheduler import CosineAnnealingLR 
+from torch.optim import SGD
 from torch.utils.data import DataLoader, Dataset 
 import torch.nn.functional as F 
 
 from albumentations import Compose, Normalize, Resize 
 from albumentations.pytorch import ToTensorV2 
-from albumentations import RandomCrop, HorizontalFlip, VerticalFlip, RandomBrightnessContrast, CenterCrop, PadIfNeeded, RandomResizedCrop
+from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContrast, RandomResizedCrop
 
 import torchvision.models as models 
 
 from torch.optim.lr_scheduler import ReduceLROnPlateau 
-from sklearn.metrics import f1_score, accuracy_score, top_k_accuracy_score 
+from sklearn.metrics import f1_score, accuracy_score
 
 from efficientnet_pytorch import EfficientNet
 
@@ -53,28 +42,6 @@ def timer(LOGGER, name):
     LOGGER.info(f'[{name}] start')
     yield
     LOGGER.info(f'[{name}] done in {time.time() - t0:.0f} s.')
-
-
-    
-def init_logger(log_file='train.log'):
-    from logging import getLogger, DEBUG, FileHandler, Formatter, StreamHandler
-        
-    log_format = '%(asctime)s %(levelname)s %(message)s'
-        
-    stream_handler = StreamHandler()
-    stream_handler.setLevel(DEBUG)
-    stream_handler.setFormatter(Formatter(log_format))
-        
-    file_handler = FileHandler(log_file)
-    file_handler.setFormatter(Formatter(log_format))
-        
-    logger = getLogger('Herbarium')
-    logger.setLevel(DEBUG)
-    logger.addHandler(stream_handler)
-    logger.addHandler(file_handler)
-        
-    return logger 
-
 
 def seed_torch(seed=777):
     random.seed(seed)
@@ -173,8 +140,8 @@ def get_mean_std(args, model):
 
 def plot_loss(args, training_loss_list, validation_loss_list, validation_acc_list, training_iteration_list, training_iteration):
 
-    if not os.path.exists('plots/{}/'.format(args.name)):
-        os.makedirs('plots/{}/'.format(args.name))
+    if not os.path.exists('plots/{}/{}/'.format(args.model, args.dataset)):
+        os.makedirs('plots/{}/{}/'.format(args.model, args.dataset))
             
     plt.figure()
     plt.title("Loss")
@@ -183,7 +150,7 @@ def plot_loss(args, training_loss_list, validation_loss_list, validation_acc_lis
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.legend()
-    plt.savefig('plots/{}/{}_loss_{}_n{}.jpg'.format(args.name, args.dataset, args.model, training_iteration))
+    plt.savefig(args.plot_path + '{}/{}/{}_loss_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
     plt.close()
     
     plt.figure()
@@ -192,11 +159,11 @@ def plot_loss(args, training_loss_list, validation_loss_list, validation_acc_lis
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
     plt.legend()
-    plt.savefig('plots/{}/{}_accuracy_{}_n{}.jpg'.format(args.name, args.dataset, args.model, training_iteration))
+    plt.savefig(args.plot_path + '{}/{}/{}_accuracy_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
     plt.close()
     
     
-def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, criterion, n_epochs, BATCH_SIZE, N_CLASSES,
+def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, criterion, n_epochs, BATCH_SIZE,
             accumulation_steps, train_loader, valid_loader, save_model_path, device):
     with timer(LOGGER, 'Train model'):
         
@@ -212,7 +179,6 @@ def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, crite
         validation_loss_list = []
         training_loss_list = []
         validation_acc_list = []
-        training_acc_list = []
         for epoch in range(n_epochs):
         
             start_time = time.time()
@@ -300,7 +266,7 @@ def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, crite
             losses['train'].append(avg_loss)
             losses['val'].append(avg_val_loss)
                 
-    return losses, best_loss, best_loss_epoch, best_accuracy, best_accuracy_epoch, best_roc_auc, best_roc_auc_epoch
+    return best_loss, best_loss_epoch, best_accuracy, best_accuracy_epoch, best_roc_auc, best_roc_auc_epoch
         
 
 def train_baseline_models(args, LOGGER, iteration):
@@ -315,21 +281,21 @@ def train_baseline_models(args, LOGGER, iteration):
     SEED = 777 
     seed_torch(SEED)
   
-    save_model_path = args.save_model_path + args.model + "_trained_models/"
+    save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
     if not os.path.exists(save_model_path):
         os.makedirs(save_model_path)
     print("Models will be saved at: ", save_model_path)
 
-    if not os.path.exists('results_files/{}'.format(args.dataset)):
-        os.makedirs('results_files/{}'.format(args.dataset))
+    if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
+        os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
     
     if args.save_results:
-        print("Results file: ", 'results_files/{}/{}_val_results.csv'.format(args.dataset, args.name))
-        if os.path.isfile('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name)):
-            f_val = open('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name), 'a')
+        print("Results file: ", args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name))
+        if os.path.isfile(args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name)):
+            f_val = open(args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name), 'a')
             writer_val = csv.writer(f_val)
         else:
-            f_val = open('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name), 'w')
+            f_val = open(args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name), 'w')
             # create the csv writer
             writer_val = csv.writer(f_val)
             header_val = ['iteration', 'best_loss', 'best_loss_epoch', 'best_accuracy', 'best_accuracy_epoch', 'best_AUC', 'best_AUC_epoch']
@@ -361,11 +327,11 @@ def train_baseline_models(args, LOGGER, iteration):
     LOGGER.debug("New iteration {}".format(iteration))
     LOGGER.debug("------------------------------------------------")
     
-    if os.path.exists("split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)) and \
-        os.path.exists("split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+    if os.path.exists(args.csv_dataset_path + "{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)) and \
+        os.path.exists(args.csv_dataset_path + "{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
         print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
-        train_metadata_split = pd.read_csv("split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
-        val_metadata_split = pd.read_csv("split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+        train_metadata_split = pd.read_csv(args.csv_dataset_path + "{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+        val_metadata_split = pd.read_csv(args.csv_dataset_path + "{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
         
     else:
         print('ERROR : WRONG PATH')
@@ -391,10 +357,10 @@ def train_baseline_models(args, LOGGER, iteration):
     scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=1, verbose=True, eps=1e-6)
     criterion = nn.CrossEntropyLoss()
     
-    losses, best_loss, best_loss_epoch, best_score, best_score_epoch, best_roc_auc, best_roc_auc_epoch = trainer(args,    LOGGER, iteration,
+    best_loss, best_loss_epoch, best_score, best_score_epoch, best_roc_auc, best_roc_auc_epoch = trainer(args, LOGGER, iteration,
                         model, optimizer,
                         scheduler, criterion,
-                        EPOCHS, BATCH_SIZE, N_CLASSES,
+                        EPOCHS, BATCH_SIZE, 
                         ACCUMULATION_STEPS,
                         train_loader,
                         val_loader,

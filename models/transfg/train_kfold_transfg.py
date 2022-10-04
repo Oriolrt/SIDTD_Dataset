@@ -16,7 +16,6 @@ import os.path
 
 from contextlib import contextmanager
 import matplotlib.pylab as plt 
-from datetime import timedelta 
 import torch 
 import torch.nn.functional as F 
 from tqdm import tqdm 
@@ -35,27 +34,6 @@ def timer(name, LOGGER):
     LOGGER.info(f'[{name}] start')
     yield
     LOGGER.info(f'[{name}] done in {time.time() - t0:.0f} s.')
-    
-    
-def init_logger(log_file='train.log'):
-    from logging import getLogger, DEBUG, FileHandler, Formatter, StreamHandler
-        
-    log_format = '%(asctime)s %(levelname)s %(message)s'
-        
-    stream_handler = StreamHandler()
-    stream_handler.setLevel(DEBUG)
-    stream_handler.setFormatter(Formatter(log_format))
-        
-    file_handler = FileHandler(log_file)
-    file_handler.setFormatter(Formatter(log_format))
-        
-    logger = getLogger('Herbarium')
-    logger.setLevel(DEBUG)
-    logger.addHandler(stream_handler)
-    logger.addHandler(file_handler)
-        
-    return logger 
-
 
 
 def seed_torch(seed=777):
@@ -88,7 +66,11 @@ def simple_accuracy(preds, labels):
 
 
 def save_model(args, LOGGER, model, best_feature, training_iteration):
-    save_model_path = args.save_model_path + args.model + "_trained_models/"
+    
+    save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
+    if not os.path.exists(save_model_path):
+        os.makedirs(save_model_path)
+    
     model_to_save = model.module if hasattr(model, 'module') else model
     model_checkpoint = os.path.join(save_model_path,
                                     '{}_{}_{}_n{}.pth'.format(args.dataset,
@@ -129,23 +111,10 @@ def count_parameters(model):
     params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     return params/1000000
 
-
-def plot_loss(args, losses, training_iteration):
-    plt.figure()
-    plt.title("Loss")
-    plt.plot(losses["train"], label="train")
-    plt.plot(losses["val"], label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("loss")
-    plt.legend()
-    #plt.show()
-    plt.savefig('plots/{}/_{}_n{}.jpg'.format(args.dataset, args.name, training_iteration))
-    plt.close()
-
 def plot_loss_acc(args, training_loss_list, validation_loss_list, validation_acc_list, training_iteration_list, training_iteration):
 
-    if not os.path.exists('plots/{}/'.format(args.dataset)):
-        os.makedirs('plots/{}/'.format(args.dataset))
+    if not os.path.exists('plots/{}/{}/'.format(args.model, args.dataset)):
+        os.makedirs('plots/{}/{}/'.format(args.model, args.dataset))
             
     plt.figure()
     plt.title("Loss")
@@ -154,7 +123,7 @@ def plot_loss_acc(args, training_loss_list, validation_loss_list, validation_acc
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.legend()
-    plt.savefig('plots/{}/{}_loss_n{}.jpg'.format(args.dataset, args.name, training_iteration))
+    plt.savefig(args.plot_path + '{}/{}/{}_loss_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
     plt.close()
     
     plt.figure()
@@ -163,7 +132,7 @@ def plot_loss_acc(args, training_loss_list, validation_loss_list, validation_acc
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
     plt.legend()
-    plt.savefig('plots/{}/{}_accuracy_n{}.jpg'.format(args.dataset, args.name, training_iteration))
+    plt.savefig(args.plot_path + '{}/{}/{}_accuracy_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
     plt.close()
 
 
@@ -305,6 +274,7 @@ def train(args, LOGGER, model, num_classes, training_iteration, writer_val):
         validation_loss_list = validation_loss_list + [eval_losses.avg]
         training_loss_list = training_loss_list + [losses.avg]
         validation_acc_list = validation_acc_list + [val_accuracy]
+        
         plot_loss_acc(args, training_loss_list, validation_loss_list, validation_acc_list, training_iteration_list, training_iteration)
         
         LOGGER.info(f' Epoch {epoch+1} - avg_train_loss: {losses.avg:.4f} avg_val_loss: {eval_losses.avg:.4f} Accuracy: {val_accuracy:.6f} Roc AUC: {roc_auc_score:.6f}')
@@ -347,16 +317,16 @@ def train_transfg_models(args, LOGGER, iteration):
     print('path', os.getcwd())
     args.device = device
     if args.save_results:
-        if not os.path.exists("results_files/{}/".format(args.dataset)):
-            os.makedirs("results_files/{}/".format(args.dataset))
+        if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
+            os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
         
-        print("Results file: ", 'results_files/{}/{}_val_results.csv'.format(args.dataset, args.name))
+        print("Results file: ", args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name))
         
-        if os.path.isfile('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name)):
-            f_val = open('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name), 'a')
+        if os.path.isfile(args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name)):
+            f_val = open(args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name), 'a')
             writer_val = csv.writer(f_val)
         else:
-            f_val = open('results_files/{}/{}_val_results.csv'.format(args.dataset, args.name), 'w')
+            f_val = open(args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name), 'w')
             # create the csv writer
             writer_val = csv.writer(f_val)
             header_val = ['iteration', 'best_loss', 'best_loss_epoch', 'best_accuracy', 'best_accuracy_epoch', 'best_AUC', 'best_AUC_epoch']

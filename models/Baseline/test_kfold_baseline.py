@@ -65,16 +65,16 @@ def test_baseline_models(args, LOGGER, iteration):
     SEED = 777 
     seed_torch(SEED)
 
-    if not os.path.exists('results_files/{}'.format(args.dataset)):
-        os.makedirs('results_files/{}'.format(args.dataset))
+    if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
+        os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
     
     if args.save_results:
-        print("Results file: ", 'results_files/{}/{}_test_results.csv'.format(args.dataset, args.name))
-        if os.path.isfile('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name)):
-            f_test = open('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name), 'a')
+        print("Results file: ", args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name))
+        if os.path.isfile(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name)):
+            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'a')
             writer_test = csv.writer(f_test)
         else:
-            f_test = open('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name), 'w')
+            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'w')
             # create the csv writer
             writer_test = csv.writer(f_test)
             header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score']
@@ -102,15 +102,12 @@ def test_baseline_models(args, LOGGER, iteration):
     mean, std = get_mean_std(args, model)
     print('fold number :', iteration)
 
+        
+    if os.path.exists(args.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+        test_metadata_split = pd.read_csv(args.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
     
-
-    if not os.path.exists("split_kfold/"):
-        os.makedirs("split_kfold/")
-        
-    if os.path.exists("split_kfold/test_split_{}_it_{}.csv".format(args.dataset, iteration)):
-        test_metadata_split = pd.read_csv("split_kfold/test_split_{}_it_{}.csv".format(args.dataset, iteration))
-        
-    print('process split csv file from path :',"split_kfold/test_split_{}_it_{}.csv".format(args.dataset, iteration))
+    print('process split csv file from path :', args.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+    
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()
 
@@ -127,7 +124,7 @@ def test_baseline_models(args, LOGGER, iteration):
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     
-    save_model_path = args.save_model_path + args.model + "_trained_models/"
+    save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
     PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
     print("********      Creating csv stat result file      *********")
     model.load_state_dict(torch.load(PATH))

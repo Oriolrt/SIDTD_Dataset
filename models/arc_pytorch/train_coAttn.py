@@ -1,11 +1,9 @@
 import os
-import argparse
-import pandas as pd
+import random
+import numpy as np
+import sklearn
 import torch
 from torch.autograd import Variable
-from datetime import datetime, timedelta
-from sklearn import metrics
-from sklearn.utils import shuffle
 import batcher_kfold_binary as batcher
 from batcher_kfold_binary import Batcher
 from utils import *
@@ -273,7 +271,10 @@ def train_coAttn_models(opt, iteration) -> None:
     
     #writers to write the results obtained for each split
     f_val, writer_val = save_results_train(opt)
-    save_model_path = opt.save_model_path + opt.model + "_trained_models/"
+    
+    save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
+    if not os.path.exists(save_model_path):
+        os.makedirs(save_model_path)
         
     best_validation_loss, best_validation_acc, best_validation_auc = train(opt, save_model_path, iteration)
     

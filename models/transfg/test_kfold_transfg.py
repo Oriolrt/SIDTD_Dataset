@@ -4,8 +4,6 @@ from __future__ import absolute_import, division, print_function
 import matplotlib 
 matplotlib.use('Agg') 
 
-import logging 
-import argparse 
 import os 
 import random 
 import numpy as np 
@@ -16,7 +14,6 @@ import os.path
 
 from contextlib import contextmanager
 import matplotlib.pylab as plt 
-from datetime import timedelta 
 import torch 
 import torch.nn.functional as F 
 from tqdm import tqdm 
@@ -24,7 +21,6 @@ from tqdm import tqdm
 
 #from torch.utils.tensorboard import SummaryWriter 
 from models.modeling import VisionTransformer, CONFIGS 
-from utils.scheduler import WarmupLinearSchedule, WarmupCosineSchedule
 from utils.data_utils import get_loader_test
 
 
@@ -35,25 +31,6 @@ def timer(name, LOGGER):
     LOGGER.info(f'[{name}] start')
     yield
     LOGGER.info(f'[{name}] done in {time.time() - t0:.0f} s.')
-    
-def init_logger(log_file='train.log'):
-    from logging import getLogger, DEBUG, FileHandler, Formatter, StreamHandler
-        
-    log_format = '%(asctime)s %(levelname)s %(message)s'
-        
-    stream_handler = StreamHandler()
-    stream_handler.setLevel(DEBUG)
-    stream_handler.setFormatter(Formatter(log_format))
-        
-    file_handler = FileHandler(log_file)
-    file_handler.setFormatter(Formatter(log_format))
-        
-    logger = getLogger('Herbarium')
-    logger.setLevel(DEBUG)
-    logger.addHandler(stream_handler)
-    logger.addHandler(file_handler)
-        
-    return logger 
 
 
 
@@ -87,7 +64,6 @@ def simple_accuracy(preds, labels):
 
 
 
-
 def setup(args, LOGGER):
     # Prepare model
     config = CONFIGS[args.model_type]
@@ -99,8 +75,10 @@ def setup(args, LOGGER):
         num_classes = 182
     else:
         num_classes = 2
+    
     #prerapre model
     model = VisionTransformer(config, args.img_size, zero_head=True, num_classes=num_classes, smoothing_value=args.smoothing_value)
+    
     #load the trained weights on imagenet
     model.load_from(np.load(args.pretrained_dir))
     model.to(args.device)
@@ -116,45 +94,8 @@ def count_parameters(model):
     return params/1000000
 
 
-def plot_loss(args, losses, training_iteration):
-    plt.figure()
-    plt.title("Loss")
-    plt.plot(losses["train"], label="train")
-    plt.plot(losses["val"], label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("loss")
-    plt.legend()
-    #plt.show()
-    plt.savefig('plots/{}/_{}_n{}.jpg'.format(args.dataset, args.name, training_iteration))
-    plt.close()
 
-def plot_loss_acc(args, training_loss_list, validation_loss_list, validation_acc_list, training_iteration_list, training_iteration):
-
-    if not os.path.exists('plots/{}/'.format(args.dataset)):
-        os.makedirs('plots/{}/'.format(args.dataset))
-            
-    plt.figure()
-    plt.title("Loss")
-    plt.plot(training_iteration_list, training_loss_list, label="train")
-    plt.plot(training_iteration_list, validation_loss_list, label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("loss")
-    plt.legend()
-    plt.savefig('plots/{}/{}_loss_n{}.jpg'.format(args.dataset, args.name, training_iteration))
-    plt.close()
-    
-    plt.figure()
-    plt.title("Accuracy")
-    plt.plot(training_iteration_list, validation_acc_list, label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("accuracy")
-    plt.legend()
-    plt.savefig('plots/{}/{}_accuracy_n{}.jpg'.format(args.dataset, args.name, training_iteration))
-    plt.close()
-
-
-
-def test(args, LOGGER, model, test_loader, num_classes):
+def test(args, LOGGER, model, test_loader):
     # Validation!
     eval_losses = AverageMeter()
     LOGGER.info("***** Running Validation *****")
@@ -222,30 +163,30 @@ def test_transfg_models(args, LOGGER, iteration):
     print('path', os.getcwd())
     args.device = device
     if args.save_results:
-        if not os.path.exists("results_files/{}/".format(args.dataset)):
-            os.makedirs("results_files/{}/".format(args.dataset))
+        if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
+            os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
         
-        print("Results file: ", 'results_files/{}/{}_val_results.csv'.format(args.dataset, args.name))
+        print("Results file: ", args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name))
         
-        if os.path.isfile('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name)):
-            f_test = open('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name), 'a')
+        if os.path.isfile(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name)):
+            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'a')
             writer_test = csv.writer(f_test)
         else:
-            f_test = open('results_files/{}/{}_test_results.csv'.format(args.dataset, args.name), 'w')
+            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'w')
             # create the csv writer
             writer_test = csv.writer(f_test)
             header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score']
             writer_test.writerow(header_test)
     
     seed_torch(seed=777)
-### start iteration here
+    ### start iteration here
     LOGGER.info("----- STARTING NEW ITERATION -----")
     LOGGER.info("Iteration = {}".format(iteration))
     # Model & Tokenizer Setup; prepare the dataset from scratch with imagenet weights at each iteration
     args, model, num_classes = setup(args, LOGGER)
     test_loader = get_loader_test(args, iteration)
 
-    save_model_path = args.save_model_path + args.model + "_trained_models/"
+    save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
     model_checkpoint = os.path.join(save_model_path,
                                     '{}_{}_best_accuracy_n{}.pth'.format(args.dataset,
                                                               args.name,

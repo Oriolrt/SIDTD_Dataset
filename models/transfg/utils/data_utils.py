@@ -1,21 +1,17 @@
 import logging
-from PIL import Image
-import os
 
 import torch
 import pandas as pd
 
 
-from torchvision import transforms
-from torch.utils.data import DataLoader, RandomSampler, DistributedSampler, SequentialSampler
+from torch.utils.data import DataLoader
 
-from .dataset import TrainDataset, TrainDatasetConditionned
-from .autoaugment import AutoAugImageNetPolicy
+from .dataset import TrainDataset
 
 
 from albumentations import Compose, Normalize, Resize 
 from albumentations.pytorch import ToTensorV2 
-from albumentations import RandomCrop, HorizontalFlip, VerticalFlip, RandomBrightnessContrast, CenterCrop, PadIfNeeded, RandomResizedCrop
+from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContrast, RandomResizedCrop
 
 
 
@@ -49,9 +45,9 @@ def get_loader(args, training_iteration):
     train_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='train')
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
     
-    train_metadata_split = pd.read_csv(args.dataset_csv_path + "/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+    train_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
     
-    val_metadata_split = pd.read_csv(args.dataset_csv_path + "/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+    val_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
 
             
     train_paths = train_metadata_split['image_path'].values.tolist()
@@ -70,13 +66,11 @@ def get_loader(args, training_iteration):
 
     train_loader = DataLoader(trainset,
                               shuffle=True,
-#                             sampler=train_sampler,
                               batch_size=args.train_batch_size,
                               num_workers=4,
                               drop_last=True,
                               pin_memory=True)
     val_loader = DataLoader(valset,
-#                            sampler=val_sampler,
                             shuffle=True,
                             batch_size=args.eval_batch_size,
                             num_workers=4,
@@ -88,14 +82,11 @@ def get_loader(args, training_iteration):
 def get_loader_test(args, training_iteration):
     WIDTH = args.img_size
     HEIGHT = args.img_size
-        
-#    if args.local_rank not in [-1, 0]:
-#        torch.distributed.barrier()
 
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
 
     
-    test_metadata_split = pd.read_csv(args.dataset_csv_path + "/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+    test_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
     
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()
@@ -107,7 +98,6 @@ def get_loader_test(args, training_iteration):
 
     
     test_loader = DataLoader(testset,
-#                             sampler=test_sampler,
                              shuffle=True,
                              batch_size=args.eval_batch_size,
                              num_workers=4,
