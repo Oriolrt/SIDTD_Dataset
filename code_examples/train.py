@@ -76,7 +76,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # flag for defining training or testing parameters
     parser.add_argument("--partition", default = 0, type=int, help="train or test on a specific partition")
-    parser.add_argument("--all", choices = ['yes', 'no'], default = 'yes', type=int, help="train or test on all partitions")
+    parser.add_argument("--all", choices = ['yes', 'no'], default = 'yes', type=str, help="train or test on all partitions")
     parser.add_argument("--nsplits", default = 10, type=int, help="Number of k-fold partition")
     parser.add_argument("--nclasses", default = 2, type=int, help="Number of class in the dataset")
     parser.add_argument("--model", choices = ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coatten_fcn_model'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
@@ -103,7 +103,7 @@ if __name__ == "__main__":
                                                  "ViT-L_32", "ViT-H_14"],
                         default="ViT-L_16", help="Which variant to use.")
     
-    parser.add_argument("--pretrained_dir", type=str, default= os.getcwd() + "/transfg_pretrained/imagenet21k+imagenet2012_ViT-L_16.npz",
+    parser.add_argument("--pretrained_dir", type=str, default= complete_path + "/transfg_pretrained/imagenet21k+imagenet2012_ViT-L_16.npz",
                         help="Where to search for pretrained ViT models.")
     
     parser.add_argument("--img_size", default=299, type=int,

@@ -71,26 +71,26 @@ def main(args):
             test_coAttn_models(args, LOGGER, iteration)
 
 
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     # flag for defining training or testing parameters
     parser.add_argument("--partition", default = 0, type=int, help="train or test on a specific partition")
-    parser.add_argument("--all", choices = ['yes', 'no'], default = 'yes', type=int, help="train or test on all partitions")
+    parser.add_argument("--all", choices = ['yes', 'no'], default = 'yes', type=str, help="train or test on all partitions")
     parser.add_argument("--nsplits", default = 10, type=int, help="Number of k-fold partition")
     parser.add_argument("--nclasses", default = 2, type=int, help="Number of class in the dataset")
     parser.add_argument("--model", choices = ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coatten_fcn_model'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
     parser.add_argument("--save_model_path", default =  os.getcwd() + '/trained_models/', type=str, help="Path where you wish to store the trained models")
     parser.add_argument("--save_results", default = True, type=bool, help="Save results performance in csv or not.")
-
-    # flag for baseline code
+    parser.add_argument("--csv_dataset_path", default = os.getcwd() + '/split_kfold/', type=str, help="Path where are located the image paths for each partition")
+    parser.add_argument("--results_path", default = os.getcwd() + '/results_files/', type=str, help="Path where are located the performance of the models in csv file")
     parser.add_argument("--name", default='ResNet50', type=str, help='Name of the experiment')
     parser.add_argument("--dataset", default = 'dataset_raw', type=str, help='Name of the dataset to use. Must be the exact same name as the dataset directory name')
+
+    # flag for baseline code
     parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')
     parser.add_argument("--batch_size", default = 32, type=int)
     parser.add_argument("--accumulation_steps", default = 2, type=int)
-    parser.add_argument("--epochs", default = 100, type=int)
     parser.add_argument("--workers", default = 4, type=int)
     parser.add_argument("--learning_rate", default = 0.01, type=float)
 
@@ -101,8 +101,7 @@ if __name__ == "__main__":
                                                  "ViT-L_32", "ViT-H_14"],
                         default="ViT-L_16", help="Which variant to use.")
     
-    parser.add_argument("--pretrained_dir", type=str, 
-default= os.getcwd() + "/transfg_pretrained/imagenet21k+imagenet2012_ViT-L_16.npz",
+    parser.add_argument("--pretrained_dir", type=str, default= complete_path + "/transfg_pretrained/imagenet21k+imagenet2012_ViT-L_16.npz",
                         help="Where to search for pretrained ViT models.")
     
     parser.add_argument("--img_size", default=299, type=int,
@@ -149,11 +148,10 @@ default= os.getcwd() + "/transfg_pretrained/imagenet21k+imagenet2012_ViT-L_16.np
     parser.add_argument('--slide_step', type=int, default=12,
                         help="Slide step for overlap split")
 
-    # flag for CoAttention Network
+    # flag for Co-Attention Network
     parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
     parser.add_argument('--imageSize', type=int, default=224, help='the height / width of the input image to ARC')
     parser.add_argument("--npy_dataset_path", default = os.getcwd() + '/omniglot/', type=str, help="Path where are located the image arrays for each label and partition")
-    parser.add_argument("--csv_dataset_path", default = os.getcwd() + '/split_kfold/', type=str, help="Path where are located the image paths for each partition")
     parser.add_argument('--glimpseSize', type=int, default=8, help='the height / width of glimpse seen by ARC')
     parser.add_argument('--numStates', type=int, default=128, help='number of hidden states in ARC controller')
     parser.add_argument('--numGlimpses', type=int, default=6, help='the number glimpses of each image in pair seen by ARC')
