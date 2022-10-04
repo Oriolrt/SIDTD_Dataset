@@ -1,4 +1,11 @@
+import sys
 import os
+
+hard_path = ''
+for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
+complete_path = hard_path + '/models/arc_pytorch/'
+sys.path.insert(1, complete_path)
+
 import random
 import numpy as np
 import sklearn

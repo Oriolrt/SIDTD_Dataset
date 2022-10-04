@@ -1,12 +1,19 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function 
 
+import sys
+import os
+
+hard_path = ''
+for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
+complete_path = hard_path + '/models/transfg/'
+sys.path.insert(1, complete_path)
+
 import matplotlib 
 matplotlib.use('Agg') 
 
 import logging 
 import argparse 
-import os 
 import random 
 import numpy as np 
 import time 
@@ -23,8 +30,8 @@ from tqdm import tqdm
 
 #from torch.utils.tensorboard import SummaryWriter 
 from models.modeling import VisionTransformer, CONFIGS 
-from utils.scheduler import WarmupLinearSchedule, WarmupCosineSchedule
-from utils.data_utils import get_loader
+from utils_transfg.scheduler import WarmupLinearSchedule, WarmupCosineSchedule
+from utils_transfg.data_utils import get_loader
 
 
 

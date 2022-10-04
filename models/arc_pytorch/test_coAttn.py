@@ -1,4 +1,11 @@
+import sys
 import os
+
+hard_path = ''
+for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
+complete_path = hard_path + '/models/arc_pytorch/'
+sys.path.insert(1, complete_path)
+
 import random
 import pandas as pd
 import numpy as np
@@ -117,14 +124,11 @@ def test(opt, save_model_path, iteration):
 
     # load the dataset in memory.
     paths_splits = {'test':{}}
-    n_val = 0
-    for d_set in ['train', 'val']:
-        for key in ['reals','fakes']:
-            path = opt.npy_dataset_path +  opt.dataset + '/'+ d_set +'_split_' + key  + '_it_' + str(iteration) + '.npy'
-            data = np.load(path)
-            if d_set == 'val':
-                n_val = n_val + len(data)
-            paths_splits[d_set][key] = list(data)
+    d_set = 'test'
+    for key in ['reals','fakes']:
+        path = opt.npy_dataset_path +  opt.dataset + '/' + d_set + '_split_' + key  + '_it_' + str(iteration) + '.npy'
+        data = np.load(path)
+        paths_splits[d_set][key] = list(data)
     loader = Batcher(paths_splits= paths_splits, batch_size=opt.batchSize, image_size=opt.imageSize)
     window = opt.batchSize
 
@@ -138,7 +142,7 @@ def test(opt, save_model_path, iteration):
         coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
         coAtten.eval()
     
-    path_test = opt.csv_dataset_path + "{}/train_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+    path_test = opt.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
     df_test = pd.read_csv(path_test)
     image_paths = df_test.image_path.values
     label_name = df_test.label_name.values

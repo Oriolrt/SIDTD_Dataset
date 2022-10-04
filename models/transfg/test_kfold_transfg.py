@@ -3,8 +3,14 @@ from __future__ import absolute_import, division, print_function
 
 import matplotlib 
 matplotlib.use('Agg') 
+import sys
+import os
 
-import os 
+hard_path = ''
+for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
+complete_path = hard_path + '/models/transfg/'
+sys.path.insert(1, complete_path)
+
 import random 
 import numpy as np 
 import time 
@@ -21,7 +27,7 @@ from tqdm import tqdm
 
 #from torch.utils.tensorboard import SummaryWriter 
 from models.modeling import VisionTransformer, CONFIGS 
-from utils.data_utils import get_loader_test
+from utils_transfg.data_utils import get_loader_test
 
 
 
