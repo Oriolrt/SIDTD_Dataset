@@ -13,12 +13,11 @@ import torch
 from torch.autograd import Variable
 import batcher_kfold_binary as batcher
 from batcher_kfold_binary import Batcher
-from utils import *
 from sklearn.metrics import roc_auc_score, accuracy_score
 
 import models_binary
 from models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
-
+import csv 
 
 def seed_torch(seed=777):
     """
@@ -49,6 +48,40 @@ def one_shot_eval(pred, truth):
     pred = pred.round()
     corrects = (pred == truth).sum().item()
     return corrects 
+
+
+def save_results_test(opt):
+    """
+    Helper function to create the files to save the final results for each iteration of the kfold
+    training as a csv file.
+
+    Parameters
+    ----------
+    args : Arguments
+        args.dataset, args.name : Parameters to decide the name of the output image file
+
+    Returns
+    -------
+    f_test : file for test
+    writer_test : writer for test
+
+    """
+    if not os.path.exists(opt.results_path + '{}/{}/'.format(opt.model, opt.dataset)):
+        os.makedirs(opt.results_path + '{}/{}/'.format(opt.model, opt.dataset))
+        
+
+
+    if os.path.isfile(opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name)):
+        f_test = open(opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name), 'a')
+        writer_test = csv.writer(f_test)
+    else:
+        f_test = open(opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name), 'w')
+        # create the csv writer
+        writer_test = csv.writer(f_test)
+        header_test = ['training_iteration', 'accuracy', 'roc_auc_score']
+        writer_test.writerow(header_test)
+    
+    return f_test, writer_test
 
 def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, paths, prob, prediction, y_true):
 
@@ -87,7 +120,6 @@ def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, 
     y_true_list = y_true + list(Y_test.to('cpu').numpy())
 
     return paths_list, prob_list, prediction_list, y_true_list
-
 
 def test(opt, save_model_path, iteration):
 
@@ -133,14 +165,25 @@ def test(opt, save_model_path, iteration):
     window = opt.batchSize
 
     # Test model
-    discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
-    discriminator.eval()
-    if opt.apply_fcn:
-        resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
-        resNet.eval()
-    if opt.use_coAttn:
-        coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
-        coAtten.eval()
+    if opt.pretrained == 'no':
+        discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+        discriminator.eval()
+        if opt.apply_fcn:
+            resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+            resNet.eval()
+        if opt.use_coAttn:
+            coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+            coAtten.eval()
+    
+    if opt.pretrained == 'yes':
+        discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.model, iteration)))
+        discriminator.eval()
+        if opt.apply_fcn:
+            resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.model, iteration)))
+            resNet.eval()
+        if opt.use_coAttn:
+            coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.model, iteration)))
+            coAtten.eval()
     
     path_test = opt.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
     df_test = pd.read_csv(path_test)
@@ -152,8 +195,8 @@ def test(opt, save_model_path, iteration):
     test_paths = []
     i = 0
     while window*(i+1) < len(df_test):
-        labels = label_name[window*i]
-        images = image_paths[window*(i+1)]
+        labels = label_name[window*i:window*(i+1)]
+        images = image_paths[window*i:window*(i+1)]
         test_paths, p_preds, preds, reals = test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, test_paths, p_preds, preds, reals)
         i = i + 1  
         
@@ -163,10 +206,13 @@ def test(opt, save_model_path, iteration):
 
     my_array = np.asarray([ test_paths, reals, preds, p_preds]).T
     df = pd.DataFrame(my_array, columns = ['Path_image','Label_image','Pred_label_image','Proba_label_image'])
-    df.drop_duplicates(subset=['Path_image'], inplace=True)
+    df.drop_duplicates(subset=['Path_image'], inplace=True, ignore_index=True)
+    df.Label_image = df.Label_image.astype(int)
+    df.Proba_label_image = df.Proba_label_image.astype(float)
+    df.Pred_label_image = df.Pred_label_image.astype(float).astype(int)
 
-    test_auc = roc_auc_score(df['Label_image'].astype(int),df['Proba_label_image'])
-    acc_test = accuracy_score(df['Label_image'],df['Pred_label_image'])
+    test_auc = roc_auc_score(df['Label_image'],df['Proba_label_image'])
+    acc_test = accuracy_score(df['Label_image'], df['Pred_label_image'])
     
     print('****** TEST COMPLETED ******')
     print('Kfold number:',iteration)
@@ -186,7 +232,10 @@ def test_coAttn_models(opt, iteration) -> None:
     
     #writers to write the results obtained for each split
     f_test, writer_test = save_results_test(opt)
-    save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
+    if opt.pretrained == 'yes':
+        save_model_path = os.getcwd() + '/pretrained_models/' + opt.model + "_trained_models/"
+    if opt.pretrained == 'no':
+        save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     
         
     acc_test, test_auc = test(opt, save_model_path, iteration)

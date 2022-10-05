@@ -1,14 +1,17 @@
 import matplotlib
 matplotlib.use('Agg')
-
-import glob
-import torch
-from torch.utils.data import DataLoader, Dataset 
-from torch.optim import Adam, SGD, AdamW 
-import torch.nn as nn 
-from torch.optim.lr_scheduler import CosineAnnealingLR
-
+import sys
 import os
+
+hard_path = ''
+for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
+complete_path = hard_path + '/models/Baseline/'
+sys.path.insert(1, complete_path)
+
+import torch
+from torch.utils.data import DataLoader 
+from torch.optim import SGD 
+import torch.nn as nn 
 
 
 from utils import *
@@ -124,8 +127,14 @@ def test_baseline_models(args, LOGGER, iteration):
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     
-    save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
-    PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
+    if args.pretrained == 'no':
+        save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
+        PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
+    if args.pretrained == 'yes':
+        save_model_path = os.getcwd() + '/pretrained_models/' + args.model + "_trained_models/"
+        PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.model, iteration)
+    
+    print('Use trained model saved in:', PATH)
     print("********      Creating csv stat result file      *********")
     model.load_state_dict(torch.load(PATH))
     model.eval()

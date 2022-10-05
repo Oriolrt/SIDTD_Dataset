@@ -3,8 +3,9 @@ from __future__ import absolute_import, division, print_function
 
 import matplotlib 
 matplotlib.use('Agg') 
+
+import os 
 import sys
-import os
 
 hard_path = ''
 for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
@@ -19,7 +20,6 @@ import csv
 import os.path
 
 from contextlib import contextmanager
-import matplotlib.pylab as plt 
 import torch 
 import torch.nn.functional as F 
 from tqdm import tqdm 
@@ -192,15 +192,22 @@ def test_transfg_models(args, LOGGER, iteration):
     args, model, num_classes = setup(args, LOGGER)
     test_loader = get_loader_test(args, iteration)
 
-    save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
-    model_checkpoint = os.path.join(save_model_path,
+    if args.pretrained == 'yes':
+        save_model_path = os.getcwd() + '/pretrained_models/' + args.model + "_trained_models/"
+        model_checkpoint = os.path.join(save_model_path,
                                     '{}_{}_best_accuracy_n{}.pth'.format(args.dataset,
                                                               args.name,
+                                                              iteration))
+    if args.pretrained == 'no':
+        save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
+        model_checkpoint = os.path.join(save_model_path,
+                                    '{}_{}_best_accuracy_n{}.pth'.format(args.dataset,
+                                                              args.model,
                                                               iteration))
     
     model.load_state_dict(torch.load(model_checkpoint))
     with torch.no_grad():
-        test_loss, test_accuracy, test_roc_auc_score = test(args, model, test_loader, num_classes)
+        test_loss, test_accuracy, test_roc_auc_score = test(args, LOGGER, model, test_loader)
 
 
     if args.save_results:
