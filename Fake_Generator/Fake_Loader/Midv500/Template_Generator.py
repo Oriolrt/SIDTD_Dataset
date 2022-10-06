@@ -41,7 +41,7 @@ class Template_Generator(Midv):
         for counter , img in enumerate(self._img_loader):
 
             fake_img, field = super().Inpaint_and_Rewrite(img=img._img, info=img._meta)
-            name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(counter)
+            name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter)
 
             fake_meta = vars(self._fake_template(src=img._relative_path, type_transformation="Inpaint_and_Rewrite",field=field,loader="Midv500",name=name_fake_generated))
 
@@ -83,7 +83,7 @@ class Template_Generator(Midv):
                 fake_img1, fake_img2 , field1, field2 = super().Crop_and_Replace(img._img, img2._img, img._meta, img2._meta,delta1=delta1, delta2=delta2)
 
                 #img1 info
-                name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl + 1 +counter)
+                name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl)
                     
                 fake_meta = vars(self._fake_template(src=img._relative_path, second_src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,field=field, second_field=field2,loader="Midv500",name=name_fake_generated))
 
@@ -99,7 +99,7 @@ class Template_Generator(Midv):
 
 
                 #img2 info
-                name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl + 2 +counter)                   
+                name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl + 1)                   
                 fake_meta2 = vars(self._fake_template(src=img._relative_path, second_src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,field=field, second_field=field2,loader="Midv500",name=name_fake_generated))
 
                 # craeting fake img1

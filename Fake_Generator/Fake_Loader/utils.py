@@ -145,7 +145,7 @@ def bbox_to_coord(x, y, w, h):
 
     return [c1, c2, c3, c4]
 
-def bbox_info(info, flag):
+def bbox_info(info, flag, shaped:bool=False):
     
     if flag == 1:
         shape = info["shape_attributes"]
@@ -156,7 +156,7 @@ def bbox_info(info, flag):
         
         return x,y,w,h
           
-    shape = info["quad"]
+    shape = info["quad"] if not shaped else info
     x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0]
     y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
 

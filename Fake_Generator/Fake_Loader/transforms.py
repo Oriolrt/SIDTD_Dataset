@@ -1,0 +1,1 @@
+# TODO Totes les funcions de transofrmacions estan al fitxer utils ja netejat

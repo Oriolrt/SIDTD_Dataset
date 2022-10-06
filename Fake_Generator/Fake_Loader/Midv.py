@@ -2,6 +2,7 @@
 
 from ast import Str
 from dataclasses import *
+from tkinter.tix import Tree
 from typing import *
 from dataclasses import dataclass
 from tracemalloc import Statistic
@@ -29,7 +30,6 @@ class Midv():
         # PlaceHolders for the fake imgs
         self._img_loader = []
         self._fake_img_loader = []
-        #self._fake_metadata = fake_template
         self._transformations = [self.Crop_and_Replace, self.Inpaint_and_Rewrite]
         self._flag = 1 if os.path.dirname(inspect.getframeinfo(sys._getframe(1)).filename).split("/")[-1] == "Midv2020" else 0
 
@@ -75,11 +75,11 @@ class Midv():
             
         return swap_info, field_to_return
 
-    def Crop_and_Replace(self,img1:np.ndarray, img2:np.ndarray, info:dict, additional_info:dict, img_id1:int=None, img_id2:int=None, delta1:list=[2,2], delta2:list = [2,2], mark:str=None) -> Tuple[Image.Image, Image.Image, Str, Str]:
+    def Crop_and_Replace(self,img1:np.ndarray, img2:np.ndarray, info:dict, additional_info:dict, img_id1:int=None, img_id2:int=None, delta1:list=[2,2], delta2:list = [2,2], mark:str=None, force_flag:int=1) -> Tuple[Image.Image, Image.Image, Str, Str]:
         
         sInfo = True if (np.random.randint(100) > 5) or (mark is not None) else False
         
-        if self._flag:
+        if bool(self._flag) is True or bool(force_flag) is True:
             
             if additional_info is None:
                 if mark is  None:
@@ -135,8 +135,8 @@ class Midv():
                                                                 
 
     
-    def Inpaint_and_Rewrite(self,img: np.ndarray, info: dict,img_id: int=None, mark:str=None) -> Tuple[Image.Image, Str]:
-        if self._flag:
+    def Inpaint_and_Rewrite(self,img: np.ndarray, info: dict,img_id: int=None, mark:str=None, force_flag:int=1) -> Tuple[Image.Image, Str]:
+        if bool(self._flag) is True or bool(force_flag) is True:
             swap_info, field_to_change = self.get_field_info(info=info,img_id1=img_id, mark=mark)
         else:
             swap_info, field_to_change = self.get_field_info(info=info, mark=mark) 
