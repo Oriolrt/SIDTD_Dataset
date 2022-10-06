@@ -38,12 +38,6 @@ The code will also provide the batch based on the amount of batches did you defi
 If you just want to download the dataset and dont want to get any type of training implementation you can download the different datasets from the Datasets file.
 
 Inside the dataset you have the different Classes to download the different datasets, as the example below shows
-## FAQ
-
-#### To resolve any doubt  
-
-cboned@cvc.uab.cat
-
 
 
 ## Run Locally
@@ -78,3 +72,13 @@ in this case the example is:
 
     train, val, test, batch_index = dt.get_structures()
 ```
+## FAQ
+
+#### To resolve any doubt  
+
+cboned@cvc.uab.cat
+
+## Acknowledgments
+SOTERIA has received funding from the European Union’s Horizon 2020 	research and innovation programme under grant agreement No 101018342 
+
+Disclaimer: This content reflects only the author's view. The European Agency is not responsible for any use that may be made of the information it contains. 

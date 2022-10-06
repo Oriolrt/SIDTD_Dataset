@@ -6,7 +6,7 @@ import sys
 
 #from Transformations import Transformations
 
-
+#TODO: split this file in two. Functions must be in a Python script in this folder while the "main" function must be moved to the "generate_fake_dataset.py"
 def read_metadata(args):
     """
 
@@ -61,10 +61,12 @@ def main():
     """
     opts500 = m5()
     args5 = opts500.parse()
+    #TODO: Carles, why this output?
     print(args5)
 
     opts2020 = m20()
     args20 = opts2020.parse()
+    #TODO: Carles, why this output?
     print(args20)
 
 

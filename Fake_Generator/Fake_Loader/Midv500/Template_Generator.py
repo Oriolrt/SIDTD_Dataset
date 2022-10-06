@@ -24,11 +24,8 @@ class Template_Generator(Midv):
 
         self.create_loader()
 
-        self.fit(sample)
 
 
- 
-    # function to generate the loader of the images
     def create_loader(self):
         for path_classes in self._classes:  # -> [path_n dels fiderents folders per ses diferents classes]
             name_img = path_classes.split("/")[-1]
@@ -44,7 +41,7 @@ class Template_Generator(Midv):
         for counter , img in enumerate(self._img_loader):
 
             fake_img, field = super().Inpaint_and_Rewrite(img=img._img, info=img._meta)
-            name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(idx)
+            name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(counter)
 
             fake_meta = vars(self._fake_template(src=img._relative_path, type_transformation="Inpaint_and_Rewrite",field=field,loader="Midv500",name=name_fake_generated))
 
@@ -65,7 +62,7 @@ class Template_Generator(Midv):
 
             if name_transform == "Inpaint_and_Rewrite":
                 fake_img, field = super().Inpaint_and_Rewrite(img._img, img._meta)
-                name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(idx)
+                name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl)
 
                 fake_meta = vars(self._fake_template(src=img._relative_path, type_transformation=name_transform,field=field,loader="Midv500",name=name_fake_generated))
 

@@ -2,7 +2,7 @@ import sys
 from Fake_Loader.utils import *
 import random
 
-
+#TODO: Carles, these two functions must be moved to Fake_Loader>transforms.py
 def generate_crop_and_replace(path_img1:str, path_img2:str, annotations_path:str,shift_pixels:list=[5,5] ,additional_annotation_path:str=None):
     delta1 = delta2 = shift_pixels
     
@@ -88,7 +88,7 @@ def generate_inpaint(path_img:str, annotations_path:str, mark=False):
     return fake_text_image, swap_info["region_attributes"]["field_name"]
 
 
-
+#TODO: move this "main" to code_examples > fake_id_ex.py
 if __name__ == "__main__":
 
     img1, img2, field1, field2 = generate_crop_and_replace("Test_Example/Samples_Test/MIDV2020/alb_id/images/00.jpg",

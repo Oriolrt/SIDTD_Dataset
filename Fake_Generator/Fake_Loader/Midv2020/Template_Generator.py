@@ -62,11 +62,8 @@ class Template_Generator(Midv):
 
                 self._img_loader[ninf[-1]].append(super(Template_Generator, self).Img(img,class_template,name_img,src_img))
 
-
-#todo mirar lo del counter per afegir al nom
     def fit(self,sample) -> List[Image.Image]:
-        #genereate and inpainting for each img of the true loader
-
+        
         for counter, (key,img_bucket) in enumerate(self._img_loader.items()):
             for idx in range(len(img_bucket)):
 

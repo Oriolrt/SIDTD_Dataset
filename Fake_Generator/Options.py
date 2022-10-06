@@ -4,7 +4,7 @@ import os
 import sys
 
 __author__ = "Carlos Boned Riera"
-__email__ = "carlos.boned@e-campus.uab.cat"
+__email__ = "cboned@cvc.uab.cat"
 
 from argparse import HelpFormatter
 from operator import attrgetter
