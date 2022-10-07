@@ -5,7 +5,7 @@ The purpose of this project is to generate a new data partition to recognize DNI
 ## Structure
 
 The structure of the project is decripted as follows:
-
+```
 SIDTD
 │   LICENSE
 │   setup.py
@@ -23,6 +23,7 @@ SIDTD
 |___code_examples
 |
 |___models
+```
 
 
 All the names in this structure are folders. Every folder have his own Readme to make clearer all the structure.

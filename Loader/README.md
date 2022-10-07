@@ -9,16 +9,15 @@ There exist 5 different type of benchmarks whose behaviour has been changed in o
 ## Documentation
 
 And the structure is decripted as follows:
-
+```
 Loader
 │   Datasets.py
 │   Loader_Modules.py
 |   __init__.py    
+```
+
 
 Mainly we have to .py scripts [__Loader_Modules.py__ & __Datasets.py__].
-
-
-```
 
 ## __Loader_Modules.py__
 
