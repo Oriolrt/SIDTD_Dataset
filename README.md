@@ -32,12 +32,12 @@ In the *Fake_Generator* folder are the scripts to create your own dataset with d
 
 In the *Loader* folder are the main functionalities to download the benchmark  that we used to train the models. Furthermore you can download the different datasets that we used to train and pretrain the models.
 
-In the *code examples* folder are 4 different scripts that reproduce some functionalities that we have done in order to create the datasetm train and test the different models. Are scripts to run localy.
+In the *code examples* folder are 4 different scripts that reproduce some functionalities that we have done in order to create the dataset and, train and/or test with different models. You should run the scripts locally.
 
-Finally in the models' folder ##TODO Maxime.
+Finally in the *models*' folder store the models' code. This is the folder to go if you want more information about the models' implementation. The models are seperate in 3 different folders *arc_pytorch* for Co-Attention ARC, *transfg* for Trans FG model and, *Baseline* for EfficientNet, ResNet and Visition Transformer models.
 
 
-## Instalation
+## Installation
 
 To get the Dataloader package you will need to:
 
@@ -54,9 +54,9 @@ It shouldnt exist any type of error
 
 #### To resolve any doubt  
 
-cboned@cvc.uab.cat
-oriolrt@cvc.uab.cat
-mtalarmain@cvc.uab.cat
++ cboned@cvc.uab.cat
++ oriolrt@cvc.uab.cat
++ mtalarmain@cvc.uab.cat
 ## Acknowledgments
 SOTERIA has received funding from the European Union’s Horizon 2020 	research and innovation programme under grant agreement No 101018342 
 
