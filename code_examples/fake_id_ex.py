@@ -1,52 +1,12 @@
 # To generate the crop and replace and the inpainting example we wiill call the MIDV() constructor
+import argparse
+from ast import arg
 from Fake_Generator.Fake_Loader.Midv import *
 from Fake_Generator.Fake_Loader import utils
 from typing import *
 from PIL import Image
-
-def make_inpaint(img:np.ndarray, annotations:dict, img_id_annotation:int=None,mark:str=None, force_flag:int=1):
-    """_summary_
-
-    Args:
-        img (np.ndarray): The img which will be inpainted
-        annotations (dict): the dictionary of the image with the metadata of the Bbox as descripted in the Midv500/Midv2020
-        img_id_annotation (int, optional): Default None, just change the value when working with the midv2020 annotations
-        mark (str, optional): If you want to change concrete field.
-        force_flag (int, optional): This flag will tell the code if the type of the annotations came from midv2020 (1) or midv500(0)
-    """
-    constructor= Midv(path=None)
-    
-    fake_image, filed_changed = constructor.Inpaint_and_Rewrite(img=img, info=annotations, img_id=img_id_annotation, mark=mark)
-    
-    return fake_image, filed_changed
-
-
-def make_crop_and_reaplace(img1:np.ndarray, img2:np.ndarray, info:dict, additional_info:dict, img_id1:int=None, img_id2:int=None, delta1:list=[2,2], delta2:list = [2,2], mark:str=None) -> Tuple[Image.Image, Image.Image, Str, Str]:
-    """_summary_
-
-    Args:
-        img1 (np.ndarray): The src image which will change the information
-        img2 (np.ndarray): The target img that will change the information
-        info (dict): the dictionary of the image with the metadata of the Bbox as descripted in the Midv500/Midv2020
-        additional_info (dict): In case we work with different src of image (Mixing midv500 and midv2020)
-        img_id1 (int, optional): Index of the src img (case Midv2020)
-        img_id2 (int, optional): Index of the target img (case Midv2020)
-        delta1 (list, optional): shift of the pixels result src img
-        delta2 (list, optional): shift of the pixels result target img
-        mark (str, optional): If you want to replace concrete field.
-        force_flag (int, optional): This flag will tell the code if the type of the annotations came from midv2020 (1) or midv500(0)
-                                    if force_flag == 0 additional info must be supplied.
-
-
-    Returns:
-        Tuple[Image.Image, Image.Image, Str, Str]: return the two images and the fields that have been replaced
-    """
-    constructor= Midv(path=None)
-    
-    fake_img1, fake_img2, filed_changed1, field_changed2 = constructor.Crop_and_Replace(img1=img1, img2=img2, info=info, additional_info=additional_info, img_id1=img_id1, img_id2=img_id2, delta1=delta1, delta2=delta2, mark=mark)
-
-    return fake_img1, fake_img2, filed_changed1, field_changed2
-
+import argparse
+import random 
 
 def custom_crop_and_replace(img:np.ndarray, img2:np.ndarray, info:dict, info2:dict, delta1:list, delta2:list):
     """In case you want to create your own crop and replace with your own images you can do it, just make sure that the 
@@ -70,43 +30,115 @@ def custom_crop_and_replace(img:np.ndarray, img2:np.ndarray, info:dict, info2:di
     
     return img_generated1, img_generated2
 
-def custom_inpaint_and_rewrite(img: np.ndarray, info: dict, text_str:str,shaped:bool=False):
+def custom_inpaint_and_rewrite(img: np.ndarray, info: dict, text_str:str=None):
     
     """In case you want to create your own inpaint with your own images you can do it, just make sure that the 
     info with the coordenades must be as follows:
 
-            {
+            field [name, surname....] : {
+                
+            value : "Carlos",
             "quad": [ [0, 0], [111, 0],
                     [111, 222], [0, 222] ]
         }
-        
-    or in case you put shaped = True the list must be the bbox with the cordenates as follows
-    
-    [ [x_0, y_0], [x_1, y_1], [x_2, y_2], [x_3, y_3] ]
-    
     
     Args:
         img (np.ndarray): The img which will be inpainted
         info (dict): the dictionary of the image with the metadata of the Bbox described
-        shaped: in case shaped==True THe code will assume that the shape is List[List, List, List, List] with the coordenades of the Bbox as described
         text_str: The original text that you want to inpaint
         
     Returns:
         the image inpainted
     """
-    
-    mask, img_masked = mask_from_info(img, info, shaped=shaped)
-    inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
-    fake_text_image = copy.deepcopy(inpaint)
-    x0, y0, w, h = bbox_info(info, flag=0, shaped=shaped)
-    
-
-    color = (0,0,0)
-    font = get_optimal_font_scale(text_str, w)
-
-    img_pil = Image.fromarray(fake_text_image)
-    draw = ImageDraw.Draw(img_pil)
-    draw.text(((x0, y0)), text_str, font=font, fill=color)
-    fake_text_image = np.array(img_pil)
+    if text_str is None:
+        text_str = info["value"]
+        
+    fake_text_image = utils.inpaint_image(img=img,swap_info=info, text_str=text_str, flag=0)
 
     return fake_text_image
+
+
+def plt_inpaint(img:np.ndarray, fake_img:np.ndarray):
+    plt.figure()
+    plt.subplot(1,2,1)
+    plt.imshow(img)
+    plt.legend("Original Image")
+    plt.subplot(1,2,2)
+    plt.imshow(fake_img)
+    plt.legend("img Inpainted")
+    
+    plt.show()
+
+def plt_crop_and_replace(img1:np.ndarray, img2:np.ndarray, fake_document1:np.ndarray, fake_document2:np.ndarray):
+    plt.figure()
+    plt.subplot(1,2,1)
+    plt.imshow(img1)
+    plt.subplot(1,2,2)
+    plt.imshow(fake_document1)
+
+    plt.figure()
+    plt.subplot(1,2,1)
+    plt.imshow(img2)
+    plt.subplot(1,2,2)
+    plt.imshow(fake_document2)
+
+    plt.show()
+    
+if __name__ == "__main__":
+    
+    parser = argparse.ArgumentParser(description="Main for the execution of the examples")
+    parser.add_argument("--transformation", "-t",choices=["cr", "ir"], required=True, type=str, help="Mode")
+    
+    
+    parser.add_argument("--src_path", "-srcpath", required=True, type=str, help="path of the src image")
+    parser.add_argument("--src_annotations","-srcan", required=True, type=str, help="annotations of the src img ")
+    
+    #crop and replace
+    parser.add_argument("--trg_path", "-trgpath", type=str, help="path of the trg image")
+    parser.add_argument("--trg_annotations", "-trgan", default=None,type=str, help="annotations of the trg img ")
+    parser.add_argument("--shit_boundary", "-sb", type=int, default=10, help= "shifting constant for crop and replace")
+
+    #inpaaint 
+    parser.add_argument("--field_to_change", "-f",  default=None,type=str, help="The field that you want to inpaint")
+    parser.add_argument("--custom_text", "-ct",  default=None, type=str, help="The field that you want to inpaint")
+    
+    
+    
+
+    args = parser.parse_args()
+
+    img = utils.read_img(args.src_path)
+    annotations = utils.read_json(args.src_annotations)
+    
+    if args.transformation == "ir":
+
+        if args.field_to_change is None:
+            field_to_change = random.choice(list(annotations.keys()))
+            info = annotations[field_to_change]
+            print("The info that will be inpainted is ", field_to_change)
+        else:
+            info = annotations[args.field_to_change]
+            
+        fake_img = custom_inpaint_and_rewrite(img, info, text_str=args.custom_text)
+        
+        plt_inpaint(img, fake_img)
+        
+    elif args.transformation == "cr":
+        assert args.trg_path != None
+        delta1 = random.sample(range(args.shift_boundary),2)
+        delta2 = random.sample(range(args.shift_boundary),2)
+        trg_image = utils.read_img(args.src_path)
+        
+        if args.trg_annotations is not None:
+            annotations2 = utils.read_json(args.trg_annotations)
+            fake_img1, fake_imgs2 = custom_crop_and_replace(img, trg_image, annotations,annotations2,delta1, delta2)
+        else:
+            fake_img1, fake_imgs2 = custom_crop_and_replace(img, trg_image, annotations,delta1=delta1, delta2=delta2)
+                        
+
+        
+
+        
+        
+
+            

@@ -76,6 +76,23 @@ def mask_from_info(img, shape:np.ndarray,flag:int=1,shaped:bool = False):
 
     return mask, masked
 
+def inpaint_image(img: np.ndarray, swap_info: dict, text_str: str, flag:int=1):
+    
+    mask, img_masked = mask_from_info(img, swap_info)
+    inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
+    fake_text_image = copy.deepcopy(inpaint)
+    x0, y0, w, h = bbox_info(swap_info, flag=flag)
+
+    color = (0,0,0)
+    font = get_optimal_font_scale(text_str, w)
+
+    img_pil = Image.fromarray(fake_text_image)
+    draw = ImageDraw.Draw(img_pil)
+    draw.text(((x0, y0)), text_str, font=font, fill=color)
+    fake_text_image = np.array(img_pil)
+    
+    return fake_text_image
+
 
 def read_img(path: str):
     

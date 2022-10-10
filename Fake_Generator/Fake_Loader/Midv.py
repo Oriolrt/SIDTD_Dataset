@@ -141,25 +141,14 @@ class Midv():
         else:
             swap_info, field_to_change = self.get_field_info(info=info, mark=mark) 
             
-          
-        mask, img_masked = mask_from_info(img, swap_info)
-        inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
-        fake_text_image = copy.deepcopy(inpaint)
-        x0, y0, w, h = bbox_info(swap_info, flag=self._flag)
         
         try:
             text_str = swap_info["region_attributes"]["value"]
 
         except:
             text_str =  swap_info["value"]
-
-        color = (0,0,0)
-        font = get_optimal_font_scale(text_str, w)
-
-        img_pil = Image.fromarray(fake_text_image)
-        draw = ImageDraw.Draw(img_pil)
-        draw.text(((x0, y0)), text_str, font=font, fill=color)
-        fake_text_image = np.array(img_pil)
+            
+        fake_text_image, field_to_change =  inpaint_image(img, swap_info, text_str, flag=self._flag)
 
         return fake_text_image, field_to_change
 
