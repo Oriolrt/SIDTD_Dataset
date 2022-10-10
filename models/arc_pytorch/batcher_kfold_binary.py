@@ -17,8 +17,6 @@ import cv2
 
 from image_augmenter import ImageAugmenter
 
-use_cuda = True
-
 
 class Binary(object):
     def __init__(self, batch_size=128, image_size=224):
@@ -114,9 +112,6 @@ class Batcher(Binary):
         X = torch.stack([X1, X2], dim=1)  # (B, 2, c, h, w)
 
         Y = Variable(torch.from_numpy(Y))
-
-        if use_cuda:
-            X, Y = X.cuda(), Y.cuda()
 
         return X, Y
 

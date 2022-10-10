@@ -42,11 +42,11 @@ You can choose to train on a specific partition or on every partition with the f
 
 During training, the model is saved in the *trained_models* folder. It is the model with the highest accuracy that is saved. You can change the location of the folder to another path with the flag --save_model_path.
 
-If you need to fine-tune the parameters you can modify the models' parameter thanks to the flags such as the --epochs (number of epochs), --batch_size (batch size for training and validation), --learning rate (learning rate chosen for the training of EfficientNet, ResNet and ViT)
+If you need to fine-tune the parameters you can modify the models' parameter thanks to the flags such as the --epochs (number of epochs), --batch_size (batch size for training and validation), --learning rate (learning rate chosen for the training of EfficientNet, ResNet and ViT). Flag model parameter can be different from one model to another, so flag model paramet are grouped by model in train.py (see code).
 
 Remember to choose a name for your experiment with the flag --name. It could help you to classify your different experiment or to remembe the training parameter you chose. The name you are choosing is free of choice.
 
-In the bash file *exectrain.sh* you can find an exemple of the minimum --flag you should mention to make your training working. If you do not have CUDA and GPU on your computer, you must remove *CUDA_VISIBLE_DEVICES* from the bash file and inform the model to use cpu device instead of CUDA with the flag --device='cpu' (for EfficientNet, ResNet, ViT and Trans FG models) or --cuda (for Co-Attention ARC)
+In the bash file *exectrain.sh* you can find an exemple of the minimum --flag you should mention to make your training working. If you do not have CUDA and GPU on your computer, you must remove *CUDA_VISIBLE_DEVICES* from the bash file and inform the model to use cpu device instead of CUDA with the flag --device='cpu'.
 
 # Test Models
 
@@ -60,4 +60,4 @@ You can choose to test on a specific partition or on every partition with the fl
 
 Remember to choose a name for your experiment with the flag --name. It should be the same name for the test than the training you performed earlier in order to use the correct trained models.
 
-In the bash file *exectest.sh* you can find an exemple of the minimum --flag you should mention to make your training working. If you do not have CUDA and GPUs on your computer, you must remove *CUDA_VISIBLE_DEVICES* from the bash file and inform the model to use cpu device instead of CUDA with the flag --device='cpu' (for EfficientNet, ResNet, ViT and Trans FG models) or --cuda (for Co-Attention ARC)
+In the bash file *exectest.sh* you can find an exemple of the minimum --flag you should mention to make your training working. If you do not have CUDA and GPUs on your computer, you must remove *CUDA_VISIBLE_DEVICES* from the bash file and inform the model to use cpu device instead of CUDA with the flag --device='cpu'.

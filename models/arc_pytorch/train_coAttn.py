@@ -69,7 +69,7 @@ def train(opt, save_model_path, iteration):
                                         channels = 1024,
                                         controller_out=opt.numStates)
 
-    if opt.cuda:
+    if opt.device=='cuda':
         print('Use GPU')
         discriminator.cuda()
         if opt.apply_fcn:
@@ -79,7 +79,7 @@ def train(opt, save_model_path, iteration):
 
     # set up the optimizer.
     bce = torch.nn.BCELoss()
-    if opt.cuda:
+    if opt.device=='cuda':
         bce = bce.cuda()
     #ce_loss = torch.nn.CrossEntropyLoss()
 
@@ -128,7 +128,7 @@ def train(opt, save_model_path, iteration):
         
 
         X, Y = loader.fetch_batch("train", batch_size=opt.batchSize)
-        if opt.cuda:
+        if opt.device=='cuda':
             X = X.cuda()
             Y = Y.cuda()
         B,P,C,W,H=X.size()
@@ -166,7 +166,7 @@ def train(opt, save_model_path, iteration):
             nloop = n_val // window
             for i in range(nloop):
                 X_val, Y_val = loader.fetch_batch(part = "val", batch_size = opt.batchSize)
-                if opt.cuda:
+                if opt.device=='cuda':
                     X_val = X_val.cuda()
                     Y_val = Y_val.cuda()
                 
@@ -261,9 +261,10 @@ def train(opt, save_model_path, iteration):
 
 def train_coAttn_models(opt, iteration) -> None:
     
-    if opt.cuda:
-        batcher.use_cuda = True
+    if opt.device=='cuda':
         models_binary.use_cuda = True  
+    if opt.device=='cpu':
+        models_binary.use_cuda = False
     
     SEED = 777 
     seed_torch(SEED)

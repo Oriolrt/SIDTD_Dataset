@@ -86,7 +86,7 @@ def save_results_test(opt):
 def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, paths, prob, prediction, y_true):
 
     X_test, Y_test = loader.fetch_batch(part = "test", labels = labels, image_paths = images, batch_size = opt.batchSize)
-    if opt.cuda:
+    if opt.device=='cuda':
         X_test = X_test.cuda()
         Y_test = Y_test.cuda()
     
@@ -140,7 +140,7 @@ def test(opt, save_model_path, iteration):
                                         channels = 1024,
                                         controller_out=opt.numStates)
 
-    if opt.cuda:
+    if opt.device=='cuda':
         discriminator.cuda()
         if opt.apply_fcn:
             resNet.cuda()
@@ -150,7 +150,7 @@ def test(opt, save_model_path, iteration):
 
     # set up the optimizer.
     bce = torch.nn.BCELoss()
-    if opt.cuda:
+    if opt.device=='cuda':
         bce = bce.cuda()
 
 
@@ -223,9 +223,10 @@ def test(opt, save_model_path, iteration):
 
 def test_coAttn_models(opt, iteration) -> None:
     
-    if opt.cuda:
-        batcher.use_cuda = True
+    if opt.device=='cuda':
         models_binary.use_cuda = True  
+    if opt.device=='cpu':
+        models_binary.use_cuda = False 
     
     SEED = 777 
     seed_torch(SEED)
