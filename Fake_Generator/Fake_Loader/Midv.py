@@ -1,17 +1,26 @@
 #Description This file has the super classes with the image class, the video class and the façade of the Midv500 loader
 
+from ast import Str
 from dataclasses import *
+from tkinter.tix import Tree
+from typing import *
 from dataclasses import dataclass
+from tracemalloc import Statistic
 import numpy as np
 import cv2
 import json
 import copy as cp
-from abc import ABC, abstractmethod
+from abc import ABC
 import os
+import inspect, sys
+import random
+import copy
+from utils import *
+from PIL import ImageFont, ImageDraw, Image
+import tqdm
+from typing import *
 
-
-
-class Midv(ABC):
+class Midv():
 
     __slots__ = ["_absolute_path","_img_loader", "_fake_img_loader","_transformations"]
 
@@ -21,10 +30,8 @@ class Midv(ABC):
         # PlaceHolders for the fake imgs
         self._img_loader = []
         self._fake_img_loader = []
-        #self._fake_metadata = fake_template
         self._transformations = [self.Crop_and_Replace, self.Inpaint_and_Rewrite]
-
-
+        self._flag = 1 if os.path.dirname(inspect.getframeinfo(sys._getframe(1)).filename).split("/")[-1] == "Midv2020" else 0
 
 
     @property
@@ -39,16 +46,122 @@ class Midv(ABC):
         return os.path.join(self.absoulute_path, "clips")
 
 
-    @abstractmethod
-    def Crop_and_Replace(self):
-        pass
+    def get_field_info(self, info:dict, img_id1:int=None, mark:str = None, force_flag:int=1) -> Tuple[Dict, Str]:
+        print(type(info))
+        assert type(info) is dict
+        
+        if (self._flag != 1 or force_flag != 1) and img_id1 is not None:
+            fields = list(np.unique(list(info.keys())))
+            for tr in ["photo", "signature"]:
+                try:
+                    fields.remove(tr)
+                except:
+                    continue
+                
+        else:
+            assert type(img_id1) is int
+            
+            selected = list(info["_via_img_metadata"])[img_id1]
+            fields = info["_via_img_metadata"][selected]["regions"]
 
-    @abstractmethod
-    def Inpaint_and_Rewrite(self):
-        pass
+        if not mark or mark == None:
+            # (2-12) to avoid the face, the photo and the signature
+            field_to_change = random.randint(2, len((fields))-2) if self._flag else random.choice(fields)
+            swap_info = fields[field_to_change]
+            field_to_return = swap_info["region_attributes"]["field_name"] if self._flag else field_to_change 
+        else:
+            swap_info = fields[mark]
+            field_to_return = mark
+            
+        return swap_info, field_to_return
 
+    def Crop_and_Replace(self,img1:np.ndarray, img2:np.ndarray, info:dict, additional_info:dict, img_id1:int=None, img_id2:int=None, delta1:list=[2,2], delta2:list = [2,2], mark:str=None, force_flag:int=1) -> Tuple[Image.Image, Image.Image, Str, Str]:
+        
+        sInfo = True if (np.random.randint(100) > 5) or (mark is not None) else False
+        
+        if bool(self._flag) is True or bool(force_flag) is True:
+            
+            if additional_info is None:
+                if mark is  None:
+                    swap_info_1, field_to_return1 = self.get_field_info(info=info, img_id1=img_id1)
+                    swap_info_2, field_to_return2 = self.get_field_info(info=info, img_id1=img_id2)
+                    if not sInfo and (swap_info_1 == swap_info_2):
+                        while(swap_info_1 == swap_info_2):
+                            swap_info_2, field_to_return2 = self.get_field_info(info=additional_info, img_id1=img_id2)
+                
+                else:
+                    swap_info_1, field_to_return1 = self.get_field_info(info=info, img_id1=img_id1, mark=mark)
+                    swap_info_2, field_to_return2 = self.get_field_info(info=info, img_id1=img_id2, mark=mark)
 
+            else:
+                if mark is not None:
+                    swap_info_2, field_to_return2 = self.get_field_info(info=additional_info, img_id1=img_id2, mark=mark)  
+                else:
+                    swap_info_2, field_to_return2 = self.get_field_info(info=additional_info, img_id1=img_id2)  
+                    if not sInfo and (swap_info_1 == swap_info_2):
+                        while(swap_info_1 == swap_info_2):
+                            swap_info_2, field_to_return1 = self.get_field_info(info=additional_info, img_id1=img_id2)
+    
+            fake_document1, fake_document2 = replace_info_documents(img1, img2, swap_info_1, swap_info_2, delta1=delta1, delta2=delta2, flag=self._flag, mixed=False)            
+        
+            return fake_document1, fake_document2 , field_to_return1, field_to_return2           
+        
+        else:
+            assert additional_info != None, "When use Midv500 additional template information must be supplied"
+            
+            mixed = True if (type(img_id1) is int) or (type(img_id2) is int) else False
+            
+            if mixed:
+                idd = img_id1 if type(img_id1) is int else img_id2
+                try:
+                    swap_info_1, field_to_return1 = self.get_field_info(info=info, img_id1=idd)
+                    swap_info_2, field_to_return2 = self.get_field_info(info=additional_info, force_flag=0)
+                except:
+                    swap_info_1, field_to_return1 = self.get_field_info(info=additional_info, img_id1=idd)
+                    swap_info_2, field_to_return2 = self.get_field_info(info=info, force_flag=0)
+        
+        
+                fake_document1, fake_document2 = replace_info_documents(img1, img2, swap_info_1,swap_info_2, delta1, delta2, flag=self._flag, mixed=mixed)
+                
+                return fake_document1, fake_document2, field_to_return1, field_to_return2                          
 
+            else:           
+                swap_info_1, field_to_return1 = self.get_field_info(info=info, force_flag=0)
+                swap_info_2, field_to_return2 = self.get_field_info(info=additional_info, force_flag=0)
+
+                fake_document1, fake_document2 = replace_info_documents(img1, img2, swap_info_1,swap_info_2, delta1, delta2, flag=self._flag, mixed=mixed)
+                
+                return fake_document1, fake_document2, field_to_return1, field_to_return2                          
+                                                                
+
+    
+    def Inpaint_and_Rewrite(self,img: np.ndarray, info: dict,img_id: int=None, mark:str=None, force_flag:int=1) -> Tuple[Image.Image, Str]:
+        if bool(self._flag) is True or bool(force_flag) is True:
+            swap_info, field_to_change = self.get_field_info(info=info,img_id1=img_id, mark=mark)
+        else:
+            swap_info, field_to_change = self.get_field_info(info=info, mark=mark) 
+            
+          
+        mask, img_masked = mask_from_info(img, swap_info)
+        inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
+        fake_text_image = copy.deepcopy(inpaint)
+        x0, y0, w, h = bbox_info(swap_info, flag=self._flag)
+        
+        try:
+            text_str = swap_info["region_attributes"]["value"]
+
+        except:
+            text_str =  swap_info["value"]
+
+        color = (0,0,0)
+        font = get_optimal_font_scale(text_str, w)
+
+        img_pil = Image.fromarray(fake_text_image)
+        draw = ImageDraw.Draw(img_pil)
+        draw.text(((x0, y0)), text_str, font=font, fill=color)
+        fake_text_image = np.array(img_pil)
+
+        return fake_text_image, field_to_change
 
     ####################################################################################################
     class Img(object):

@@ -14,9 +14,9 @@ from PIL import ImageFont, ImageDraw, Image
 
 class Template_Generator(Midv):
 
-    __slots__ = ["_img_loader", "_classes", "_fake_template", "_transformations","_fake_img_loader","_annotations_path","_imgs_path","_delta_boundary","_static_path"]
+    __slots__ = ["_img_loader", "_classes", "_fake_template", "_transformations","_fake_img_loader","_annotations_path","_imgs_path","_delta_boundary","_static_path", "_flag"]
 
-    def __init__(self, absolute_path:str ,fake_template = None, delta_boundary:int=10):
+    def __init__(self, absolute_path:str ,fake_template:dict = None, delta_boundary:int=10):
 
 
         """
@@ -43,13 +43,8 @@ class Template_Generator(Midv):
         
         #static path
         self._static_path = "/dataset/MIDV2020/dataset/templates/images"
-        
-        #print(self._imgs_path)
-        #print(self._static_path)
-
 
         self.create_loader()
-
 
 
 
@@ -67,82 +62,14 @@ class Template_Generator(Midv):
 
                 self._img_loader[ninf[-1]].append(super(Template_Generator, self).Img(img,class_template,name_img,src_img))
 
-    # TODO: Carlos, this code is the same that in the generate_crop_and_replace function from the generate_fake_test.py file. It must be a single function in the transforms.py file
-
-    def Crop_and_Replace(self, img1: np.ndarray, img1_id: int, img2: np.ndarray, img2_id: int, info: dict,
-                         delta1: list = [2, 2], delta2: list = [2, 2])-> Tuple[Image.Image, Image.Image, Str, Str]: 
-
-        selected1 = list(info["_via_img_metadata"])[img1_id]
-        selected2 = list(info["_via_img_metadata"])[img2_id]
-        fields1 = info["_via_img_metadata"][selected1]["regions"]
-        fields2 = info["_via_img_metadata"][selected2]["regions"]
-
-        sInfo = True if np.random.randint(100) > 5 else False
-
-        # (2-12) to avoid the face, the photo and the signature
-        if sInfo and (len(fields1) == len(fields2)):
-            field_to_change1 = field_to_change2 = random.randint(2, len((fields1))-2)
-
-        else:
-            field_to_change1 = random.randint(2, len((fields1))-2)
-            field_to_change2 = random.randint(2, len((fields2))-2)
-            while field_to_change2 == field_to_change1:
-                field_to_change2 = random.randint(2, len((fields2))-2)
-
-        fake_document1, fake_document2 = replace_info_documents_2020(img1, img2, fields1[field_to_change1],
-                                                                        fields2[field_to_change2], delta1, delta2)
-
-        return fake_document1, fake_document2, fields1[field_to_change1]["region_attributes"]["field_name"], fields2[field_to_change2]["region_attributes"]["field_name"]
-
-#TODO: Carlos, this code is the same that in the generate_inpaint function from the generate_fake_test.py file. It must be a single function in the transforms.py file
-    def Inpaint_and_Rewrite(self, img: np.ndarray, img_id: int, info: dict, mark=False) -> Tuple[Image.Image, Str]:
-
-        selected = list(info["_via_img_metadata"])[img_id]
-        fields = info["_via_img_metadata"][selected]["regions"]
-
-        if not mark:
-
-            # (2-12) to avoid the face, the photo and the signature
-            field_to_change = random.randint(2, len((fields))-2)
-            swap_info = fields[field_to_change]
-        #mark if we want to inpaint certain field
-        else:
-            swap_info = fields[mark]
-
-        mask, img_masked = mask_from_info(img, swap_info)
-
-        inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
-
-        fake_text_image = copy.deepcopy(inpaint)
-
-
-        x0, y0, w, h = bbox_info(swap_info)
-
-        text_str = swap_info["region_attributes"]["value"]
-
-        color = (0, 0, 0)
-
-        font = get_optimal_font_scale(text_str, w)
-
-        img_pil = Image.fromarray(fake_text_image)
-        draw = ImageDraw.Draw(img_pil)
-        draw.text(((x0, y0)), text_str, font=font, fill=color)
-        #+h
-        fake_text_image = np.array(img_pil)
-
-        return fake_text_image, swap_info["region_attributes"]["field_name"]
-
-
-#todo mirar lo del counter per afegir al nom
     def fit(self,sample) -> List[Image.Image]:
-        #genereate and inpainting for each img of the true loader
-
+        
         for counter, (key,img_bucket) in enumerate(self._img_loader.items()):
             for idx in range(len(img_bucket)):
 
                 img = random.choice(img_bucket)
                 img_id = int(img._relative_path.split("/")[-1].split(".")[0])
-                fake_img, field =  self.Inpaint_and_Rewrite(img._img,img_id,img._meta)
+                fake_img, field =  super().Inpaint_and_Rewrite(img=img._img,img_id=img_id,info=img._meta)
                 name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(idx)
 
                 #Creating the dict with the metadata
@@ -168,7 +95,7 @@ class Template_Generator(Midv):
                 transformation = random.choice(self._transformations)
                 name_transform = (transformation.__name__).split(".")[-1]
                 if name_transform == "Inpaint_and_Rewrite":
-                    fake_img, field = transformation(img._img, img_id,img._meta)
+                    fake_img, field = super().Inpaint_and_Rewrite(img=img._img, img_id=img_id,info=img._meta)
 
 
                     fake_meta = vars(self._fake_template(src=img._relative_path, type_transformation=name_transform,field=field,loader="Midv2020",name=name_fake_generated))
@@ -187,11 +114,10 @@ class Template_Generator(Midv):
 
                     delta1 = random.sample(range(self._delta_boundary),2)
                     delta2 = random.sample(range(self._delta_boundary),2)
-                    fake_meta2 =  copy.copy(fake_meta)
 
                     img2 = random.choice(img_bucket)
                     img_id2 = int(img2._relative_path.split("/")[-1].split(".")[0])
-                    fake_img1, fake_img2 , field, field2 = transformation(img._img, img_id ,img2._img, img_id2 ,img._meta,delta1,delta2)
+                    fake_img1, fake_img2 , field, field2 = super().Crop_and_Replace(img1=img._img, img2=img2._img, info=img._meta, additional_info=None, img_id1=img_id ,img_id2=img_id2,delta1=delta1,delta2=delta2)
                     
                     #img1 info
                     name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl + 1 +idx)
@@ -211,7 +137,7 @@ class Template_Generator(Midv):
 
                     #img2 info
                     name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(smpl + 2 +idx)
-                    fake_meta = vars(self._fake_template(second_src=img._relative_path, src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,second_field=field, field=field2,loader="Midv2020",name=name_fake_generated))
+                    fake_meta2 = vars(self._fake_template(second_src=img._relative_path, src=img2._relative_path, shift=(delta1,delta2),type_transformation=name_transform,second_field=field, field=field2,loader="Midv2020",name=name_fake_generated))
                     
 
                     # craeting fake img2
@@ -234,4 +160,4 @@ if __name__ == "__main__":
     
     gen.fit(1000)
     
-    gen.store_generated_dataset()
+    #gen.store_generated_dataset()
