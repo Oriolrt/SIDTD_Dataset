@@ -76,19 +76,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # flag for defining training or testing parameters
     parser.add_argument("--partition", default = 0, type=int, help="train or test on a specific partition")
-    parser.add_argument("--all", choices = ['yes', 'no'], default = 'yes', type=str, help="train or test on all partitions")
+    parser.add_argument("--all", choices = ['yes', 'no'], default = 'yes', type=str, help="Train or test on all partitions. If yes, then you train on all partition. If no, then you train on one partition. You need to specify the partition with the flag --partition.")
     parser.add_argument("--nsplits", default = 10, type=int, help="Number of k-fold partition")
     parser.add_argument("--nclasses", default = 2, type=int, help="Number of class in the dataset")
     parser.add_argument("--model", choices = ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coatten_fcn_model'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
+    parser.add_argument("--dataset", default = 'dataset_raw', type=str, help='Name of the dataset to use. Must be the exact same name as the dataset directory name')
     parser.add_argument("--save_model_path", default =  os.getcwd() + '/trained_models/', type=str, help="Path where you wish to store the trained models")
     parser.add_argument("--save_results", default = True, type=bool, help="Save results performance in csv or not.")
     parser.add_argument("--csv_dataset_path", default = os.getcwd() + '/split_kfold/', type=str, help="Path where are located the image paths for each partition")
     parser.add_argument("--results_path", default = os.getcwd() + '/results_files/', type=str, help="Path where are located the performance of the models in csv file")
     parser.add_argument("--plot_path", default = os.getcwd() + '/plots/', type=str, help="Path where are located the plot graphs for the loss and accuracy performance")
+    parser.add_argument("--name", default='ResNet50', type=str, help='Name of the experiment')
     
     # flag for baseline code
-    parser.add_argument("--name", default='ResNet50', type=str, help='Name of the experiment')
-    parser.add_argument("--dataset", default = 'dataset_raw', type=str, help='Name of the dataset to use. Must be the exact same name as the dataset directory name')
     parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')
     parser.add_argument("--batch_size", default = 32, type=int)
     parser.add_argument("--accumulation_steps", default = 2, type=int)
