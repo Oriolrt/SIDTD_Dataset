@@ -40,14 +40,16 @@ class Midv():
     
     
     def get_template_path(self):
-        return os.path.join(self.absoulute_path, "templates")
+        return os.path.join(self.absoulute_path, "Images")
 
     def get_video_path(self):
         return os.path.join(self.absoulute_path, "clips")
 
+    def get_img_annotations_path(self):
+        return os.path.join(self._absolute_path, "Annotations")
+        
 
     def get_field_info(self, info:dict, img_id1:int=None, mark:str = None, force_flag:int=1) -> Tuple[Dict, Str]:
-        print(type(info))
         assert type(info) is dict
         
         if (self._flag != 1 or force_flag != 1) and img_id1 is not None:
@@ -148,7 +150,7 @@ class Midv():
         except:
             text_str =  swap_info["value"]
             
-        fake_text_image, field_to_change =  inpaint_image(img, swap_info, text_str, flag=self._flag)
+        fake_text_image =  inpaint_image(img, swap_info, text_str, flag=self._flag)
 
         return fake_text_image, field_to_change
 
