@@ -1,6 +1,7 @@
 from ast import arg, parse
 import numpy as np
 import pandas as pd
+from torch import split
 from Loader.Datasets import *
 from abc import ABC, abstractmethod
 import time
@@ -88,7 +89,10 @@ class DataLoader(object):
         self._few_shot_split = few_shot_split
         self._normal_split = normal_split
         self._conditioned = conditioned
-
+        
+        current_path = os.path.basename(os.path.dirname(__file__))
+        self._save_dir = os.path.join(current_path,"code_examples")
+        
         self._datasets = [Midv, Dogs, Fungus, Findit, Banknotes]
 
         self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](self._conditioned)
@@ -136,8 +140,9 @@ class DataLoader(object):
         structure_val = []
         structure_test = []
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        if not os.path.exists('split_kfold/'):
-            os.makedirs('split_kfold/')
+        split_kfold_dir = os.path.join(self._save_dir,'split_kfold')
+        if not os.path.exists(split_kfold_dir):
+            os.makedirs(split_kfold_dir)
 
         print('Splitting dataset into {}-folds partition with train/validation/test sets...'.format(self._kfold_split))
         k = len(new_df) / 10
@@ -146,19 +151,19 @@ class DataLoader(object):
             b_low = int(iteration * k)
             b_high = int((1 + iteration) * k)
             df_test = shuffled_df[b_low:b_high]
-            df_test.to_csv('split_kfold/test_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
+            df_test.to_csv(split_kfold_dir+'/test_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
             df_val_train = shuffled_df.drop(shuffled_df.index[b_low:b_high])
             if iteration == 9:
                 b_high = int(k)
                 df_val = df_val_train[:b_high]
-                df_val.to_csv('split_kfold/val_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
+                df_val.to_csv(split_kfold_dir+'/val_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
                 df_train = df_val_train.drop(df_val_train.index[:b_high])
-                df_train.to_csv('split_kfold/train_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
+                df_train.to_csv(split_kfold_dir+'/train_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
             else:
                 df_val = df_val_train[b_low:b_high]
-                df_val.to_csv('split_kfold/val_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
+                df_val.to_csv(split_kfold_dir+'/val_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
                 df_train = df_val_train.drop(df_val_train.index[b_low:b_high])
-                df_train.to_csv('split_kfold/train_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
+                df_train.to_csv(split_kfold_dir+'/train_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
 
 
             self.load_dataset(df_train, structure_train)
@@ -170,22 +175,26 @@ class DataLoader(object):
 
         # Copy split_kfold directory to models' directory
         print('Copying split_kfold to Baseline directory...')
-        shutil.copytree("split_kfold", "Baseline/split_kfold")
+        shutil.copytree(split_kfold_dir, "Baseline/split_kfold")
         print('Done.')
 
         print('Copying split_kfold to transfg directory...')
-        shutil.copytree("split_kfold", "transfg/split_kfold")
+        shutil.copytree(split_kfold_dir, "transfg/split_kfold")
         print('Done.')
 
         print('Copying split_kfold to arc_pytorch directory...')
-        shutil.copytree("split_kfold", "arc_pytorch/split_kfold")
+        shutil.copytree(split_kfold_dir, "arc_pytorch/split_kfold")
         print('Done.')
 
         return structure_train, structure_val, structure_test
 
 
     def _shot_partition(self,new_df, proportion:list = [0.6,0.4], metaclasses:list = ["id", "passport"]):
-        #TODO Debbug it
+
+        structure_train = structure_test = []
+
+        split_dir = os.path.join(self._save_dir,'split_shot')
+
         ngroups = len(metaclasses)
         assert ngroups >0
         if ngroups > 1:
@@ -208,13 +217,42 @@ class DataLoader(object):
 
         train = grouped_pandas[grouped_pandas.ngroup().isin(different_groups[:ceil(len(different_groups)*proportion[0])])]
         test = grouped_pandas[grouped_pandas.ngroup().isin(different_groups[ceil(len(different_groups)*proportion[0]):])]
-            
-        return train.reset_index(), test.reset_index()
+        df_train = train.reset_index()
+        df_test = test.reset_index()
+        
+        if not os.path.exists(split_dir):
+            os.makedirs(split_dir)
 
+        
+        print('Splitting dataset into {}-shot partition with meta_train/meta_test sets...'.format(self._few_shot_split))
+        df_train.to_csv(split_dir+'/train_split_' + self._dataset + '.csv', index=False)
+        df_test.to_csv(split_dir+'/test_split_' + self._dataset + '.csv', index=False)
+
+        self.load_dataset(df_train, structure_train)
+        self.load_dataset(df_test, structure_test)
+        
+        print('Directory split_shot created.')
+
+        # Copy split_noraml directory to models' directory
+        print('Copying split_shot to Baseline directory...')
+        shutil.copytree(split_dir, "Baseline/split_shot")
+        print('Done.')
+
+        print('Copying split_normal to transfg directory...')
+        shutil.copytree(split_dir, "transfg/split_shot")
+        print('Done.')
+
+        print('Copying split_normal to arc_pytorch directory...')
+        shutil.copytree(split_dir, "arc_pytorch/split_shot")
+        print('Done.')
+
+
+
+        return structure_train,structure_test
 
 
     def _ranking_shot_partition(self, new_df, proportion, metaclasses:list = ["dni", "passport"]):
-        àss
+        pass
 
     def _train_val_test_split(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
@@ -223,8 +261,10 @@ class DataLoader(object):
         structure_val = []
         structure_test = []
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        if not os.path.exists('split_normal/'):
-            os.makedirs('split_normal/')
+        split_dir = os.path.join(self._save_dir,'split_normal')
+
+        if not os.path.exists(split_dir):
+            os.makedirs(split_dir)
 
         print('Splitting dataset into {}-normal partition with train/validation/test sets...'.format(self._normal_split))
         shuffled_df = shuffle(new_df)
@@ -233,14 +273,14 @@ class DataLoader(object):
         test_sec = len(shuffled_df) - (train_sec+val_sec)
         ### TEST ####
         df_test = shuffled_df[:test_sec]
-        df_test.to_csv('split_normal/test_split_' + self._dataset + '.csv', index=False)
+        df_test.to_csv(split_dir+'/test_split_' + self._dataset + '.csv', index=False)
         ### VALIDATION ###
         df_val_train = shuffled_df.drop(shuffled_df.index[:test_sec])
         df_val = df_val_train[:val_sec]
-        df_val.to_csv('split_normal/val_split_' + self._dataset + '.csv', index=False)
+        df_val.to_csv(split_dir+'/val_split_' + self._dataset + '.csv', index=False)
         ### TRAIN ###
         df_train = df_val_train.drop(df_val_train.index[:val_sec])
-        df_train.to_csv('split_normal/train_split_' + self._dataset + '.csv', index=False)
+        df_train.to_csv(split_dir+'/train_split_' + self._dataset + '.csv', index=False)
 
         self.load_dataset(df_train, structure_train)
         self.load_dataset(df_val, structure_val)
@@ -251,15 +291,15 @@ class DataLoader(object):
 
         # Copy split_noraml directory to models' directory
         print('Copying split_normal to Baseline directory...')
-        shutil.copytree("split_normal", "Baseline/split_normal")
+        shutil.copytree(split_dir, "Baseline/split_normal")
         print('Done.')
 
         print('Copying split_normal to transfg directory...')
-        shutil.copytree("split_normal", "transfg/split_normal")
+        shutil.copytree(split_dir, "transfg/split_normal")
         print('Done.')
 
         print('Copying split_normal to arc_pytorch directory...')
-        shutil.copytree("split_normal", "arc_pytorch/split_normal")
+        shutil.copytree(split_dir, "arc_pytorch/split_normal")
         print('Done.')
 
         return structure_train, structure_val, structure_test
