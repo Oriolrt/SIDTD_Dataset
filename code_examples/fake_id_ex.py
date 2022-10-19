@@ -12,11 +12,15 @@ def custom_crop_and_replace(img:np.ndarray, img2:np.ndarray, info:dict, info2:di
     """In case you want to create your own crop and replace with your own images you can do it, just make sure that the 
     info with the coordenades must be as follows:
          
-        {
+        field [name, surname....] : {
+                
+            value : "Carlos",
+            
+            ----------- here is the important thing, make sure that this part is as follows.
             "quad": [ [0, 0], [111, 0],
                     [111, 222], [0, 222] ]
         }
-        
+    
     Args:
         img (_type_): src img
         img2 (_type_): target img
