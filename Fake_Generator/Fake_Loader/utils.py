@@ -1,8 +1,10 @@
+from importlib.resources import path
 import json
 from ntpath import join
 import random
 import copy
 import sys
+from typing import *
 from PIL import ImageFont, ImageDraw, Image
 import numpy as np
 import cv2
@@ -11,6 +13,7 @@ import os
 import imageio
 
 import matplotlib.pyplot as plt
+from traitlets import Int
 
 
 def get_optimal_font_scale(text, width):
@@ -96,7 +99,6 @@ def inpaint_image(img: np.ndarray, swap_info: dict, text_str: str, flag:int=1):
 
 def read_img(path: str):
     
-    #os.path.dirname(os.path.dirname(__file__))+"/"+
     img = np.array(imageio.imread(path))
 
     if img.shape[-1] == 4:
@@ -130,9 +132,11 @@ def write_json(data:dict, path:str, name:str=None):
         with open(path_to_save, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
 
-def store(img_loader: list,path_store="/home/carlos/MIDV2020/Fake_Benchmark_Generated"):
+def store(img_loader: list,path_store:str=None):
     
-
+    if path_store is None:
+        path_store = os.path.join(os.getcwd() , "SIDTD_Generated")
+        
     advisor = len(img_loader)//10
     for idx, image in enumerate(img_loader):
         class_name = image._name.split("_")[0]
@@ -157,7 +161,13 @@ def store(img_loader: list,path_store="/home/carlos/MIDV2020/Fake_Benchmark_Gene
         
     print("Data Successfuly stored")
 
-def bbox_to_coord(x, y, w, h):
+def bbox_to_coord(x, y, w, h) ->Tuple[List[Int, Int],List[Int, Int],List[Int, Int],List[Int, Int]]:
+    
+    """This function convert the kin of the shape from bbox rectangle x0,y0 + heigh and weight to the polygon coordenades.
+
+    Returns:
+        _type_: _description_
+    """
     x_f = x + w
     y_f = y + h
 
@@ -165,7 +175,18 @@ def bbox_to_coord(x, y, w, h):
 
     return [c1, c2, c3, c4]
 
-def bbox_info(info, flag, shaped:bool=False):
+def bbox_info(info, flag, shaped:bool=False, shaped_kin:str="rect") -> Tuple[Int, Int, Int, Int]:
+    
+    """This function return the rectangle of the template where are in located,
+    
+    Shaped: if shaped is True assume that the form of the info is an array that can represent the polygon or the rectangle
+            
+            If shapend kin is set to rect the info have this form [[x0,y0], [x1,y1]...] 
+            If shaped kin is polygon the info have this form x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
+
+    Returns:
+        Tuple[Int, Int, Int, Int]
+    """
     
     if flag == 1:
         shape = info["shape_attributes"]
@@ -176,9 +197,9 @@ def bbox_info(info, flag, shaped:bool=False):
         
         return x,y,w,h
           
-    shape = info["quad"] if not shaped else info
-    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0]
-    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
+    shape = info["quad"] if not shaped else info   #here if the info is like [[x0,y0], [x1,y1]...] #Here if the info is x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
+    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
+    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
 
     w = np.max([x0, x1, x2, x3]) - np.min([x0, x1, x2, x3])
     h = np.max([y0, y1, y2, y3]) - np.min([y0, y1, y2, y3])
