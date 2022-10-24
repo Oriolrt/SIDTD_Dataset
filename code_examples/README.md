@@ -64,7 +64,7 @@ You can choose to train on a specific partition or on every partition with the f
 
 ### Results
 
-Results by fold are generated as csv file in the 'results_files' directory. The training history (loss and accuracy) can be found in the 'plots' directory. Trained models are located in the trained_models directory.
+Results by fold are generated in csv file in the 'results_files' directory. The training history (loss and accuracy) can be found in the 'plots' directory. Trained models will be located in the trained_models directory.
 
 
 # Test Models
