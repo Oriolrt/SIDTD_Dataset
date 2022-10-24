@@ -121,12 +121,15 @@ def get_class(document_folder: str, gt: list):
             continue
     return -1
 
-def write_json(data:dict, path:str, name:str):
-    path_to_save = os.path.join(path,name+".json")
-    with open(path_to_save, "w", encoding="utf-8") as file:
-        json.dump(data, file, ensure_ascii=False, indent=4)
+def write_json(data:dict, path:str, name:str=None):
+    if name is None:
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+    else:
+        path_to_save = os.path.join(path,name+".json")
+        with open(path_to_save, "w", encoding="utf-8") as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
 
-#TODO: Change path_store default value
 def store(img_loader: list,path_store="/home/carlos/MIDV2020/Fake_Benchmark_Generated"):
     
 
