@@ -17,11 +17,12 @@ import sys
 
 class Dataset(ABC):
 
-    def __init__(self,download_original:bool=True,conditioned:bool=False,uri:str = "localhost/Benchmarking/DataLoader/dataset") -> None:
+    def __init__(self,type_download:str="images", download_original:bool=True,conditioned:bool=False,uri:str = "localhost/Benchmarking/DataLoader/dataset") -> None:
 
         self._uri = uri
         self._conditioned = conditioned
         self._download_original = download_original
+        self._type_download = type_download
 
 
 
@@ -68,30 +69,55 @@ class Banknotes(Dataset):
 
 class Midv(Dataset):
 
-    def __init__(self,conditioned:bool=True,download_original:bool =True ,uri: str = "http://0.0.0.0:8000/Benchmarking/DataLoader/dataset/midv") -> None:
-        super().__init__(conditioned=conditioned, download_original=download_original,uri=uri)
+    def __init__(self,type_download:str="images",conditioned:bool=True,download_original:bool =True ,uri: str = "http://0.0.0.0:8000/Benchmarking/DataLoader/dataset/midv") -> None:
+        
+        super().__init__(type_download=type_download,conditioned=conditioned, download_original=download_original,uri=uri)
         self._map_classes = self.map_classes() if conditioned is True else None
+        ## Path to reconstruct thew original structure
         self._original_abs_path = "MIDV2020/templates"
         self._original_imgs_path = os.path.join(self._original_abs_path, "images")
         self._original_ann_path  = os.path.join(self._original_abs_path, "annotations")
         
-    def download_dataset(self):
-        #files = os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
+        #Paths that will belong to the cvc cluster
+        self._images_path = os.path.join(self._uri, "images")
+        self._clips_path = os.path.join(self._uri, "clips")
+        self._videos_path = os.path.join(self._uri, "videos")
 
-        if self._download_original:
-            self._abs_path = "../datasets/"+self._uri.split("/")[-1]
-            self._img_abs_path = os.path.join(self._abs_path, "Images", "Reals")
-            self._ann_abs_path = os.path.join(self._abs_path, "Annotations", "Reals")
-            self.create_structure()
+        #path to download
+        self._path_to_download = os.path.join(os.getcwd(), "datasets")
+
+        self._abs_path = os.path.join(self._path_to_download,os.path.basename(self._uri)) # cwd/datasets/SIDTD/...
+
+    def download_dataset(self):
+        
+        if self._type_download == "all":    
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
+            if self._download_original:self.create_structure_images()
+
+        elif self._type_download == "clips":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
+            if self._download_original:raise NotImplementedError
+        
+        elif self._type_download == "videos":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._videos_path))
+            if self._download_original:raise NotImplementedError
+
+        else:
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._images_path))
+            if self._download_original:raise NotImplementedError
+
+            
            
     def create_and_map_classes_imgs(self):
         map_class = {
             
         }
+        print(self._img_abs_path)
         for image in os.listdir(self._img_abs_path):
             if image.endswith("html"):continue
-            class_image = image.split("_")[0]
-            original_class_path = os.path.join("..","datasets",self._original_imgs_path, class_image)
+            spl = image.split("_")
+            class_image = "_".join(spl[:2]) if not spl[1].isnumeric() else spl[0]
+            original_class_path = os.path.join(self._path_to_download,self._original_imgs_path, class_image)
             if os.path.exists(original_class_path):
                 if map_class.get(class_image) is not None:
                     map_class[class_image].append(os.path.join(self._img_abs_path, image))
@@ -111,8 +137,11 @@ class Midv(Dataset):
         }
         for annotation in os.listdir(self._ann_abs_path):
             if annotation.endswith("html"):continue
-            class_ann = annotation.split("_")[0]
-            original_class_path = os.path.join("..","datasets",self._original_ann_path, class_ann)
+            spl = annotation.split("_")
+            key = os.path.splitext("_".join(spl[:2]) if not spl[1].isnumeric() else spl[0])[0]
+            class_ann = key
+            print(class_ann)
+            original_class_path = os.path.join(self._path_to_download,self._original_ann_path, class_ann)
 
             if os.path.exists(original_class_path):
                 map_annotation[class_ann] = os.path.join(self._ann_abs_path,annotation)
@@ -124,20 +153,28 @@ class Midv(Dataset):
                                 
         return map_annotation    
                        
-           
+    def create_structure_videos(self):
+        #self._clips_abs_path = os.path.join(self._abs_path, "clips","Images", "Reals")
+        #self._clips_ann_abs_path = os.path.join(self._abs_path, "clips","Annotations", "Reals")
+        pass  
             
-    def create_structure(self):
+    def create_structure_images(self):
+        
+        
+        self._img_abs_path = os.path.join(self._abs_path, "templates","Images", "Reals")
+        self._ann_abs_path = os.path.join(self._abs_path, "templates","Annotations", "Reals")       
+        
         map_imgs = self.create_and_map_classes_imgs()
         map_annotations = self.create_and_map_classes_annotations()
-        classes = list(map_imgs.keys())
+
         
 
         for clas, img_set in map_imgs.items():
             template = self.read_json(map_annotations[clas]) #dict
-            path_ann_save = os.path.join("..", "datasets", self._original_ann_path,clas)
+            path_ann_save = os.path.join(self._path_to_download, self._original_ann_path,clas)
             self.write_json(template, path_ann_save, clas)
             
-            path_img_save = os.path.join("..", "datasets", self._original_imgs_path, clas)
+            path_img_save = os.path.join(self._path_to_download, self._original_imgs_path, clas)
             for img in img_set:
                 name_img = img.split("/")[-1].split("_")[-1] #get the image numbe (82.jpg example)
                 im = self.read_img(img)  
