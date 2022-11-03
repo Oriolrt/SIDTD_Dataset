@@ -8,7 +8,10 @@ import os
 import subprocess
 import glob
 from collections import Counter
-import imageio.v2 as imageio
+try:
+    import imageio.v2 as imageio
+except:
+    import imageio
 import json
 import cv2
 import sys
@@ -17,9 +20,12 @@ import sys
 
 class Dataset(ABC):
 
-    def __init__(self,type_download:str="images", download_original:bool=True,conditioned:bool=False,uri:str = "localhost/Benchmarking/DataLoader/dataset") -> None:
+    def __init__(self,type_download:str="images", download_original:bool=True,conditioned:bool=False) -> None:
 
-        self._uri = uri
+        self._uri_images = "http://datasets.cvc.uab.es/SIDTD/data/templates"
+        self._uri_clips = "http://datasets.cvc.uab.es/SIDTD/data/clips"
+        self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/data/videos"
+        self._uri = "http://datasets.cvc.uab.es/SIDTD/data"
         self._conditioned = conditioned
         self._download_original = download_original
         self._type_download = type_download
@@ -67,11 +73,11 @@ class Banknotes(Dataset):
     pass
 
 
-class Midv(Dataset):
+class SIDTD(Dataset):
 
-    def __init__(self,type_download:str="images",conditioned:bool=True,download_original:bool =True ,uri: str = "http://0.0.0.0:8000/Benchmarking/DataLoader/dataset/midv") -> None:
+    def __init__(self,type_download:str="images",conditioned:bool=True,download_original:bool =True) -> None:
         
-        super().__init__(type_download=type_download,conditioned=conditioned, download_original=download_original,uri=uri)
+        super().__init__(type_download=type_download,conditioned=conditioned, download_original=download_original)
         self._map_classes = self.map_classes() if conditioned is True else None
         ## Path to reconstruct thew original structure
         self._original_abs_path = "MIDV2020/templates"
@@ -79,9 +85,9 @@ class Midv(Dataset):
         self._original_ann_path  = os.path.join(self._original_abs_path, "annotations")
         
         #Paths that will belong to the cvc cluster
-        self._images_path = os.path.join(self._uri, "images")
-        self._clips_path = os.path.join(self._uri, "clips")
-        self._videos_path = os.path.join(self._uri, "videos")
+        self._images_path = self._uri_images
+        self._clips_path = self._uri_clips
+        self._videos_path = self._uri_videos
 
         #path to download
         self._path_to_download = os.path.join(os.getcwd(), "datasets")
@@ -92,7 +98,7 @@ class Midv(Dataset):
         
         if self._type_download == "all":    
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
-            if self._download_original:self.create_structure_images()
+            if self._download_original:raise NotImplementedError
 
         elif self._type_download == "clips":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
@@ -104,7 +110,7 @@ class Midv(Dataset):
 
         else:
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._images_path))
-            if self._download_original:raise NotImplementedError
+            if self._download_original:self.create_structure_images()
 
             
            
@@ -232,5 +238,5 @@ class Midv(Dataset):
 
 
 if __name__ == "__main__":
-    data = Midv(uri="http://0.0.0.0:8000/SIDTD")
-    data.download_dataset()
+    data = SIDTD(type_download="images")
+    data.download_dataset() 

@@ -54,11 +54,11 @@ class DataLoader(object):
 
 
 
-    def __init__(self, dataset:str="Midv", type_split:str = "normal", batch_size: int = 1,kfold_split:int=10, normal_split:list=[0.8,0.1,0.1]
+    def __init__(self, dataset:str="SIDTD   ", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
 , few_shot_split:str=None, conditioned:bool = True):
 
         """
-            Input of the class:         dataset --> Define what kind of the different datasets do you want to download [Midv, Dogs, Fungus, Findit, Banknotes]
+            Input of the class:         dataset --> Define what kind of the different datasets do you want to download [SIDTD, Dogs, Fungus, Findit, Banknotes]
                                                     This datasets have been changed in order to the different approach we are working on
                                         Type_split --> Diferent kind of split for train the models. The diferents splits are [kfold, normal or few_shot]
 
@@ -72,13 +72,13 @@ class DataLoader(object):
 
         ### ASSERTS AND ERROR CONTROL ###
 
-        if type_split == "normal": assert (type(normal_split) == list and np.sum(normal_split) == 1)
+        if type_split == "cross": assert (type(cross_split) == list and np.sum(cross_split) == 1)
         elif type_split == "kfold": assert (kfold_split > 0 and type(kfold_split) == int)
         elif type_split == "shot": pass #TODO veure com es genera el few shot partition
 
         assert (batch_size > 0 and type(batch_size) == int)
 
-        assert dataset in ["Midv", "Dogs", "Fungus", "Findit", "Banknotes"]
+        assert dataset in ["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"]
 
 
         ### PLACEHOLDERS  ###
@@ -87,13 +87,13 @@ class DataLoader(object):
         self._batch_size = batch_size
         self._kfold_split = kfold_split
         self._few_shot_split = few_shot_split
-        self._normal_split = normal_split
+        self._normal_split = cross_split
         self._conditioned = conditioned
         
         current_path = os.path.basename(os.path.dirname(__file__))
         self._save_dir = os.path.join(current_path,"code_examples")
         
-        self._datasets = [Midv, Dogs, Fungus, Findit, Banknotes]
+        self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
         self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](self._conditioned)
 
@@ -390,7 +390,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset",default="Midv",nargs="?", required=True, type=str, choices=["Midv", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
+    parser.add_argument("--dataset",default="SIDTD",nargs="?", required=True, type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="normal",nargs="?", choices=["normal", "kfold", "few_shot"], help="Diferent kind of split for train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")

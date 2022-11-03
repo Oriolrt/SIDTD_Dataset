@@ -106,6 +106,8 @@ if __name__ == "__main__":
     parser.add_argument("--field_to_change", "-f",  default=None,type=str, help="The field that you want to inpaint")
     parser.add_argument("--custom_text", "-ct",  default=None, type=str, help="The field that you want to inpaint")
     
+    # Get help
+    parser.add_argument("--help_func", action='store_true', help="If set up to True the description of the function will be displayed")
     
     
 
@@ -115,6 +117,9 @@ if __name__ == "__main__":
     annotations = utils.read_json(args.src_annotations)
     
     if args.transformation == "ir":
+
+        if args.help_func:
+            help(custom_inpaint_and_rewrite)
 
         if args.field_to_change is None:
             field_to_change = random.choice(list(annotations.keys()))
@@ -128,6 +133,9 @@ if __name__ == "__main__":
         plt_inpaint(img, fake_img)
         
     elif args.transformation == "cr":
+        if args.help_func:
+            help(custom_crop_and_replace)
+            
         assert args.trg_path != None
         delta1 = random.sample(range(args.shift_boundary),2)
         delta2 = random.sample(range(args.shift_boundary),2)
