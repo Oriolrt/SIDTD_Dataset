@@ -1,6 +1,6 @@
 import argparse
-from Fake_Generator.Fake_Loader.Midv2020 import Template_Generator
-from Fake_Generator.Fake_Loader.Midv500 import Template_Generator
+from Fake_Generator.Midv2020 import Template_Generator
+from Fake_Generator.Midv500 import Template_Generator
 
 
 def Midv2020_generator(path_to_templates:str, sample:int=1000):

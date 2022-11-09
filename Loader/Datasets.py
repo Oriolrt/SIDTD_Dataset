@@ -22,10 +22,10 @@ class Dataset(ABC):
 
     def __init__(self,type_download:str="images", download_original:bool=True,conditioned:bool=False) -> None:
 
-        self._uri_images = "http://datasets.cvc.uab.es/SIDTD/data/templates"
+        self._uri_images = 'http://0.0.0.0:8000/SIDTD/' #"http://datasets.cvc.uab.es/SIDTD/data/templates"
         self._uri_clips = "http://datasets.cvc.uab.es/SIDTD/data/clips"
         self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/data/videos"
-        self._uri = "http://datasets.cvc.uab.es/SIDTD/data"
+        self._uri = 'http://0.0.0.0:8000/' #"http://datasets.cvc.uab.es/SIDTD/data"
         self._conditioned = conditioned
         self._download_original = download_original
         self._type_download = type_download
@@ -79,6 +79,8 @@ class SIDTD(Dataset):
         
         super().__init__(type_download=type_download,conditioned=conditioned, download_original=download_original)
         self._map_classes = self.map_classes() if conditioned is True else None
+
+
         ## Path to reconstruct thew original structure
         self._original_abs_path = "MIDV2020/templates"
         self._original_imgs_path = os.path.join(self._original_abs_path, "images")
@@ -88,7 +90,6 @@ class SIDTD(Dataset):
         self._images_path = self._uri_images
         self._clips_path = self._uri_clips
         self._videos_path = self._uri_videos
-
         #path to download
         self._path_to_download = os.path.join(os.getcwd(), "datasets")
 
@@ -167,8 +168,8 @@ class SIDTD(Dataset):
     def create_structure_images(self):
         
         
-        self._img_abs_path = os.path.join(self._abs_path, "templates","Images", "Reals")
-        self._ann_abs_path = os.path.join(self._abs_path, "templates","Annotations", "Reals")       
+        self._img_abs_path = os.path.join(self._abs_path,"Images", "Reals")
+        self._ann_abs_path = os.path.join(self._abs_path,"Annotations", "Reals")       
         
         map_imgs = self.create_and_map_classes_imgs()
         map_annotations = self.create_and_map_classes_annotations()
@@ -188,9 +189,9 @@ class SIDTD(Dataset):
                 
 
     def map_classes(self):
-        classes = {"reals":{}, "fakes":{}}
-        fakes = [(file, "fakes") for file in glob.glob("dataset/SIDTD/Images/fakes/*.jpg")]
-        reals = [(file, "reals") for file in glob.glob("dataset/SIDTD/Images/reals/*.jpg")]
+        classes = {"Reals":{}, "Fakes":{}}
+        fakes = [(file, "Fakes") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), "Images", 'Fakes',"*"))]
+        reals = [(file, "Reals") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), "Images", 'Reals',"*"))]
         for file in (fakes+reals):
             section = classes[file[1]]
             clas = file[0].split("_")[0].split("/")[-1]
@@ -235,6 +236,9 @@ class SIDTD(Dataset):
             path_to_save = os.path.join(path,name+".json")
             with open(path_to_save, "w", encoding="utf-8") as file:
                 json.dump(data, file, ensure_ascii=False, indent=4)
+                
+    def __name__(self):
+        return "SIDTD"
 
 
 if __name__ == "__main__":

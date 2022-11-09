@@ -54,7 +54,7 @@ def get_font_scale(inner_path: str = "/usr/share/fonts/TTF"):
 
     return os.path.join(inner_path,selected)
 
-def mask_from_info(img, shape:np.ndarray,flag:int=1,shaped:bool = False):
+def mask_from_info(img, shape:np.ndarray,flag:int=1,shaped:bool = False,  shaped_kin:str="rect"):
     def midpoint(x1, y1, x2, y2):
         x_mid = int((x1 + x2) / 2)
         y_mid = int((y1 + y2) / 2)
@@ -64,8 +64,8 @@ def mask_from_info(img, shape:np.ndarray,flag:int=1,shaped:bool = False):
         x0, y0, w, h = bbox_info(shape, flag)
         shape = bbox_to_coord(x0, y0, w, h)
 
-    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0]
-    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
+    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
+    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
 
     xmid0, ymid0 = midpoint(x1, y1, x2, y2)
     xmid1, ymid1 = midpoint(x0, y0, x3, y3)

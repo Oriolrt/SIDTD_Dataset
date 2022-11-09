@@ -1,8 +1,8 @@
 # To generate the crop and replace and the inpainting example we wiill call the MIDV() constructor
 import argparse
 from ast import arg
-from Fake_Generator.Fake_Loader.Midv import *
-from Fake_Generator.Fake_Loader import utils
+from Fake_Generator.Midv import *
+from Fake_Generator import utils
 from typing import *
 from PIL import Image
 import argparse

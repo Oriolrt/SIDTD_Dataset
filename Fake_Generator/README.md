@@ -10,18 +10,14 @@ The structure of this section is depicted as follows:
 ```
 Fake_Generator
 |   __init__.py    
-│
-└───Fake_Loader
-│   │   Midv.py (where this class is the core class of the generator)
-│   │   utils.py
-│   │   __init__.py
-|   |
-│   └───Midv2020
+│   Midv.py (where this class is the core class of the generator)
+│   utils.py
+|   
+│─────Midv2020
 │       │   Template_Generator.py
 │       │   Video_Generator.py (beta)
-│   |
-|   |
-|   |___Midv500
+|
+|______Midv500
 |       |   Template_Generator
 |       |   Video_Generator.py (beta)
 ```
