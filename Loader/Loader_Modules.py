@@ -133,7 +133,7 @@ class DataLoader(object):
         structure_val = []
         structure_test = []
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        split_kfold_dir = os.path.join(self._save_dir,'split_kfold')
+        split_kfold_dir = os.path.join(self._save_dir,'split_kfold', self._dataset)
         if not os.path.exists(split_kfold_dir):
             os.makedirs(split_kfold_dir)
 
@@ -174,7 +174,7 @@ class DataLoader(object):
     def _shot_partition(self,new_df, proportion:list = [0.6,0.4], metaclasses:list = ["id", "passport"]):
 
 
-        split_dir = os.path.join(self._save_dir,'split_shot')
+        split_dir = os.path.join(self._save_dir,'split_shot', self._dataset)
 
         ngroups = len(metaclasses)
         assert ngroups >0
@@ -219,19 +219,6 @@ class DataLoader(object):
         
         print('Directory split_shot created.')
 
-        # Copy split_noraml directory to models' directory
-        print('Copying split_shot to Baseline directory...')
-        shutil.copytree(split_dir, "Baseline/split_shot")
-        print('Done.')
-
-        print('Copying split_normal to transfg directory...')
-        shutil.copytree(split_dir, "transfg/split_shot")
-        print('Done.')
-
-        print('Copying split_normal to arc_pytorch directory...')
-        shutil.copytree(split_dir, "arc_pytorch/split_shot")
-        print('Done.')
-
 
 
         #return structure_train,structure_test
@@ -247,7 +234,7 @@ class DataLoader(object):
         structure_val = []
         structure_test = []
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        split_dir = os.path.join(self._save_dir,'split_normal')
+        split_dir = os.path.join(self._save_dir,'split_normal', self._dataset)
 
         if not os.path.exists(split_dir):
             os.makedirs(split_dir)
@@ -274,19 +261,6 @@ class DataLoader(object):
 
 
         print('Directory split_normal created.')
-
-        # Copy split_noraml directory to models' directory
-        print('Copying split_normal to Baseline directory...')
-        shutil.copytree(split_dir, "Baseline/split_normal")
-        print('Done.')
-
-        print('Copying split_normal to transfg directory...')
-        shutil.copytree(split_dir, "transfg/split_normal")
-        print('Done.')
-
-        print('Copying split_normal to arc_pytorch directory...')
-        shutil.copytree(split_dir, "arc_pytorch/split_normal")
-        print('Done.')
 
         #return structure_train, structure_val, structure_test
 
@@ -407,12 +381,3 @@ if __name__ == "__main__":
         op = parser.parse_args()
         print(op.kfold_split)
         t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split)
-
-
-
-
-
-
-
-
-
