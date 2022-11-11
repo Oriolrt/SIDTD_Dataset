@@ -167,18 +167,6 @@ class DataLoader(object):
 
         print('Directory split_kfold created.')
 
-        # Copy split_kfold directory to models' directory
-        print('Copying split_kfold to Baseline directory...')
-        shutil.copytree(split_kfold_dir, "Baseline/split_kfold")
-        print('Done.')
-
-        print('Copying split_kfold to transfg directory...')
-        shutil.copytree(split_kfold_dir, "transfg/split_kfold")
-        print('Done.')
-
-        print('Copying split_kfold to arc_pytorch directory...')
-        shutil.copytree(split_kfold_dir, "arc_pytorch/split_kfold")
-        print('Done.')
 
         #return structure_train, structure_val, structure_test
 
@@ -307,11 +295,11 @@ class DataLoader(object):
         l_label = []
         l_img = []
         l_conditioned = []
-        for file in glob.glob('{}/*/*'.format(os.path.join(os.getcwd(), "datasets",self._dataset, "Images"))):
+        for file in glob.glob('{}/*/*'.format(os.path.join(os.getcwd(), "datasets",self._dataset, "templates", "Images"))):
             path = file.replace('\\', '/')
             path_decompose = path.split('/')
             if path_decompose[-1].startswith("index"):continue
-            label = list(filter(lambda x: x in ["Reals", "Fakes"], path_decompose))[0]
+            label = list(filter(lambda x: x in ["reals", "fakes"], path_decompose))[0]
             l_label.append(label)
             l_img.append(file)
             if self._conditioned is True:
@@ -324,8 +312,8 @@ class DataLoader(object):
         data = np.array([l_label, l_label, l_img, l_conditioned]).T
         new_df = pd.DataFrame(data=data, columns=columns)
 
-        new_df['label'] = new_df['label'].map({'Reals': 0,
-                                               'Fakes': 1},
+        new_df['label'] = new_df['label'].map({'reals': 0,
+                                               'fakes': 1},
                                               na_action=None)
 
         return new_df

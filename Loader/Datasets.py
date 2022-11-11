@@ -189,9 +189,9 @@ class SIDTD(Dataset):
                 
 
     def map_classes(self):
-        classes = {"Reals":{}, "Fakes":{}}
-        fakes = [(file, "Fakes") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), "Images", 'Fakes',"*"))]
-        reals = [(file, "Reals") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), "Images", 'Reals',"*"))]
+        classes = {"reals":{}, "fakes":{}}
+        fakes = [(file, "fakes") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(),"templates", "Images", 'fakes',"*"))]
+        reals = [(file, "reals") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), "templates", "Images", 'reals',"*"))]
         for file in (fakes+reals):
             section = classes[file[1]]
             clas = file[0].split("_")[0].split("/")[-1]
