@@ -2,6 +2,7 @@ import logging
 
 import torch
 import pandas as pd
+import os
 
 
 from torch.utils.data import DataLoader
@@ -41,15 +42,19 @@ def get_loader(args, training_iteration):
     WIDTH = args.img_size
     HEIGHT = args.img_size
 
-
     train_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='train')
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
     
-    train_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+    if args.type_split =='kfold':
+        train_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+        val_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+    elif args.type_split =='cross':
+        train_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset))
+        val_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(args.dataset, args.dataset))
+    else:
+        train_metadata_split = pd.read_csv(os.getcwd() + "/static_cross_val/{}/train_split_{}.csv".format(args.dataset, args.dataset))
+        val_metadata_split = pd.read_csv(os.getcwd() + "/static_cross_val/{}/val_split_{}.csv".format(args.dataset, args.dataset))
     
-    val_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
-
-            
     train_paths = train_metadata_split['image_path'].values.tolist()
     train_ids = train_metadata_split['label'].values.tolist()
     
@@ -84,9 +89,15 @@ def get_loader_test(args, training_iteration):
     HEIGHT = args.img_size
 
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
-
     
     test_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+
+    if args.type_split =='kfold':
+        test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+    elif args.type_split =='cross':
+        test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
+    else:
+        test_metadata_split = pd.read_csv(os.getcwd() + "/static_cross_val/{}/test_split_{}.csv".format(args.dataset, args.dataset))
     
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()

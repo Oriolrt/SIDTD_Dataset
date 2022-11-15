@@ -56,7 +56,7 @@ def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
     return avg_val_loss, accuracy, roc_auc_score
 
            
-def test_baseline_models(args, LOGGER, iteration):
+def test_baseline_models(args, LOGGER, iteration=0):
     
     if args.device=='cuda':
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -105,11 +105,24 @@ def test_baseline_models(args, LOGGER, iteration):
     mean, std = get_mean_std(args, model)
     print('fold number :', iteration)
 
-        
-    if os.path.exists(args.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
-        test_metadata_split = pd.read_csv(args.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+    if args.type_split =='kfold':
+        if os.path.exists(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+            print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
+            test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+        else:
+            print('ERROR : WRONG PATH')
     
-    print('process split csv file from path :', args.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+    elif args.type_split =='cross':
+        if os.path.exists(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset)):
+            test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
+        else:
+            print('ERROR : WRONG PATH')
+    
+    else:
+        if os.path.exists(os.getcwd() + "/static_cross_val/{}/train_split_{}.csv".format(args.dataset, args.dataset)):
+            test_metadata_split = pd.read_csv(os.getcwd() + "/static_cross_val/{}/test_split_{}.csv".format(args.dataset, args.dataset))
+        else:
+            print('ERROR : WRONG PATH')
     
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()

@@ -105,13 +105,25 @@ def train(opt, save_model_path, iteration):
     
     optimizer = torch.optim.Adam(params=flat_params, lr=opt.lr)
 
-    # load the dataset in memory.
+    # csv path for train and validation
+    if opt.type_split =='kfold':
+        path_train = os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+        path_val = os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+    elif opt.type_split =='cross':
+        path_train = os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(opt.dataset, opt.dataset)
+        path_val = os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(opt.dataset, opt.dataset)
+    else:
+        path_train = os.getcwd() + "/static_cross_val/{}/train_split_{}.csv".format(opt.dataset, opt.dataset)
+        path_val = os.getcwd() + "/static_cross_val/{}/val_split_{}.csv".format(opt.dataset, opt.dataset)
+
+    # load the dataset in python dictionnary to make the trainingg faster.
     paths_splits = {'train':{}, 'val' :{}}
     for d_set in ['train', 'val']:
-        path_set = opt.csv_dataset_path +  opt.dataset + '/' + d_set + '_split_' +  opt.dataset + '_it_' + str(iteration) + '.csv'
-        df = pd.read_csv(path_set)
         if d_set == 'val':
+            df = pd.read_csv(path_val)
             n_val = len(df)
+        else:
+            df = pd.read_csv(path_train)
         for key in ['reals','fakes']:
             imgs_path = df[df['label_name']==key].image_path.values
             array_data = []
@@ -273,7 +285,7 @@ def train(opt, save_model_path, iteration):
     
     return best_validation_loss, best_validation_acc, best_validation_auc
 
-def train_coAttn_models(opt, iteration) -> None:
+def train_coAttn_models(opt, iteration=0) -> None:
     
     if opt.device=='cuda':
         models_binary.use_cuda = True  

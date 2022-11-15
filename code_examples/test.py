@@ -37,46 +37,41 @@ def main(args):
     if args.model in ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50']:
             
         # test model on all partition
-        if args.all =='yes':
+        if args.type_split =='kfold':
             for iteration in range(args.nsplits):
                 test_baseline_models(args, LOGGER, iteration)
         
         # test model on a specific partition
         else:
-            iteration = args.partition
-            test_baseline_models(args, LOGGER, iteration)
+            test_baseline_models(args, LOGGER)
 
     if args.model == 'trans_fg':
 
         # test model on all partition
-        if args.all =='yes':
+        if args.type_split =='kfold':
             for iteration in range(args.nsplits):
                 test_transfg_models(args, LOGGER, iteration)
         
         # test model on a specific partition
         else:
-            iteration = args.partition
-            test_transfg_models(args, LOGGER, iteration)
+            test_transfg_models(args, LOGGER)
 
     if args.model == 'coatten_fcn_model':
             
         # test model on all partition
-        if args.all =='yes':
+        if args.type_split =='kfold':
             for iteration in range(args.nsplits):
                 test_coAttn_models(args, iteration)
         
         # test model on a specific partition
         else:
-            iteration = args.partition
-            test_coAttn_models(args, iteration)
+            test_coAttn_models(args)
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     # flag for defining training or testing parameters
-    parser.add_argument("--partition", default = 0, type=int, help="train or test on a specific partition")
-    parser.add_argument("--all", choices = ['yes', 'no'], default = 'yes', type=str, help="train or test on all partitions")
     parser.add_argument("--nsplits", default = 10, type=int, help="Number of k-fold partition")
     parser.add_argument("--nclasses", default = 2, type=int, help="Number of class in the dataset")
     parser.add_argument("--model", choices = ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coatten_fcn_model'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
@@ -87,6 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--name", default='ResNet50', type=str, help='Name of the experiment')
     parser.add_argument("--dataset", default = 'dataset_raw', type=str, help='Name of the dataset to use. Must be the exact same name as the dataset directory name')
     parser.add_argument("--pretrained", choices = ['yes', 'no'], default = 'no', type=str, help="If 'yes', use trained network on MIDV2020 to reproduce results. If 'no', use the custom trained network on your own partitions.")
+    parser.add_argument("-ts","--type_split",default="kfold",nargs="?", choices=["cross", "kfold", "static"], help="Diferent kind of split to train the models.")
 
     # flag for baseline code
     parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')

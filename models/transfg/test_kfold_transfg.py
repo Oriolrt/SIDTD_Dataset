@@ -163,7 +163,7 @@ def test(args, LOGGER, model, test_loader):
 
 
 
-def test_transfg_models(args, LOGGER, iteration):
+def test_transfg_models(args, LOGGER, iteration=0):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("DEVICE USED: ", device)
     print('path', os.getcwd())

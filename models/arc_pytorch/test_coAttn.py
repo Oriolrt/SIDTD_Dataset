@@ -162,12 +162,18 @@ def test(opt, save_model_path, iteration):
     if opt.device=='cuda':
         bce = bce.cuda()
 
+    # csv path for train and validation
+    if opt.type_split =='kfold':
+        path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+    elif opt.type_split =='cross':
+        path_test = os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
+    else:
+        path_test = os.getcwd() + "/static_cross_val/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
 
     # load the dataset in memory.
     paths_splits = {'test' :{}}
     d_set = 'test'
-    path_set = opt.csv_dataset_path +  opt.dataset + '/' + d_set + '_split_' +  opt.dataset + '_it_' + str(iteration) + '.csv'
-    df = pd.read_csv(path_set)
+    df = pd.read_csv(path_test)
     for key in ['reals','fakes']:
         imgs_path = df[df['label_name']==key].image_path.values
         array_data = []
@@ -235,7 +241,7 @@ def test(opt, save_model_path, iteration):
     return acc_test, test_auc
 
 
-def test_coAttn_models(opt, iteration) -> None:
+def test_coAttn_models(opt, iteration=0) -> None:
     
     if opt.device=='cuda':
         models_binary.use_cuda = True  
