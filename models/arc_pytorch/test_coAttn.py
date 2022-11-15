@@ -196,13 +196,13 @@ def test(opt, save_model_path, iteration):
             coAtten.eval()
     
     if opt.pretrained == 'yes':
-        discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.model, iteration)))
+        discriminator.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
         discriminator.eval()
         if opt.apply_fcn:
-            resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.model, iteration)))
+            resNet.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
             resNet.eval()
         if opt.use_coAttn:
-            coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.model, iteration)))
+            coAtten.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
             coAtten.eval()
     
     path_test = opt.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
@@ -254,7 +254,7 @@ def test_coAttn_models(opt, iteration=0) -> None:
     #writers to write the results obtained for each split
     f_test, writer_test = save_results_test(opt)
     if opt.pretrained == 'yes':
-        save_model_path = os.getcwd() + '/pretrained_models/' + opt.model + "_trained_models/"
+        save_model_path = os.getcwd() + "/pretrained_models/coatten_fcn_model_trained_models/"
     if opt.pretrained == 'no':
         save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     

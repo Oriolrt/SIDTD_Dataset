@@ -141,11 +141,14 @@ def test_baseline_models(args, LOGGER, iteration=0):
     model.to(device)
     
     if args.pretrained == 'no':
+        print('Test with your own trained models.')
         save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
         PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
-    if args.pretrained == 'yes':
+    elif args.pretrained == 'yes':
+        print('Test with SIDTD trained models.')
         save_model_path = os.getcwd() + '/pretrained_models/' + args.model + "_trained_models/"
-        PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.model, iteration)
+        PATH = save_model_path + '/MIDV2020_{}_best_accuracy_n{}.pth'.format(args.model, iteration)
+
     
     print('Use trained model saved in:', PATH)
     print("********      Creating csv stat result file      *********")

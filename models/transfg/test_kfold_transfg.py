@@ -193,16 +193,14 @@ def test_transfg_models(args, LOGGER, iteration=0):
     test_loader = get_loader_test(args, iteration)
 
     if args.pretrained == 'yes':
-        save_model_path = os.getcwd() + '/pretrained_models/' + args.model + "_trained_models/"
+        save_model_path = os.getcwd() + "/pretrained_models/trans_fg_trained_models/"
         model_checkpoint = os.path.join(save_model_path,
-                                    '{}_{}_best_accuracy_n{}.pth'.format(args.dataset,
-                                                              args.name,
-                                                              iteration))
+                                    'MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
     if args.pretrained == 'no':
         save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
         model_checkpoint = os.path.join(save_model_path,
                                     '{}_{}_best_accuracy_n{}.pth'.format(args.dataset,
-                                                              args.model,
+                                                              args.name,
                                                               iteration))
     
     model.load_state_dict(torch.load(model_checkpoint))
