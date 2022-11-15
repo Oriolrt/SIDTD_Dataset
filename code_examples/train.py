@@ -153,7 +153,6 @@ if __name__ == "__main__":
     # flag for Co-Attention Network
     parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
     parser.add_argument('--imageSize', type=int, default=224, help='the height / width of the input image to ARC')
-    parser.add_argument("--npy_dataset_path", default = os.getcwd() + '/omniglot/', type=str, help="Path where are located the image arrays for each label and partition")
     parser.add_argument('--glimpseSize', type=int, default=8, help='the height / width of glimpse seen by ARC')
     parser.add_argument('--numStates', type=int, default=128, help='number of hidden states in ARC controller')
     parser.add_argument('--numGlimpses', type=int, default=6, help='the number glimpses of each image in pair seen by ARC')
