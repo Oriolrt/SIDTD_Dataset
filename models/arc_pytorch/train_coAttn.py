@@ -63,14 +63,12 @@ def read_image(image_path, image_size):
 def train(opt, save_model_path, iteration):
 
     #Define the ResNet50 NN
-    if opt.apply_fcn:
-        print('Use ResNet50')
-        resNet = CustomResNet50()
+    print('Use ResNet50')
+    resNet = CustomResNet50()
         
     #Define the CoAttn
-    if opt.use_coAttn:
-        print('Use Co Attention Model')
-        coAtten = CoAttn()
+    print('Use Co Attention Model')
+    coAtten = CoAttn()
              
     # initialise the model
     discriminator = ArcBinaryClassifier(num_glimpses=opt.numGlimpses,
@@ -82,10 +80,8 @@ def train(opt, save_model_path, iteration):
     if opt.device=='cuda':
         print('Use GPU')
         discriminator.cuda()
-        if opt.apply_fcn:
-            resNet.cuda()
-        if opt.use_coAttn:
-            coAtten.cuda()
+        resNet.cuda()
+        coAtten.cuda()
 
     # set up the optimizer.
     bce = torch.nn.BCELoss()
@@ -95,11 +91,8 @@ def train(opt, save_model_path, iteration):
 
     optim_params = []
     optim_params.append(list(discriminator.parameters()))
-    
-    if opt.apply_fcn:
-        optim_params.append(list(resNet.parameters()))
-    if opt.use_coAttn:
-        optim_params.append(list(coAtten.parameters()))
+    optim_params.append(list(resNet.parameters()))
+    optim_params.append(list(coAtten.parameters()))
         
     flat_params = [item for sublist in optim_params for item in sublist]
     
@@ -159,16 +152,14 @@ def train(opt, save_model_path, iteration):
             Y = Y.cuda()
         B,P,C,W,H=X.size()
         
-        if opt.apply_fcn:
-            resNet.train()
-            X = resNet(X.view(B*P,C,W,H))
-            _,C,W,H = X.size()
-            X =X.view(B,P,C,W,H)
+        resNet.train()
+        X = resNet(X.view(B*P,C,W,H))
+        _,C,W,H = X.size()
+        X =X.view(B,P,C,W,H)
             
         # CoAttention Module 
-        if opt.use_coAttn:
-            coAtten.train()
-            X = coAtten(X)
+        coAtten.train()
+        X = coAtten(X)
             
         pred = discriminator(X)
         loss = bce(pred, Y.float())
@@ -180,10 +171,8 @@ def train(opt, save_model_path, iteration):
         if training_iteration % 50 == 0:
         
             discriminator.eval()
-            if opt.apply_fcn:
-                resNet.eval()
-            if opt.use_coAttn:
-                coAtten.eval()
+            resNet.eval()
+            coAtten.eval()
             
             # validate your model
             acc_val = 0
@@ -199,16 +188,14 @@ def train(opt, save_model_path, iteration):
                 B,P,C,W,H=X_val.size()
                 
                 # if we apply the FCN
-                if opt.apply_fcn:
-                    with torch.no_grad():
-                        X_val = resNet(X_val.view(B*P,C,W,H))
-                    _,C,W,H = X_val.size()
-                    X_val = X_val.view(B,P,C,W,H)
+                with torch.no_grad():
+                    X_val = resNet(X_val.view(B*P,C,W,H))
+                _,C,W,H = X_val.size()
+                X_val = X_val.view(B,P,C,W,H)
 
                 # CoAttention Module 
-                if opt.use_coAttn:
-                    with torch.no_grad():
-                        X_val = coAtten(X_val)   
+                with torch.no_grad():
+                    X_val = coAtten(X_val)   
                 
 
                 with torch.no_grad():
@@ -273,10 +260,8 @@ def train(opt, save_model_path, iteration):
                     best_validation_acc, acc_val
                 ))
                 torch.save(discriminator.state_dict(),save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration))
-                if opt.apply_fcn :
-                    torch.save(resNet.state_dict(),save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration))
-                if opt.use_coAttn :
-                    torch.save(coAtten.state_dict(),save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration))
+                torch.save(resNet.state_dict(),save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration))
+                torch.save(coAtten.state_dict(),save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration))
                 best_validation_acc = acc_val
 
     
@@ -318,4 +303,3 @@ def train_coAttn_models(opt, iteration=0) -> None:
 
     if opt.save_results:
         f_val.close()
-

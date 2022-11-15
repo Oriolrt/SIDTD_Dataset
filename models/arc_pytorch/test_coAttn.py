@@ -102,20 +102,18 @@ def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, 
     if len(X_test.size())<5:
         X_test = X_test.unsqueeze(2)
         
-    if opt.apply_fcn:
-        if X_test.size()[2] == 1:
-            # since the omiglot data is grayscale we need to transform it to 3 channels in order to fit through resnet
-            X_test = X_test.repeat(1,1,3,1,1)
-        B,P,C,W,H = X_test.size()
+    if X_test.size()[2] == 1:
+        # since the omiglot data is grayscale we need to transform it to 3 channels in order to fit through resnet
+        X_test = X_test.repeat(1,1,3,1,1)
+    B,P,C,W,H = X_test.size()
 
-        with torch.no_grad():
-            X_test = resNet(X_test.view(B*P,C,W,H))
-        _, C, W, H = X_test.size()
-        X_test = X_test.view(B, P, C, W, H)
+    with torch.no_grad():
+        X_test = resNet(X_test.view(B*P,C,W,H))
+    _, C, W, H = X_test.size()
+    X_test = X_test.view(B, P, C, W, H)
         
-    if opt.use_coAttn:
-        with torch.no_grad():
-            X_test = coAtten(X_test)
+    with torch.no_grad():
+        X_test = coAtten(X_test)
     
     with torch.no_grad():
         pred_test = discriminator(X_test)
@@ -133,14 +131,12 @@ def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, 
 def test(opt, save_model_path, iteration):
 
     #Define the ResNet50 NN
-    if opt.apply_fcn:
-        print('Use ResNet50')
-        resNet = CustomResNet50()
+    print('Use ResNet50')
+    resNet = CustomResNet50()
         
     #Define the CoAttn
-    if opt.use_coAttn:
-        print('Use Co Attention Model')
-        coAtten = CoAttn()
+    print('Use Co Attention Model')
+    coAtten = CoAttn()
              
     # initialise the model
     discriminator = ArcBinaryClassifier(num_glimpses=opt.numGlimpses,
@@ -151,10 +147,8 @@ def test(opt, save_model_path, iteration):
 
     if opt.device=='cuda':
         discriminator.cuda()
-        if opt.apply_fcn:
-            resNet.cuda()
-        if opt.use_coAttn:
-            coAtten.cuda()
+        resNet.cuda()
+        coAtten.cuda()
 
 
     # set up the optimizer.
@@ -187,23 +181,20 @@ def test(opt, save_model_path, iteration):
     # Test model
     if opt.pretrained == 'no':
         discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+        resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+        coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
         discriminator.eval()
-        if opt.apply_fcn:
-            resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
-            resNet.eval()
-        if opt.use_coAttn:
-            coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
-            coAtten.eval()
+        resNet.eval()
+        coAtten.eval()
     
     if opt.pretrained == 'yes':
         discriminator.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
         discriminator.eval()
-        if opt.apply_fcn:
-            resNet.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
-            resNet.eval()
-        if opt.use_coAttn:
-            coAtten.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
-            coAtten.eval()
+        resNet.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
+        coAtten.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
+        discriminator.eval()
+        resNet.eval()
+        coAtten.eval()
     
     path_test = opt.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
     df_test = pd.read_csv(path_test)
@@ -267,4 +258,3 @@ def test_coAttn_models(opt, iteration=0) -> None:
 
     if opt.save_results:
         f_test.close()
-

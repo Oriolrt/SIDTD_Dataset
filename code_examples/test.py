@@ -154,8 +154,6 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=0.0002, help='learning rate, default=0.0002')
     parser.add_argument('--cuda', default='True', help='enables cuda')
     parser.add_argument('--n_its', type=int, default=5000, help='number of iterations for training')
-    parser.add_argument('--apply_fcn', type=bool, default=True, help='apply a resnet to input prior to ARC')
-    parser.add_argument('--use_coAttn', type=bool, default=True, help='apply the coattention mechanism before discrimination')
     args = parser.parse_args()
     
     #global
