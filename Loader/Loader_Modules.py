@@ -117,19 +117,12 @@ class DataLoader(object):
 
         if type_split == "kfold":
             self._kfold_partition(new_df)
-            if opts.load_data_arc != 'no':
-                self._load_split_kfold_arc_model(opts)
 
         elif type_split == "few_shot":
             self._shot_partition(new_df)
-            if opts.load_data_arc != 'no':
-                self._load_split_shot_arc_model(opts)
 
         else:
             self._train_val_test_split(new_df)
-            if opts.load_data_arc != 'no':
-                self._load_split_normal_arc_model(opts)
-
 
 
 
@@ -298,117 +291,6 @@ class DataLoader(object):
 
         return new_df
 
-    def _load_split_kfold_arc_model(self, opts):
-        # Load all the images path for the chosen dataset for each fold train/validation/test set
-        print('+++++++++++++++++++++++++++++++++++++++++++++++')
-        print('+++++++++++     Loading Dataset     +++++++++++')
-        
-        # Save csv path
-        # Create omniglot directory and a subdirectory with dataset name to store the data array
-        split_dir_csv = os.path.join(self._save_dir,'split_kfold', self._dataset)
-        np_array_path = os.path.join(self._save_dir, "omniglot",'split_kfold', self._dataset)
-
-        
-        if not os.path.exists(np_array_path):
-            os.makedirs(np_array_path)
-        
-        for  iteration in range(op.kfold_split):
-            print('+++++++++++       Partition {}       +++++++++++'.format(iteration))
-            
-            classes = ["reals","fakes"]
-            
-            for d_set in ['train','val','test']:
-                
-                path_set = split_dir_csv + '/' + d_set + '_split_' + self._dataset + '_it_' + str(iteration) + '.csv'
-                df = pd.read_csv(path_set)
-                
-                for lbl in classes:
-                    
-                    print('****** Loading {} set for {} images ******'.format(d_set,lbl))
-                    array_data = []
-                    imgs_path = df[df['label_name']==lbl].image_path.values
-                    
-                    for path in imgs_path:
-                        img = self.reshape_image(path, image_size=opts.reshape_size)  # read and resize image
-                        array_data.append(img)
-                    np_array_save = np_array_path + '/' + d_set + '_split_' + lbl + '_it_' + str(iteration) + '.npy'
-                    np.save(np_array_save, np.array(array_data))  # save all images to one single array of the label (reals or fakes)
-
-    def _load_split_shot_arc_model(self, opts):
-        # Load all the images path for the chosen dataset for each fold train/validation/test set
-        print('+++++++++++++++++++++++++++++++++++++++++++++++')
-        print('+++++++++++     Loading Dataset     +++++++++++')
-        
-        # Save csv path
-        # Create omniglot directory and a subdirectory with dataset name to store the data array
-        split_dir_csv = os.path.join(self._save_dir,'split_shot', self._dataset)
-        np_array_path = os.path.join(self._save_dir, "omniglot",'split_shot', self._dataset)
-
-        
-        if not os.path.exists(np_array_path):
-            os.makedirs(np_array_path)
-        
-        classes = ["reals","fakes"]
-            
-        for d_set in ['train','test']:
-            
-            path_set = split_dir_csv + '/' + d_set + '_split_' + self._dataset + '.csv'
-            df = pd.read_csv(path_set)
-            
-            for lbl in classes:
-                
-                print('****** Loading {} set for {} images ******'.format(d_set,lbl))
-                array_data = []
-                imgs_path = df[df['label_name']==lbl].image_path.values
-                
-                for path in imgs_path:
-                    img = self.reshape_image(path, image_size=opts.reshape_size)  # read and resize image
-                    array_data.append(img)
-                np_array_save = np_array_path + '/' + d_set + '_split_' + lbl + '.npy'
-                np.save(np_array_save, np.array(array_data))  # save all images to one single array of the label (reals or fakes)
-
-    def _load_split_normal_arc_model(self, opts):
-        # Load all the images path for the chosen dataset for each fold train/validation/test set
-        print('+++++++++++++++++++++++++++++++++++++++++++++++')
-        print('+++++++++++     Loading Dataset     +++++++++++')
-        
-        # Save csv path
-        # Create omniglot directory and a subdirectory with dataset name to store the data array
-        split_dir_csv = os.path.join(self._save_dir,'split_normal', self._dataset)
-        np_array_path = os.path.join(self._save_dir, "omniglot",'split_normal', self._dataset)
-
-        
-        if not os.path.exists(np_array_path):
-            os.makedirs(np_array_path)
-        
-            
-        classes = ["reals","fakes"]
-        
-        for d_set in ['train','val','test']:
-            
-            path_set = split_dir_csv + '/' + d_set + '_split_' + self._dataset + '.csv'
-            df = pd.read_csv(path_set)
-            
-            for lbl in classes:
-                
-                print('****** Loading {} set for {} images ******'.format(d_set,lbl))
-                array_data = []
-                imgs_path = df[df['label_name']==lbl].image_path.values
-                
-                for path in imgs_path:
-                    img = self.reshape_image(path, image_size=opts.reshape_size)  # read and resize image
-                    array_data.append(img)
-                np_array_save = np_array_path + '/' + d_set + '_split_' + lbl + '.npy'
-                np.save(np_array_save, np.array(array_data))  # save all images to one single array of the label (reals or fakes)
-
-    def reshape_image(self, image_path, image_size):
-        image = imageio.imread(image_path)
-        if image.shape[-1]>=4:
-            image = image[...,:-1]
-        image = cv2.resize(image, (image_size,image_size))
-        
-        return np.moveaxis(image, -1, 0) 
-
     def control_download(self):
         result = []
 
@@ -473,8 +355,6 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split for train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
-    parser.add_argument("--load_data_arc", default='no', type=str, help="Flag to define if you will train with Co-Attention ARC model in order to process data according to fit the ARC code. It will download data as npy files in order to speed up the training process.")
-    parser.add_argument("--reshape_size", default=224,help="Reshaped size of the images that will be trained with Co Attention ARC model." )
 
     opts, rem_args = parser.parse_known_args()
 

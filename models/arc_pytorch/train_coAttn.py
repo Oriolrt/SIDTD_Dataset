@@ -8,6 +8,9 @@ sys.path.insert(1, complete_path)
 
 import random
 import numpy as np
+import pandas as pd
+import imageio.v2 as imageio
+import cv2
 import sklearn
 import torch
 from torch.autograd import Variable
@@ -49,6 +52,13 @@ def one_shot_eval(pred, truth):
     corrects = (pred == truth).sum().item()
     return corrects 
 
+def read_image(image_path, image_size):
+    image = imageio.imread(image_path)
+    if image.shape[-1]>=4:
+        image = image[...,:-1]
+    image = cv2.resize(image, (image_size,image_size))
+    
+    return np.moveaxis(image, -1, 0) 
 
 def train(opt, save_model_path, iteration):
 
@@ -97,15 +107,19 @@ def train(opt, save_model_path, iteration):
 
     # load the dataset in memory.
     paths_splits = {'train':{}, 'val' :{}}
-    n_val = 0
     for d_set in ['train', 'val']:
+        path_set = opt.csv_dataset_path +  opt.dataset + '/' + d_set + '_split_' +  opt.dataset + '_it_' + str(iteration) + '.csv'
+        df = pd.read_csv(path_set)
+        if d_set == 'val':
+            n_val = len(df)
         for key in ['reals','fakes']:
-            path = opt.npy_dataset_path +  opt.dataset + '/'+ d_set +'_split_' + key  + '_it_' + str(iteration) + '.npy'
-            data = np.load(path)
-            if d_set == 'val':
-                n_val = n_val + len(data)
-            paths_splits[d_set][key] = list(data)
-    loader = Batcher(paths_splits= paths_splits, batch_size=opt.batchSize, image_size=opt.imageSize)
+            imgs_path = df[df['label_name']==key].image_path.values
+            array_data = []
+            for path in imgs_path:
+                img = read_image(path, image_size=opt.imageSize)  # read and resize image
+                array_data.append(img)
+            paths_splits[d_set][key] = list(array_data)
+    loader = Batcher(paths_splits = paths_splits, batch_size=opt.batchSize, image_size=opt.imageSize)
 
     # ready to train ...
     best_validation_loss = None
