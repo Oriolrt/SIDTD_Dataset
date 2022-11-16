@@ -20,15 +20,23 @@ import sys
 
 class Dataset(ABC):
 
-    def __init__(self,type_download:str="images", download_original:bool=True,conditioned:bool=False) -> None:
+    def __init__(self,type_download:str="images", type_download_models:str="", download_original:bool=True,conditioned:bool=False) -> None:
 
         self._uri_images = 'http://0.0.0.0:8000/SIDTD/' #"http://datasets.cvc.uab.es/SIDTD/data/templates"
         self._uri_clips = "http://datasets.cvc.uab.es/SIDTD/data/clips"
         self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/data/videos"
         self._uri = 'http://0.0.0.0:8000/' #"http://datasets.cvc.uab.es/SIDTD/data"
+        self._uri_trained_models = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD"
+        self._uri_trained_models_effnet = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/efficientnet-b3_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/efficientnet-b3_trained_models"
+        self._uri_trained_models_resnet = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/resnet50_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/resnet50_trained_models"
+        self._uri_trained_models_vit = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/vit_large_patch16_224_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/vit_large_patch16_224_trained_models"
+        self._uri_trained_models_transfg = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/trans_fg_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/trans_fg_trained_models"
+        self._uri_trained_models_arc = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/coatten_fcn_model_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/coatten_fcn_model_trained_models"
+        self._uri_transfg_pretrained = 'http://0.0.0.0:8000/SIDTD/transfg_pretrained' #"http://datasets.cvc.uab.es/SIDTD/transfg_pretrained"
         self._conditioned = conditioned
         self._download_original = download_original
         self._type_download = type_download
+        self._type_download_models = type_download_models
 
 
 
@@ -81,7 +89,7 @@ class SIDTD(Dataset):
         self._map_classes = self.map_classes() if conditioned is True else None
 
 
-        ## Path to reconstruct thew original structure
+        ## Path to reconstruct the original structure
         self._original_abs_path = "MIDV2020/templates"
         self._original_imgs_path = os.path.join(self._original_abs_path, "images")
         self._original_ann_path  = os.path.join(self._original_abs_path, "annotations")
@@ -94,10 +102,17 @@ class SIDTD(Dataset):
         self._path_to_download = os.path.join(os.getcwd(), "datasets")
 
         self._abs_path = os.path.join(self._path_to_download,os.path.basename(self._uri)) # cwd/datasets/SIDTD/...
+        self.abs_path_code_ex = os.path.join(os.getcwd(), "code_examples", "pretrained_models")
+        self.abs_path_trans_fg = os.path.join(os.getcwd(), "models", "transfg", "transfg_pretrained")
+
+        if not os.path.exists(self.abs_path_code_ex):
+            os.makedirs(self.abs_path_code_ex)
+        if not os.path.exists(self.abs_path_trans_fg):
+            os.makedirs(self.abs_path_trans_fg)
 
     def download_dataset(self):
         
-        if self._type_download == "all":    
+        if self._type_download == "all_dataset":    
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
             if self._download_original:raise NotImplementedError
 
@@ -113,7 +128,29 @@ class SIDTD(Dataset):
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._images_path))
             if self._download_original:self.create_structure_images()
 
-            
+    def download_models(self):
+        
+        if self._type_download == "all_trained_models":    
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models))
+
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_trans_fg,self._uri_transfg_pretrained))
+
+        elif self._type_download == "effnet":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_effnet))
+        
+        elif self._type_download == "resnet":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_resnet))
+
+        elif self._type_download == "vit":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_vit))
+        
+        elif self._type_download == "transfg":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_transfg))
+
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_trans_fg,self._uri_transfg_pretrained))
+
+        elif self._type_download == "arc":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_arc))
            
     def create_and_map_classes_imgs(self):
         map_class = {
@@ -168,8 +205,8 @@ class SIDTD(Dataset):
     def create_structure_images(self):
         
         
-        self._img_abs_path = os.path.join(self._abs_path,"Images", "Reals")
-        self._ann_abs_path = os.path.join(self._abs_path,"Annotations", "Reals")       
+        self._img_abs_path = os.path.join(self._abs_path,"Images", "reals")
+        self._ann_abs_path = os.path.join(self._abs_path,"Annotations", "reals")       
         
         map_imgs = self.create_and_map_classes_imgs()
         map_annotations = self.create_and_map_classes_annotations()
@@ -244,3 +281,4 @@ class SIDTD(Dataset):
 if __name__ == "__main__":
     data = SIDTD(type_download="images")
     data.download_dataset() 
+    data.download_models() 
