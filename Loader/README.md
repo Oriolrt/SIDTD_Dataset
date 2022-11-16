@@ -54,6 +54,8 @@ All this benchamarks have been changed in order to fit our task and they will be
 
 ## Run Example 
 
+**TODO change code example and list the different possibilities to download the dataset (partially or entirely)**
+
 Once you have installed the package as decripted in the main **Readme** you can call the different functionalities as follows:
 
 If you just want to get the benchmark you only need to go to the datasets and choice among [Midv, Dogs, Fungus, Findit, Banknotes]:
@@ -61,7 +63,22 @@ If you just want to get the benchmark you only need to go to the datasets and ch
 ```python
     import Loader.Datasets as ld
 
-    ld.Midv(conditioned=True, download_original=True).dowload_dataset()
+    ld.SIDTD(conditioned=True, download_original=True)
+```
+
+To download pretrained models on SIDTD and reproduce results you can download all the models at once (type_download_models="all_trained_models") or download only the pretrain model you need (type_download_models="effnet" or "resnet" or "vit" or "transfg" or "arc"). However, if you want to download all the trained models at once, keep in mind that you need enough space as the size of all models is 28,1GB. The pretrained models will be stored in code_examples, in the folder pretrained_models. By default, only the pretrained Trans FG on ImageNet is downloaded. If you do not choose "all_trained_models" or "transfg", the pretrained Trans FG on ImageNet will not downloaded.
+
+```python
+    import Loader.Datasets as ld
+    
+    # load all trained models including pretrained transfg on ImageNet
+    ld.SIDTD(type_download_models="all_trained_models", conditioned=True, download_original=True)
+
+    # load trained EfficientNet models
+    ld.SIDTD(type_download_models="effnet", conditioned=True, download_original=True)
+
+    # load trained TransFG models including pretrained transfg on ImageNet
+    ld.SIDTD(type_download_models="transfg", conditioned=True, download_original=True)
 ```
 
 if you want to download the dataset to train it as we have done, with our kind of partitions,  __Loader_Modules.py__ is the file you  have to use. In this case the example is:

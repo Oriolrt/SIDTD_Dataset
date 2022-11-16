@@ -20,7 +20,7 @@ import sys
 
 class Dataset(ABC):
 
-    def __init__(self,type_download:str="images", type_download_models:str="", download_original:bool=True,conditioned:bool=False) -> None:
+    def __init__(self,type_download:str="images", type_download_models:str="transfg_img_net", download_original:bool=True,conditioned:bool=False) -> None:
 
         self._uri_images = 'http://0.0.0.0:8000/SIDTD/' #"http://datasets.cvc.uab.es/SIDTD/data/templates"
         self._uri_clips = "http://datasets.cvc.uab.es/SIDTD/data/clips"
@@ -83,9 +83,9 @@ class Banknotes(Dataset):
 
 class SIDTD(Dataset):
 
-    def __init__(self,type_download:str="images",conditioned:bool=True,download_original:bool =True) -> None:
+    def __init__(self,type_download:str="images",type_download_models:str="transfg_img_net",conditioned:bool=True,download_original:bool =True) -> None:
         
-        super().__init__(type_download=type_download,conditioned=conditioned, download_original=download_original)
+        super().__init__(type_download=type_download,type_download_models = type_download_models,conditioned=conditioned, download_original=download_original)
         self._map_classes = self.map_classes() if conditioned is True else None
 
 
@@ -130,27 +130,30 @@ class SIDTD(Dataset):
 
     def download_models(self):
         
-        if self._type_download == "all_trained_models":    
+        if self._type_download_models == "all_trained_models":    
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models))
 
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_trans_fg,self._uri_transfg_pretrained))
 
-        elif self._type_download == "effnet":
+        if self._type_download_models == "effnet":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_effnet))
         
-        elif self._type_download == "resnet":
+        elif self._type_download_models == "resnet":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_resnet))
 
-        elif self._type_download == "vit":
+        elif self._type_download_models == "vit":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_vit))
         
-        elif self._type_download == "transfg":
+        elif self._type_download_models == "transfg":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_transfg))
 
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_trans_fg,self._uri_transfg_pretrained))
 
-        elif self._type_download == "arc":
+        elif self._type_download_models == "arc":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_arc))
+
+        else:
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_trans_fg,self._uri_transfg_pretrained))
            
     def create_and_map_classes_imgs(self):
         map_class = {
@@ -279,6 +282,6 @@ class SIDTD(Dataset):
 
 
 if __name__ == "__main__":
-    data = SIDTD(type_download="images")
+    data = SIDTD(type_download="images", type_download_models="transfg_img_net")
     data.download_dataset() 
     data.download_models() 
