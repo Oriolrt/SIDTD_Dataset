@@ -327,36 +327,50 @@ def train_baseline_models(args, LOGGER, iteration = 0):
     LOGGER.debug("New iteration {}".format(iteration))
     LOGGER.debug("------------------------------------------------")
     
-    if args.type_split =='kfold':
+    if args.reproduce == 'no':
+        if args.type_split =='kfold':
 
-        if os.path.exists(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)) and \
-            os.path.exists(os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
-            print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
-            train_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
-            val_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
-            
-        else:
-            print('ERROR : WRONG PATH')
-    
-    elif args.type_split =='cross':
+            if os.path.exists(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)) and \
+                os.path.exists(os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+                print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
+                train_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+                val_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+                
+            else:
+                print('ERROR : WRONG PATH')
+        
+        elif args.type_split =='cross':
 
-        if os.path.exists(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset)) and \
-            os.path.exists(os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(args.dataset, args.dataset)):
-            train_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset))
-            val_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(args.dataset, args.dataset))
-            
-        else:
-            print('ERROR : WRONG PATH')
+            if os.path.exists(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset)) and \
+                os.path.exists(os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(args.dataset, args.dataset)):
+                train_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset))
+                val_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(args.dataset, args.dataset))
+                
+            else:
+                print('ERROR : WRONG PATH')
 
     else:
 
-        if os.path.exists(os.getcwd() + "/static_cross_val/{}/train_split_{}.csv".format(args.dataset, args.dataset)) and \
-            os.path.exists(os.getcwd() + "/static_cross_val/{}/val_split_{}.csv".format(args.dataset, args.dataset)):
-            train_metadata_split = pd.read_csv(os.getcwd() + "/static_cross_val/{}/train_split_{}.csv".format(args.dataset, args.dataset))
-            val_metadata_split = pd.read_csv(os.getcwd() + "/static_cross_val/{}/val_split_{}.csv".format(args.dataset, args.dataset))
-            
-        else:
-            print('ERROR : WRONG PATH')
+        if args.type_split =='kfold':
+
+            if os.path.exists(os.getcwd() + "/static/split_kfold/train_split_{}_it_{}.csv".format(args.dataset, iteration)) and \
+                os.path.exists(os.getcwd() + "/static/split_kfold/val_split_{}_it_{}.csv".format(args.dataset, iteration)):
+                print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/train_split_{}_it_{}.csv".format(args.dataset, iteration))
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/val_split_{}_it_{}.csv".format(args.dataset, iteration))
+                
+            else:
+                print('ERROR : WRONG PATH')
+        
+        elif args.type_split =='cross':
+
+            if os.path.exists(os.getcwd() + "/static/split_normal/train_split_{}.csv".format(args.dataset)) and \
+                os.path.exists(os.getcwd() + "/static/split_normal/val_split_{}.csv".format(args.dataset)):
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/train_split_{}.csv".format(args.dataset))
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/val_split_{}.csv".format(args.dataset))
+                
+            else:
+                print('ERROR : WRONG PATH')
 
 
     train_paths = train_metadata_split['image_path'].values.tolist()

@@ -157,12 +157,17 @@ def test(opt, save_model_path, iteration):
         bce = bce.cuda()
 
     # csv path for train and validation
-    if opt.type_split =='kfold':
-        path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
-    elif opt.type_split =='cross':
-        path_test = os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
+    if opt.reproduce == 'no':
+        if opt.type_split =='kfold':
+            path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+        elif opt.type_split =='cross':
+            path_test = os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
     else:
-        path_test = os.getcwd() + "/static_cross_val/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
+        if opt.type_split =='kfold':
+            path_test = os.getcwd() + "/static/split_kfold/test_split_{}_it_{}.csv".format(opt.dataset, iteration)
+
+        elif opt.type_split =='cross':
+            path_test = os.getcwd() + "/static/split_normal/test_split_{}.csv".format(opt.dataset)
 
     # load the dataset in memory.
     paths_splits = {'test' :{}}

@@ -83,6 +83,8 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", default = 'dataset_raw', type=str, help='Name of the dataset to use. Must be the exact same name as the dataset directory name')
     parser.add_argument("--pretrained", choices = ['yes', 'no'], default = 'no', type=str, help="If 'yes', use trained network. If 'no', use the custom trained network on your own partitions.")
     parser.add_argument("-ts","--type_split",default="kfold",nargs="?", choices=["cross", "kfold", "static"], help="Diferent kind of split to train the models.")
+    parser.add_argument("-r","--reproduce",default="no",nargs="?", choices=["yes", "no"], help="Use static partition in order to reproduce the results.")
+
 
     # flag for baseline code
     parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')

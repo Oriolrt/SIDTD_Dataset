@@ -82,7 +82,8 @@ if __name__ == "__main__":
     parser.add_argument("--results_path", default = os.getcwd() + '/results_files/', type=str, help="Path where are located the performance of the models in csv file")
     parser.add_argument("--plot_path", default = os.getcwd() + '/plots/', type=str, help="Path where are located the plot graphs for the loss and accuracy performance")
     parser.add_argument("--name", default='ResNet50', type=str, help='Name of the experiment')
-    parser.add_argument("-ts","--type_split",default="kfold",nargs="?", choices=["cross", "kfold", "static"], help="Diferent kind of split to train the models.")
+    parser.add_argument("-ts","--type_split",default="kfold",nargs="?", choices=["cross", "kfold"], help="Diferent kind of split to train the models.")
+    parser.add_argument("-r","--reproduce",default="no",nargs="?", choices=["yes", "no"], help="Use static partition in order to reproduce the results.")
     
     # flag for baseline code
     parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')

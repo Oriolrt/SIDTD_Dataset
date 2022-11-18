@@ -99,15 +99,20 @@ def train(opt, save_model_path, iteration):
     optimizer = torch.optim.Adam(params=flat_params, lr=opt.lr)
 
     # csv path for train and validation
-    if opt.type_split =='kfold':
-        path_train = os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
-        path_val = os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
-    elif opt.type_split =='cross':
-        path_train = os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(opt.dataset, opt.dataset)
-        path_val = os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(opt.dataset, opt.dataset)
+    if opt.reproduce == 'no':
+        if opt.type_split =='kfold':
+            path_train = os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+            path_val = os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+        elif opt.type_split =='cross':
+            path_train = os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(opt.dataset, opt.dataset)
+            path_val = os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(opt.dataset, opt.dataset)
     else:
-        path_train = os.getcwd() + "/static_cross_val/{}/train_split_{}.csv".format(opt.dataset, opt.dataset)
-        path_val = os.getcwd() + "/static_cross_val/{}/val_split_{}.csv".format(opt.dataset, opt.dataset)
+        if opt.type_split =='kfold':
+            path_train = os.getcwd() + "/static/split_kfold/train_split_{}_it_{}.csv".format(opt.dataset, iteration)
+            path_val = os.getcwd() + "/static/split_kfold/val_split_{}_it_{}.csv".format(opt.dataset, iteration)
+        elif opt.type_split =='cross':
+            path_train = os.getcwd() + "/static/split_normal/train_split_{}.csv".format(opt.dataset)
+            path_val = os.getcwd() + "/static/split_normal/val_split_{}.csv".format(opt.dataset)
 
     # load the dataset in python dictionnary to make the trainingg faster.
     paths_splits = {'train':{}, 'val' :{}}

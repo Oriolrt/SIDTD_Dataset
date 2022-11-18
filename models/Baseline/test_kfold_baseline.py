@@ -105,24 +105,31 @@ def test_baseline_models(args, LOGGER, iteration=0):
     mean, std = get_mean_std(args, model)
     print('fold number :', iteration)
 
-    if args.type_split =='kfold':
-        if os.path.exists(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
-            print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
-            test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
-        else:
-            print('ERROR : WRONG PATH')
-    
-    elif args.type_split =='cross':
-        if os.path.exists(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset)):
-            test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
-        else:
-            print('ERROR : WRONG PATH')
+    if args.reproduce == 'no':
+        if args.type_split =='kfold':
+            if os.path.exists(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+                print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
+                test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+            else:
+                print('ERROR : WRONG PATH')
+        elif args.type_split =='cross':
+            if os.path.exists(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset)):
+                test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
+            else:
+                print('ERROR : WRONG PATH')
     
     else:
-        if os.path.exists(os.getcwd() + "/static_cross_val/{}/train_split_{}.csv".format(args.dataset, args.dataset)):
-            test_metadata_split = pd.read_csv(os.getcwd() + "/static_cross_val/{}/test_split_{}.csv".format(args.dataset, args.dataset))
-        else:
-            print('ERROR : WRONG PATH')
+        if args.type_split =='kfold':
+            if os.path.exists(os.getcwd() + "/static/split_kfold/test_split_{}_it_{}.csv".format(args.dataset, iteration)):
+                print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_{}_it_{}.csv".format(args.dataset, iteration)) 
+            else:
+                print('ERROR : WRONG PATH')
+        elif args.type_split =='cross':
+            if os.path.exists(os.getcwd() + "/static/split_normal/test_split_{}.csv".format(args.dataset)):
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/test_split_{}.csv".format(args.dataset))
+            else:
+                print('ERROR : WRONG PATH')
     
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()
