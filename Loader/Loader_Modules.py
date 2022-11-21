@@ -111,6 +111,8 @@ class DataLoader(object):
 
         new_df =  self._prepare_csv()
 
+        self.set_static_path()
+
         if len(new_df)  == 0:
             logging.error("Some error occurred and the data couldnt been downloaded")
             sys.exit()
@@ -124,7 +126,20 @@ class DataLoader(object):
         else:
             self._train_val_test_split(new_df)
 
+    def change_path(self,path:str='/home/users/SIDTD/code_examples/split_normal/test_split_SIDTD.csv'):
+        current_path = os.getcwd()
+        df = pd.read_csv(path)
+        df['image_path'] = current_path + df['image_path']
+        df.to_csv(path, index=False)
 
+    def set_static_path(self):
+        current_path = os.getcwd()
+        for d_set in ['train','val','test']:
+            path_save_csv = current_path + '/code_examples/static/split_normal/' + d_set + '_split_SIDTD.csv'
+            self.change_path(path_save_csv)
+            for j in range(10):
+                path_save_csv = current_path + '/code_examples/static/split_kfold/' + d_set + '_split_SIDTD_it_' + str(j) + '.csv'
+                self.change_path(path_save_csv)
 
     def _kfold_partition(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
