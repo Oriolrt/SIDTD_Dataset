@@ -8,6 +8,8 @@ import os
 import subprocess
 import glob
 from collections import Counter
+import zipfile
+
 try:
     import imageio.v2 as imageio
 except:
@@ -22,17 +24,17 @@ class Dataset(ABC):
 
     def __init__(self,type_download:str="images", type_download_models:str="transfg_img_net", download_original:bool=True,conditioned:bool=False) -> None:
 
-        self._uri_images = 'http://0.0.0.0:8000/SIDTD/' #"http://datasets.cvc.uab.es/SIDTD/data/templates"
-        self._uri_clips = "http://datasets.cvc.uab.es/SIDTD/data/clips"
-        self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/data/videos"
-        self._uri = 'http://0.0.0.0:8000/' #"http://datasets.cvc.uab.es/SIDTD/data"
+        self._uri_images = "http://datasets.cvc.uab.es/SIDTD/templates.zip "
+        self._uri_clips = "http://datasets.cvc.uab.es/SIDTD/clips.zip"
+        self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/videos.zip"
+        self._uri = "http://datasets.cvc.uab.es/SIDTD"
         self._uri_trained_models = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD"
         self._uri_trained_models_effnet = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/efficientnet-b3_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/efficientnet-b3_trained_models"
-        self._uri_trained_models_resnet = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/resnet50_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/resnet50_trained_models"
+        self._uri_trained_models_resnet = "http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/resnet50_trained_models"
         self._uri_trained_models_vit = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/vit_large_patch16_224_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/vit_large_patch16_224_trained_models"
-        self._uri_trained_models_transfg = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/trans_fg_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/trans_fg_trained_models"
+        self._uri_trained_models_transfg = 'http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/trans_fg_trained_models'
         self._uri_trained_models_arc = 'http://0.0.0.0:8000/SIDTD/trained_models_SIDTD/coatten_fcn_model_trained_models' #"http://datasets.cvc.uab.es/SIDTD/trained_models_SIDTD/coatten_fcn_model_trained_models"
-        self._uri_transfg_pretrained = 'http://0.0.0.0:8000/SIDTD/transfg_pretrained' #"http://datasets.cvc.uab.es/SIDTD/transfg_pretrained"
+        self._uri_transfg_pretrained = "http://datasets.cvc.uab.es/SIDTD/transfg_pretrained"
         self._conditioned = conditioned
         self._download_original = download_original
         self._type_download = type_download
@@ -118,14 +120,20 @@ class SIDTD(Dataset):
 
         elif self._type_download == "clips":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
+            with zipfile.ZipFile(self._abs_path+"/clips.zip", 'r') as zip_ref:
+                zip_ref.extractall(self._abs_path)
             if self._download_original:raise NotImplementedError
         
         elif self._type_download == "videos":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._videos_path))
+            with zipfile.ZipFile(self._abs_path+"/videos.zip", 'r') as zip_ref:
+                zip_ref.extractall(self._abs_path)
             if self._download_original:raise NotImplementedError
 
         else:
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._images_path))
+            with zipfile.ZipFile(self._abs_path+"/templates.zip", 'r') as zip_ref:
+                zip_ref.extractall(self._abs_path)
             if self._download_original:self.create_structure_images()
 
     def download_models(self):
@@ -200,16 +208,23 @@ class SIDTD(Dataset):
                                 
         return map_annotation    
                        
+    # TODO today
     def create_structure_videos(self):
-        #self._clips_abs_path = os.path.join(self._abs_path, "clips","Images", "Reals")
-        #self._clips_ann_abs_path = os.path.join(self._abs_path, "clips","Annotations", "Reals")
+        self._videos_abs_path = os.path.join(self._abs_path, "videos","Images", "Reals")
+        self._videos_ann_abs_path = os.path.join(self._abs_path, "videos","Annotations", "Reals")
+        pass 
+
+    #TODO today
+    def create_structure_clips(self):
+        self._clips_abs_path = os.path.join(self._abs_path, "clips","Images", "Reals")
+        self._clips_ann_abs_path = os.path.join(self._abs_path, "clips","Annotations", "Reals")
         pass  
             
     def create_structure_images(self):
         
         
-        self._img_abs_path = os.path.join(self._abs_path,"Images", "reals")
-        self._ann_abs_path = os.path.join(self._abs_path,"Annotations", "reals")       
+        self._img_abs_path = os.path.join(self._abs_path,"templates","Images", "reals")
+        self._ann_abs_path = os.path.join(self._abs_path, "templates", "Annotations", "reals")       
         
         map_imgs = self.create_and_map_classes_imgs()
         map_annotations = self.create_and_map_classes_annotations()
@@ -282,6 +297,5 @@ class SIDTD(Dataset):
 
 
 if __name__ == "__main__":
-    data = SIDTD(type_download="images", type_download_models="transfg_img_net")
+    data = SIDTD(type_download="videos", type_download_models="resnet")
     data.download_dataset() 
-    data.download_models() 

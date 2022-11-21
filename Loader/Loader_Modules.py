@@ -128,9 +128,6 @@ class DataLoader(object):
 
     def _kfold_partition(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
-        structure_train = []
-        structure_val = []
-        structure_test = []
         # Window to split the dataset in training/validation/testing set for the 10-fold
         split_kfold_dir = os.path.join(self._save_dir,'split_kfold', self._dataset)
         if not os.path.exists(split_kfold_dir):
@@ -159,15 +156,8 @@ class DataLoader(object):
                 df_train.to_csv(split_kfold_dir+'/train_split_' + self._dataset + '_it_' + str(iteration) + '.csv', index=False)
 
 
-            #self.load_dataset(df_train, structure_train)
-            #self.load_dataset(df_val, structure_val)
-            #self.load_dataset(df_test, structure_test)
-
 
         print('Directory split_kfold created.')
-
-
-        #return structure_train, structure_val, structure_test
 
 
     def _shot_partition(self,new_df, proportion:list = [0.6,0.4], metaclasses:list = ["id", "passport"]):
@@ -213,14 +203,9 @@ class DataLoader(object):
         df_train.to_csv(split_dir+'/train_split_' + self._dataset + '.csv', index=False)
         df_test.to_csv(split_dir+'/test_split_' + self._dataset + '.csv', index=False)
 
-        #self.load_dataset(df_train, structure_train)
-        #self.load_dataset(df_test, structure_test)
+
         
         print('Directory split_shot created.')
-
-
-
-        #return structure_train,structure_test
 
 
     def _ranking_shot_partition(self, new_df, proportion, metaclasses:list = ["dni", "passport"]):
@@ -228,10 +213,6 @@ class DataLoader(object):
 
     def _train_val_test_split(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
-
-        structure_train = []
-        structure_val = []
-        structure_test = []
         # Window to split the dataset in training/validation/testing set for the 10-fold
         split_dir = os.path.join(self._save_dir,'split_normal', self._dataset)
 
@@ -254,14 +235,13 @@ class DataLoader(object):
         df_train = df_val_train.drop(df_val_train.index[:val_sec])
         df_train.to_csv(split_dir+'/train_split_' + self._dataset + '.csv', index=False)
 
-        #self.load_dataset(df_train, structure_train)
-        #self.load_dataset(df_val, structure_val)
-        #self.load_dataset(df_test, structure_test)
-
-
         print('Directory split_normal created.')
 
-        #return structure_train, structure_val, structure_test
+    ## Function to get the unbalance partitions that came from videos.
+    def get_unbalance_(self):
+        pass
+
+        
 
 
     def _prepare_csv(self):
