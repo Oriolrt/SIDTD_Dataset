@@ -267,6 +267,10 @@ class SIDTD(Dataset):
     def num_real_classes(self):
         return len(self.number_of_real_sampling().keys())
     
+    def map_metaclass(self, l:list):
+        # from path get the first word of the name of the file that is the metaclass
+        return [i.split("/")[-1].split("_")[0] for i in l ]
+    
     @staticmethod
     def read_json(path: str):
         with open(path) as f:
