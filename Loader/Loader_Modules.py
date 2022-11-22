@@ -400,7 +400,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
-    parser.add_argument("--dataset",default="images",nargs="?", type=str, choices=["images", "clips", "videos"],help="Define what kind of the info from the benchmark do you want to download to use")
+    parser.add_argument("--kin",default="images",nargs="?", type=str, choices=["images", "clips", "videos"],help="Define what kind of the info from the benchmark do you want to download to use")
     
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
