@@ -261,7 +261,7 @@ class DataLoader(object):
         all_info_fakes = set(glob.glob(data_path+"/fakes/*"))
         all_info_reals = set(glob.glob(data_path+"/reals/*"))
 
-        defined_number_of_images = 190
+        defined_number_of_images = 191
         new_data = {}
 
         static_info = None
@@ -273,7 +273,7 @@ class DataLoader(object):
             static_info = set(c_file["Fake_Document_ID"].apply(lambda x: os.path.join(data_path,"fakes", x)).values)
 
         _number_fakes = round((proportion[-1] * defined_number_of_images)/0.2)
-        _number_reals = round((proportion[0] * defined_number_of_images)/proportion[-1])
+        _number_reals = len(all_info_reals)
 
         ## Updating real part
         new_data["info"] = random.choices(list(all_info_reals), k=_number_reals)
