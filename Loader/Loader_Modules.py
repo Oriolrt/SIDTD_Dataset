@@ -17,6 +17,8 @@ import imageio
 from typing import *
 from PIL.Image import Image
 from math import *
+from pathlib import Path
+import random
 
 class DataLoader(object):
 
@@ -55,7 +57,7 @@ class DataLoader(object):
 
 
     def __init__(self, dataset:str="SIDTD   ", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
-, few_shot_split:str=None, conditioned:bool = True):
+, few_shot_split:str=None, conditioned:bool = True, unbalanced:bool=False):
 
         """
             Input of the class:         dataset --> Define what kind of the different datasets do you want to download [SIDTD, Dogs, Fungus, Findit, Banknotes]
@@ -89,6 +91,7 @@ class DataLoader(object):
         self._few_shot_split = few_shot_split
         self._normal_split = cross_split
         self._conditioned = conditioned
+        self._unbalanced = unbalanced
         
         current_path = os.getcwd()
         self._save_dir = os.path.join(current_path,"code_examples")
@@ -97,7 +100,6 @@ class DataLoader(object):
 
         self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](conditioned=self._conditioned, type_download="images")
 
-        #TODO afegir flag per fer les particions amb videos quan estigui tot parlat
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
         
         logging.info("Searching for the dataset in the current working directory")
@@ -109,7 +111,7 @@ class DataLoader(object):
             self._dt.download_dataset()
             logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], self._dt._uri.split("/")[-1])))
 
-        new_df =  self._prepare_csv()
+        new_df =  self._prepare_csv() if unbalanced == False else self.get_unabalanced_()
 
         self.set_static_path()
 
@@ -144,7 +146,7 @@ class DataLoader(object):
     def _kfold_partition(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        split_kfold_dir = os.path.join(self._save_dir,'split_kfold', self._dataset)
+        split_kfold_dir = os.path.join(self._save_dir,'split_kfold', self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'split_kfold_unbalanced', self._dataset)
         if not os.path.exists(split_kfold_dir):
             os.makedirs(split_kfold_dir)
 
@@ -178,7 +180,7 @@ class DataLoader(object):
     def _shot_partition(self,new_df, proportion:list = [0.6,0.4], metaclasses:list = ["id", "passport"]):
 
 
-        split_dir = os.path.join(self._save_dir,'split_shot', self._dataset)
+        split_dir = os.path.join(self._save_dir,'split_shot', self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'split_shot_unbalanced', self._dataset)
 
         ngroups = len(metaclasses)
         assert ngroups >0
@@ -229,12 +231,12 @@ class DataLoader(object):
     def _train_val_test_split(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
 
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        split_dir = os.path.join(self._save_dir,'split_normal', self._dataset)
+        split_dir = os.path.join(self._save_dir,'cross_val', self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'cross_val_unbalanced', self._dataset)
 
         if not os.path.exists(split_dir):
             os.makedirs(split_dir)
 
-        print('Splitting dataset into {}-normal partition with train/validation/test sets...'.format(self._normal_split))
+        print('Splitting dataset into {}-standard cross val partition with train/validation/test sets...'.format(self._normal_split))
         shuffled_df = shuffle(new_df)
         train_sec = int(len(shuffled_df) * self._normal_split[0])
         val_sec =  int(len(shuffled_df) * self._normal_split[1])
@@ -253,9 +255,46 @@ class DataLoader(object):
         print('Directory split_normal created.')
 
     ## Function to get the unbalance partitions that came from videos.
-    def get_unbalance_(self):
-        pass
+    def get_unbalance_(self, kin_data:str="images", proportion:list=[0.8, 0.2], path_to_conversion: Optional[Path] = None) -> None:
 
+        data_path =  os.path.join(os.getcwd(), "datasets",self._dataset, "templates", "Images") if kin_data == "images" else os.path.join(os.getcwd(), "datasets",self._dataset, "videos", "Images")
+        all_info_fakes = set(glob.glob(data_path+"/fakes/*"))
+        all_info_reals = set(glob.glob(data_path+"/reals/*"))
+
+        defined_number_of_images = 190
+        new_data = {}
+
+        static_info = None
+
+        assert (sum(proportion) == 1) and (proportion[-1] <= 0.2) and len(proportion)==2, "The proportion is out of bounds of the proper behaviour"
+
+        if path_to_conversion is not None:
+            c_file = pd.read_csv(os.getcwd()+"/Fake_MIDV2020_videos_2_templates.csv")
+            static_info = set(c_file["Fake_Document_ID"].apply(lambda x: os.path.join(data_path,"fakes", x)).values)
+
+        _number_fakes = round((proportion[-1] * defined_number_of_images)/0.2)
+        _number_reals = round((proportion[0] * defined_number_of_images)/proportion[-1])
+
+        ## Updating real part
+        new_data["info"] = random.choices(list(all_info_reals), k=_number_reals)
+        new_data["label"] = np.full(_number_reals, 0).tolist()
+
+        #updating fake part
+        if isinstance(static_info, str):
+            new_data["info"].extend(list(all_info_fakes & static_info))
+            new_data["label"].extend((np.full_like(static_info, 1).tolist()))
+
+        else:
+            new_data["info"].extend(random.choices(list(all_info_fakes), k=_number_fakes))
+            new_data["label"].extend(np.full(_number_fakes, 1))
+
+        new_data = pd.DataFrame(new_data)
+        new_data["label_name"] = new_data["label"].map({0: "reals",1: 'fakes'},na_action=None)
+
+
+
+        return new_data.sample(frac=1).reset_index(drop=True)
+        
         
 
 
@@ -350,7 +389,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
-
+    parser.add_argument("--unbalanced", action="store_true", help="flag to prepare the unbalance partition")
     opts, rem_args = parser.parse_known_args()
 
     conditioned = False if opts.conditioned == 0 else True
@@ -362,16 +401,16 @@ if __name__ == "__main__":
         parser.add_argument("--normal_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
         op = parser.parse_args()
 
-        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.normal_split)
+        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.normal_split, unbalanced=op.unbalanced)
 
     elif opts.type_split != "kfold" and opts.type_split != "cross":
         parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
         op = parser.parse_args()
         print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split)
+        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, unbalanced=op.unbalanced)
 
     else:
         parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
         op = parser.parse_args()
         print(op.kfold_split)
-        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split)
+        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
