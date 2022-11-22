@@ -117,7 +117,9 @@ class DataLoader(object):
 
         new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
 
-        self.set_static_path()
+        ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
+        #self.set_static_path()
+        ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
 
         if len(new_df)  == 0:
             logging.error("Some error occurred and the data couldnt been downloaded")
