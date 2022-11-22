@@ -56,7 +56,7 @@ class DataLoader(object):
 
 
 
-    def __init__(self, dataset:str="SIDTD   ", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
+    def __init__(self, dataset:str="SIDTD",kin:str="images", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
 , few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False):
 
         """
@@ -74,7 +74,6 @@ class DataLoader(object):
 
         ### ASSERTS AND ERROR CONTROL ###
         cross_split = list(float(x) for x in cross_split)
-        print(np.sum(cross_split))
         if type_split == "cross": assert (type(cross_split) == list and int(np.sum(cross_split)) == 1)
         elif type_split == "kfold": assert (kfold_split > 0 and type(kfold_split) == int)
         elif type_split == "shot": pass #TODO veure com es genera el few shot partition
@@ -109,7 +108,11 @@ class DataLoader(object):
         if flag is False:
             logging.warning("The dataset hasnt been found, starting to download")
             time.sleep(1)
-            self._dt.download_dataset()
+            if self._dt.__name__ == "SIDTD":
+                self._dt.download_dataset(type_download=kin)
+            else:
+                self._dt.download_dataset()
+               
             logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], self._dt._uri.split("/")[-1])))
 
         new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
@@ -341,7 +344,7 @@ class DataLoader(object):
 
         # Wlaking top-down from the Working directory
         for root, dir, files in os.walk(os.getcwd()):
-            if self._dataset in dir:
+            if self._dataset in dir and root == "datasets":
                 result.append(os.path.join(root, "/".join(dir)))
 
         return (True and len(result) != 0), result
@@ -393,10 +396,12 @@ class DataLoader(object):
 
 if __name__ == "__main__":
 
-
+    ## TODO add the flag to get templates videos or clips
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
+    parser.add_argument("--dataset",default="images",nargs="?", type=str, choices=["images", "clips", "videos"],help="Define what kind of the info from the benchmark do you want to download to use")
+    
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
@@ -412,7 +417,7 @@ if __name__ == "__main__":
         parser.add_argument("--cross_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
         op = parser.parse_args()
 
-        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kin=op.kin, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
 
     elif opts.type_split != "kfold" and opts.type_split != "cross":
         parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
@@ -420,10 +425,10 @@ if __name__ == "__main__":
 
         op = parser.parse_args()
         print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kin=op.kin, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
 
     else:
         parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
         op = parser.parse_args()
         print(op.kfold_split)
-        t = DataLoader(dataset=op.dataset,conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kin=op.kin, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
