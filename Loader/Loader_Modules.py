@@ -56,7 +56,7 @@ class DataLoader(object):
 
 
 
-    def __init__(self, dataset:str="SIDTD",kin:str="images", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
+    def __init__(self, dataset:str="SIDTD",kin:str="images", kind_models:str="transfg_img_net", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
 , few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False):
 
         """
@@ -108,6 +108,7 @@ class DataLoader(object):
         if flag is False:
             logging.warning("The dataset hasnt been found, starting to download")
             time.sleep(1)
+            self._dt.download_models()
             if self._dt.__name__ == "SIDTD":
                 self._dt.download_dataset(type_download=kin)
             else:
@@ -403,7 +404,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
     parser.add_argument("--kin",default="images",nargs="?", type=str, choices=["images", "clips", "videos"],help="Define what kind of the info from the benchmark do you want to download to use")
-    
+    parser.add_argument("--kind_models",default="transfg_img_net",nargs="?", type=str, choices=["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"],help="Define what kind of the trained model from the benchmark you want to download in order to reproduce results. Choose transfg_img_net, if you want to train the trans fg model (default mode). Choose no if you do not want to download any model.")
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
@@ -419,7 +420,7 @@ if __name__ == "__main__":
         parser.add_argument("--cross_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
         op = parser.parse_args()
 
-        t = DataLoader(dataset=op.dataset,kin=op.kin, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kin=op.kin, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
 
     elif opts.type_split != "kfold" and opts.type_split != "cross":
         parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
@@ -427,10 +428,10 @@ if __name__ == "__main__":
 
         op = parser.parse_args()
         print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,kin=op.kin, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kin=op.kin, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
 
     else:
         parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
         op = parser.parse_args()
         print(op.kfold_split)
-        t = DataLoader(dataset=op.dataset,kin=op.kin, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kin=op.kin, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
