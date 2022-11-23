@@ -127,7 +127,7 @@ class DataLoader(object):
         if (flag_1 & flag_2) is False:
             logging.warning("The model hasnt been found, starting to download")
             time.sleep(1)
-            self._dt.download_models(model=kind_models)
+            self._dt.download_models(type_models=kind_models)
 
                
             logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
