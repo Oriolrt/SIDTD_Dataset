@@ -56,7 +56,7 @@ class DataLoader(object):
 
 
 
-    def __init__(self, dataset:str="SIDTD",kin:str="images", kind_models:str="transfg_img_net", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
+    def __init__(self, dataset:str="SIDTD",kind:str="images", kind_models:str="transfg_img_net", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
 , few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False):
 
         """
@@ -76,7 +76,8 @@ class DataLoader(object):
         cross_split = list(float(x) for x in cross_split)
         if type_split == "cross": assert (type(cross_split) == list and int(np.sum(cross_split)) == 1)
         elif type_split == "kfold": assert (kfold_split > 0 and type(kfold_split) == int)
-        elif type_split == "shot": pass #TODO veure com es genera el few shot partition
+        elif type_split == "shot": assert (isinstance(cross_split, list) and len(cross_split) == 3 and isinstance(cross_split[0], str)
+                                           and isinstance(cross_split[1], float) and isinstance(cross_split[2], float)), "Some parameter have been badly declared"
 
         assert (batch_size > 0 and type(batch_size) == int)
 
@@ -85,6 +86,7 @@ class DataLoader(object):
 
         ### PLACEHOLDERS  ###
         self._dataset = dataset
+        self._model_name = kind_models
         self._type_split = type_split
         self._batch_size = batch_size
         self._kfold_split = kfold_split
@@ -98,23 +100,40 @@ class DataLoader(object):
         
         self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
-        self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](conditioned=self._conditioned, type_download="images")
+        self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](conditioned=conditioned)
 
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
         
         logging.info("Searching for the dataset in the current working directory")
-        flag, self._dataset_path = self.control_download()
+        # search:str="dataset", root:str="datasets"
+        flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
 
         if flag is False:
             logging.warning("The dataset hasnt been found, starting to download")
             time.sleep(1)
-            self._dt.download_models()
             if self._dt.__name__ == "SIDTD":
-                self._dt.download_dataset(type_download=kin)
+                self._dt.download_dataset(type_download=kind)
             else:
                 self._dt.download_dataset()
                
-            logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], self._dt._uri.split("/")[-1])))
+            logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "code_examples")))
+
+
+        logging.info("Searching for the model in the current working directory")
+        # search:str="dataset", root:str="datasets"
+        flag_1, _ = self.control_download(search="model", root="code_examples")   
+        flag_2, _ = self.control_download(search="model", root="models")
+           
+        if (flag_1 & flag_2) is False:
+            logging.warning("The model hasnt been found, starting to download")
+            time.sleep(1)
+            self._dt.download_models(model=kind_models)
+
+               
+            logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
+    
+
+
 
         new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
 
@@ -342,25 +361,16 @@ class DataLoader(object):
 
         return new_df
 
-    def control_download(self):
+    
+    def control_download(self, search:str="dataset", root:str="datasets"):
         result = []
-
+        to_search = self._dataset if search == "dataset" else self._model_name
         # Wlaking top-down from the Working directory
         for root, dir, files in os.walk(os.getcwd()):
-            if self._dataset in dir and root == "datasets":
+            if to_search in dir and root == root:
                 result.append(os.path.join(root, "/".join(dir)))
 
         return (True and len(result) != 0), result
-
-    @staticmethod
-    def read_img(path: str) -> Image:
-
-        img = np.array(imageio.imread(path))
-        if img.shape[-1] == 4:
-            return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-        else:
-            return img
-
 
     def load_dataset(self, path: str) -> list:
         
@@ -371,6 +381,7 @@ class DataLoader(object):
             structure.append(self._Data(label, self.read_img(path), clas))
         
         return structure
+    
 
     def make_batches(self, structure: List[Type[_Data]]) -> List[List[range]]:
         """
@@ -391,11 +402,18 @@ class DataLoader(object):
                 tmp = [(i * self._batch_size, min(size, (i + 1) * self._batch_size)) for i in range(0, nb_batch)]
 
                 res.append(fold)
+        
         return res
 
-    @property
-    def get_structures(self):
-        return self._train_array, self._val_array, self._test_array, self._batch
+
+    @staticmethod
+    def read_img(path: str) -> Image:
+
+        img = np.array(imageio.imread(path))
+        if img.shape[-1] == 4:
+            return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        else:
+            return img
 
 if __name__ == "__main__":
 
@@ -403,7 +421,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
-    parser.add_argument("--kin",default="images",nargs="?", type=str, choices=["images", "clips", "videos"],help="Define what kind of the info from the benchmark do you want to download to use")
+    parser.add_argument("--kind",default="images",nargs="?", type=str, choices=["images", "clips", "videos"],help="Define what kind of the info from the benchmark do you want to download to use")
     parser.add_argument("--kind_models",default="transfg_img_net",nargs="?", type=str, choices=["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"],help="Define what kind of the trained model from the benchmark you want to download in order to reproduce results. Choose transfg_img_net, if you want to train the trans fg model (default mode). Choose no if you do not want to download any model.")
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
@@ -420,7 +438,7 @@ if __name__ == "__main__":
         parser.add_argument("--cross_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
         op = parser.parse_args()
 
-        t = DataLoader(dataset=op.dataset,kin=op.kin, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
 
     elif opts.type_split != "kfold" and opts.type_split != "cross":
         parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
@@ -428,10 +446,10 @@ if __name__ == "__main__":
 
         op = parser.parse_args()
         print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,kin=op.kin, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
 
     else:
         parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
         op = parser.parse_args()
         print(op.kfold_split)
-        t = DataLoader(dataset=op.dataset,kin=op.kin, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)

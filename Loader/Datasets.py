@@ -9,7 +9,7 @@ import subprocess
 import glob
 from collections import Counter
 import zipfile
-
+import shutil
 try:
     import imageio.v2 as imageio
 except:
@@ -17,30 +17,14 @@ except:
 import json
 import cv2
 import sys
+from path import Path
 
 
 
 class Dataset(ABC):
-
-    def __init__(self,type_download:str="images", type_download_models:str="transfg_img_net", download_original:bool=True,conditioned:bool=False) -> None:
-
-        self._uri_images = "http://datasets.cvc.uab.es/SIDTD/templates.zip "
-        self._uri_clips = "http://datasets.cvc.uab.es/SIDTD/clips.zip"
-        self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/videos.zip"
-        self._uri = "http://datasets.cvc.uab.es/SIDTD"
-        self._uri_trained_models_effnet = 'http://datasets.cvc.uab.es/SIDTD/efficientnet-b3_trained_models.zip'
-        self._uri_trained_models_resnet = "http://datasets.cvc.uab.es/SIDTD/resnet50_trained_models.zip"
-        self._uri_trained_models_vit = 'http://datasets.cvc.uab.es/SIDTD/vit_large_patch16_224_trained_models.zip'
-        self._uri_trained_models_transfg = 'http://datasets.cvc.uab.es/SIDTD/trans_fg_trained_models.zip'
-        self._uri_trained_models_arc = 'http://datasets.cvc.uab.es/SIDTD/coatten_fcn_model_trained_models.zip'
-        self._uri_transfg_pretrained = "http://datasets.cvc.uab.es/SIDTD/imagenet21k+imagenet2012_ViT-L_16.zip"
-        self._conditioned = conditioned
-        self._download_original = download_original
-        self._type_download = type_download
-        self._type_download_models = type_download_models
-
-
-
+    def __init__(self) -> None:
+        self._cluster_link = "http://datasets.cvc.uab.es"
+        
     @abstractmethod
     def num_fake_classes(self):
         raise NotImplementedError
@@ -84,21 +68,31 @@ class Banknotes(Dataset):
 
 class SIDTD(Dataset):
 
-    def __init__(self,type_download:str="images",type_download_models:str="transfg_img_net",conditioned:bool=True,download_original:bool =True) -> None:
+    def __init__(self,conditioned:bool=True,download_original:bool =False) -> None:
         
-        super().__init__(type_download=type_download,type_download_models = type_download_models,conditioned=conditioned, download_original=download_original)
+        super().__init__()
         self._map_classes = self.map_classes() if conditioned is True else None
-
-
-        ## Path to reconstruct the original structure
-        self._original_abs_path = "MIDV2020/templates"
-        self._original_imgs_path = os.path.join(self._original_abs_path, "images")
-        self._original_ann_path  = os.path.join(self._original_abs_path, "annotations")
+        ###### Static links
+        self._uri = self._cluster_link + "/SIDTD"
+        self._images_path = "http://datasets.cvc.uab.es/SIDTD/templates.zip "
+        self._clips_path = "http://datasets.cvc.uab.es/SIDTD/clips.zip"
+        self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/videos.zip"
+        self._uri_trained_models_effnet = 'http://datasets.cvc.uab.es/SIDTD/efficientnet-b3_trained_models.zip'
+        self._uri_trained_models_resnet = "http://datasets.cvc.uab.es/SIDTD/resnet50_trained_models.zip"
+        self._uri_trained_models_vit = 'http://datasets.cvc.uab.es/SIDTD/vit_large_patch16_224_trained_models.zip'
+        self._uri_trained_models_transfg = 'http://datasets.cvc.uab.es/SIDTD/trans_fg_trained_models.zip'
+        self._uri_trained_models_arc = 'http://datasets.cvc.uab.es/SIDTD/coatten_fcn_model_trained_models.zip'
+        self._uri_transfg_pretrained = "http://datasets.cvc.uab.es/SIDTD/imagenet21k+imagenet2012_ViT-L_16.zip"
         
-        #Paths that will belong to the cvc cluster
-        self._images_path = self._uri_images
-        self._clips_path = self._uri_clips
-        self._videos_path = self._uri_videos
+        ######### Conditioned and original structure variables
+        self._conditioned = conditioned
+        self._download_original = download_original
+
+
+        if download_original == True:
+            self._define_paths()
+        
+        
         #path to download
         self._path_to_download = os.path.join(os.getcwd(), "datasets")
 
@@ -110,34 +104,60 @@ class SIDTD(Dataset):
             os.makedirs(self.abs_path_code_ex)
         if not os.path.exists(self.abs_path_trans_fg):
             os.makedirs(self.abs_path_trans_fg)
-
-    def download_dataset(self):
+            
+  
+  
+  
+  
+            
+    def _define_paths(self) ->None:        
+        ## Path to reconstruct the original structure
+        ##images
+        self._original_abs_imgs_path = "MIDV2020/templates"
+        self._original_imgs_path = os.path.join(self._original_abs_imgs_path, "images")
+        self._original_ann_path  = os.path.join(self._original_abs_imgs_path, "annotations")
         
-        if self._type_download == "all_dataset":    
+        ## videos
+        self._original_videos = "MIDV2020/video"
+
+        ##clips
+        self._original_clips_path = "MIDV2020/clips"
+        self._original_clips_imgs_path = os.path.join(self._original_clips_path, "images")
+        self._original_clips_ann_path  = os.path.join(self._original_clips_path, "annotations")
+        
+
+    def download_dataset(self, type_download:str = "images"):
+        
+        if type_download == "all_dataset":    
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
             if self._download_original:raise NotImplementedError
 
-        elif self._type_download == "clips":
+        elif type_download == "clips":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
             with zipfile.ZipFile(self._abs_path+"/clips.zip", 'r') as zip_ref:
                 zip_ref.extractall(self._abs_path)
             if self._download_original:raise NotImplementedError
         
-        elif self._type_download == "videos":
+        elif type_download == "videos":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._videos_path))
             with zipfile.ZipFile(self._abs_path+"/videos.zip", 'r') as zip_ref:
                 zip_ref.extractall(self._abs_path)
             if self._download_original:raise NotImplementedError
 
-        else:
+        elif type_download == "images":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._images_path))
             with zipfile.ZipFile(self._abs_path+"/templates.zip", 'r') as zip_ref:
                 zip_ref.extractall(self._abs_path)
             if self._download_original:self.create_structure_images()
-
-    def download_models(self):
+            
+        else:
+            raise "Not defined correctly the type info to download"
         
-        if self._type_download_models == "all_trained_models":    
+        
+
+    def download_models(self, type_models:str="transfg_img_net"):
+        
+        if type_models == "all_trained_models":    
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_effnet))
             with zipfile.ZipFile(self.abs_path_code_ex+"/efficientnet-b3_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_code_ex)
@@ -162,22 +182,22 @@ class SIDTD(Dataset):
             with zipfile.ZipFile(self.abs_path_trans_fg+"/imagenet21k+imagenet2012_ViT-L_16.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_trans_fg)
 
-        if self._type_download_models == "effnet":
+        if type_models == "effnet":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_effnet))
             with zipfile.ZipFile(self.abs_path_code_ex+"/efficientnet-b3_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_code_ex)
 
-        elif self._type_download_models == "resnet":
+        elif type_models == "resnet":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_resnet))
             with zipfile.ZipFile(self.abs_path_code_ex+"/resnet50_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_code_ex)
 
-        elif self._type_download_models == "vit":
+        elif type_models == "vit":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_vit))
             with zipfile.ZipFile(self.abs_path_code_ex+"/vit_large_patch16_224_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_code_ex)
 
-        elif self._type_download_models == "transfg":
+        elif type_models == "transfg":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_transfg))
             with zipfile.ZipFile(self.abs_path_code_ex+"/trans_fg_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_code_ex)
@@ -186,12 +206,12 @@ class SIDTD(Dataset):
             with zipfile.ZipFile(self.abs_path_trans_fg+"/imagenet21k+imagenet2012_ViT-L_16.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_trans_fg)
 
-        elif self._type_download_models == "arc":
+        elif type_models == "arc":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,self._uri_trained_models_arc))
             with zipfile.ZipFile(self.abs_path_code_ex+"/coatten_fcn_model_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_code_ex)
 
-        elif self._type_download_models == "transfg_img_net":
+        elif type_models == "transfg_img_net":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_trans_fg,self._uri_transfg_pretrained))
             with zipfile.ZipFile(self.abs_path_trans_fg+"/imagenet21k+imagenet2012_ViT-L_16.zip", 'r') as zip_ref:
                 zip_ref.extractall(self.abs_path_trans_fg)
@@ -199,73 +219,50 @@ class SIDTD(Dataset):
         else:
             pass
            
-    def create_and_map_classes_imgs(self):
-        map_class = {
-            
-        }
-        print(self._img_abs_path)
-        for image in os.listdir(self._img_abs_path):
-            if image.endswith("html"):continue
-            spl = image.split("_")
-            class_image = "_".join(spl[:2]) if not spl[1].isnumeric() else spl[0]
-            original_class_path = os.path.join(self._path_to_download,self._original_imgs_path, class_image)
-            if os.path.exists(original_class_path):
-                if map_class.get(class_image) is not None:
-                    map_class[class_image].append(os.path.join(self._img_abs_path, image))
-                else:
-                    map_class[class_image] = [os.path.join(self._img_abs_path, image)]
-
-            else:
-                map_class[class_image] = [os.path.join(self._img_abs_path, image)]
-                os.makedirs(original_class_path)
-  
-        return map_class                
-            
-    
-    def create_and_map_classes_annotations(self):
-        map_annotation = {
-            
-        }
-        for annotation in os.listdir(self._ann_abs_path):
-            if annotation.endswith("html"):continue
-            spl = annotation.split("_")
-            key = os.path.splitext("_".join(spl[:2]) if not spl[1].isnumeric() else spl[0])[0]
-            class_ann = key
-            print(class_ann)
-            original_class_path = os.path.join(self._path_to_download,self._original_ann_path, class_ann)
-
-            if os.path.exists(original_class_path):
-                map_annotation[class_ann] = os.path.join(self._ann_abs_path,annotation)
-                continue
-            else:
-                map_annotation[class_ann] = os.path.join(self._ann_abs_path,annotation)
-                os.makedirs(original_class_path)
-
-                                
-        return map_annotation    
-                       
-    # TODO today
+                          
+    # TODO test it
     def create_structure_videos(self):
-        self._videos_abs_path = os.path.join(self._abs_path, "videos","Images", "Reals")
-        self._videos_ann_abs_path = os.path.join(self._abs_path, "videos","Annotations", "Reals")
+        videos_abs_path = os.path.join(self._abs_path, "videos", "reals")
+        
+        map_videos = self.create_and_map_classes_objects(path=videos_abs_path)
+        
+        for clas, video_set in map_videos.items():
+            path_video_save = os.path.join(self._path_to_download, self._original_videos_path, clas)            
+            for video in video_set:
+                name_video = video.split("/")[-1].split("_")[-1]
+                #make the copy 
+                shutil.copyfile(video, path_video_save+f"/{name_video}")           
         pass 
 
-    #TODO today
+    #TODO test it
     def create_structure_clips(self):
-        self._clips_abs_path = os.path.join(self._abs_path, "clips","Images", "Reals")
-        self._clips_ann_abs_path = os.path.join(self._abs_path, "clips","Annotations", "Reals")
-        pass  
+        clips_abs_path = os.path.join(self._abs_path, "clips","Images", "reals")
+        clips_ann_abs_path = os.path.join(self._abs_path, "clips","Annotations", "reals")
+        
+        map_imgs = self.create_and_map_classes_objects(path=clips_abs_path)
+        map_annotations = self.create_and_map_classes_annotations(path=clips_ann_abs_path)
+        
+ 
+        for clas, img_set in map_imgs.items():
+            template = self.read_json(map_annotations[clas]) #dict
+            path_ann_save = os.path.join(self._path_to_download, self._original_ann_path,clas)
+            self.write_json(template, path_ann_save, clas)
             
+            path_img_save = os.path.join(self._path_to_download, self._original_imgs_path, clas)
+            for img in img_set:
+                name_img = img.split("/")[-1].split("_")[-1] #get the image numbe (82.jpg example)
+                shutil.copyfile(img, path_img_save+f"/{name_img}")           
+       
+        pass  
+                  
     def create_structure_images(self):
         
         
-        self._img_abs_path = os.path.join(self._abs_path,"templates","Images", "reals")
-        self._ann_abs_path = os.path.join(self._abs_path, "templates", "Annotations", "reals")       
+        img_abs_path = os.path.join(self._abs_path,"templates","Images", "reals")
+        ann_abs_path = os.path.join(self._abs_path, "templates", "Annotations", "reals")       
         
-        map_imgs = self.create_and_map_classes_imgs()
-        map_annotations = self.create_and_map_classes_annotations()
-
-        
+        map_imgs = self.create_and_map_classes_objects(path=img_abs_path)
+        map_annotations = self.create_and_map_classes_annotations(path=ann_abs_path)
 
         for clas, img_set in map_imgs.items():
             template = self.read_json(map_annotations[clas]) #dict
@@ -275,14 +272,66 @@ class SIDTD(Dataset):
             path_img_save = os.path.join(self._path_to_download, self._original_imgs_path, clas)
             for img in img_set:
                 name_img = img.split("/")[-1].split("_")[-1] #get the image numbe (82.jpg example)
-                im = self.read_img(img)  
-                imageio.imwrite(os.path.join(path_img_save,name_img), im)
-                
+                shutil.copyfile(img, path_img_save+f"/{name_img}")           
 
-    def map_classes(self):
+                #im = self.read_img(img)  
+                #imageio.imwrite(os.path.join(path_img_save,name_img), im)
+                
+                
+    def create_and_map_classes_objects(self, path:Path):
+        map_class = {}
+        
+        for obj in os.listdir(path):
+            
+            if obj.endswith("html"):continue
+            spl = obj.split("_")
+            class_image = "_".join(spl[:2]) if not spl[1].isnumeric() else spl[0]
+            original_class_path = os.path.join(self._path_to_download,self._original_imgs_path, class_image)
+            if os.path.exists(original_class_path):
+                if map_class.get(class_image) is not None:
+                    map_class[class_image].append(os.path.join(path, obj))
+                else:
+                    map_class[class_image] = [os.path.join(path, obj)]
+
+            else:
+                map_class[class_image] = [os.path.join(path, obj)]
+                os.makedirs(original_class_path)
+  
+        return map_class                
+            
+    
+    def create_and_map_classes_annotations(self, path:Path):
+        map_annotation = {
+            
+        }
+        for annotation in os.listdir(path):
+            if annotation.endswith("html"):continue
+            spl = annotation.split("_")
+            key = os.path.splitext("_".join(spl[:2]) if not spl[1].isnumeric() else spl[0])[0]
+            class_ann = key
+            print(class_ann)
+            original_class_path = os.path.join(self._path_to_download,path, class_ann)
+
+            if os.path.exists(original_class_path):
+                map_annotation[class_ann] = os.path.join(path,annotation)
+                continue
+            else:
+                map_annotation[class_ann] = os.path.join(path,annotation)
+                os.makedirs(original_class_path)
+
+                                
+        return map_annotation    
+
+
+    def map_classes(self, type_data:str="templates"):
         classes = {"reals":{}, "fakes":{}}
-        fakes = [(file, "fakes") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(),"templates", "Images", 'fakes',"*"))]
-        reals = [(file, "reals") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), "templates", "Images", 'reals',"*"))]
+        if type_data == "videos":
+            fakes = [(file, "fakes") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(),type_data, 'fakes',"*"))]
+            reals = [(file, "reals") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), type_data, 'reals',"*"))]
+        else:     
+            fakes = [(file, "fakes") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(),type_data, "Images", 'fakes',"*"))]
+            reals = [(file, "reals") for file in glob.glob(os.path.join(os.getcwd(), "datasets",self.__name__(), type_data, "Images", 'reals',"*"))]
+        
         for file in (fakes+reals):
             section = classes[file[1]]
             clas = file[0].split("_")[0].split("/")[-1]
