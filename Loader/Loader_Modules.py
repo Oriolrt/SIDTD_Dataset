@@ -127,12 +127,20 @@ class DataLoader(object):
         if (flag_1 & flag_2) is False:
             logging.warning("The model hasnt been found, starting to download")
             time.sleep(1)
-            self._dt.download_models(type_models=kind_models)
+            self._dt.download_models(unbalanced = self._unbalanced,type_models=kind_models)
 
                
             logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
     
 
+        flag_csv = self.control_download_csv()
+
+        if flag_csv is False:
+            logging.warning("Static csv hasnt been downloaded, starting to download")
+            time.sleep(1)
+            self._dt.download_static_csv()
+
+            logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "code_examples", "static")))
 
 
         new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
@@ -371,6 +379,18 @@ class DataLoader(object):
                 result.append(os.path.join(root, "/".join(dir)))
 
         return (True and len(result) != 0), result
+
+    def control_download_csv(self):
+        abs_path = os.getcwd()
+        abs_path_csv = os.path.join(abs_path, "code_examples", "static")
+        path_split_unbalanced = glob.glob(abs_path_csv + "/split_kfold_unbalanced/*.csv")
+        path_split_balanced = glob.glob(abs_path_csv + "/split_kfold/*.csv")
+        path_split_normal = glob.glob(abs_path_csv + "/split_normal/*.csv")
+        if len(path_split_unbalanced) > 0 and len(path_split_balanced) > 0 and len(path_split_normal) > 0:
+            found = True
+        else:
+            found = False
+        return found
 
     def load_dataset(self, path: str) -> list:
         
