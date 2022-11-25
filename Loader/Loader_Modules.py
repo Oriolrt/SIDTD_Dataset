@@ -441,7 +441,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
-    parser.add_argument("--kind",default="images",nargs="?", type=str, choices=["images", "clips", "videos"],help="Define what kind of the info from the benchmark do you want to download to use")
+    parser.add_argument("--kind",default="images",nargs="?", type=str, choices=["images", "clips", "videos","no"],help="Define what kind of the info from the benchmark do you want to download to use. If no is selected, then the dataset will not be download.")
     parser.add_argument("--kind_models",default="transfg_img_net",nargs="?", type=str, choices=["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"],help="Define what kind of the trained model from the benchmark you want to download in order to reproduce results. Choose transfg_img_net, if you want to train the trans fg model (default mode). Choose no if you do not want to download any model.")
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")

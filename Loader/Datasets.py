@@ -99,10 +99,8 @@ class SIDTD(Dataset):
         self.abs_path_code_ex = os.path.join(os.getcwd(), "code_examples", "pretrained_models")
         self.abs_path_trans_fg = os.path.join(os.getcwd(), "models", "transfg", "transfg_pretrained")
 
-        if not os.path.exists(self.abs_path_code_ex_templates):
-            os.makedirs(self.abs_path_code_ex_templates)
-        if not os.path.exists(self.abs_path_code_ex_clip_background):
-            os.makedirs(self.abs_path_code_ex_clip_background)
+        if not os.path.exists(self.abs_path_code_ex_csv):
+            os.makedirs(self.abs_path_code_ex_csv)
         if not os.path.exists(self.abs_path_trans_fg):
             os.makedirs(self.abs_path_trans_fg)
             
@@ -161,7 +159,7 @@ class SIDTD(Dataset):
             if self._download_original:self.create_structure_images()
             
         else:
-            raise "Not defined correctly the type info to download" 
+            print("Option: do not download dataset files") 
 
     def download_models(self, unbalanced:str="yes", type_models:str="transfg_img_net"):
         
@@ -170,8 +168,8 @@ class SIDTD(Dataset):
         else:
             balanced_folder = "unbalanced_clip_background_SIDTD"
         
-        abs_path_model = self.abs_path_code_ex + "/" + balanced_folder
-        server_path_model = self._uri + "/" + balanced_folder
+        abs_path_model = os.path.join(self.abs_path_code_ex, balanced_folder)
+        server_path_model = os.path.join(self._uri, balanced_folder)
 
         if type_models == "all_trained_models":   
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model,server_path_model +"/efficientnet-b3_trained_models.zip" ))
