@@ -193,10 +193,13 @@ def test_transfg_models(args, LOGGER, iteration=0):
     test_loader = get_loader_test(args, iteration)
 
     if args.pretrained == 'yes':
-        save_model_path = os.getcwd() + "/pretrained_models/trans_fg_trained_models/"
+        if args.type_split == 'unbalanced':
+            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/trans_fg_trained_models/"
+        elif args.type_split == 'kfold':
+            save_model_path = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/trans_fg_trained_models/"
         model_checkpoint = os.path.join(save_model_path,
                                     'MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
-    if args.pretrained == 'no':
+    else:
         save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
         model_checkpoint = os.path.join(save_model_path,
                                     '{}_{}_best_accuracy_n{}.pth'.format(args.dataset,

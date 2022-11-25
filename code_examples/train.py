@@ -82,8 +82,9 @@ if __name__ == "__main__":
     parser.add_argument("--results_path", default = os.getcwd() + '/results_files/', type=str, help="Path where are located the performance of the models in csv file")
     parser.add_argument("--plot_path", default = os.getcwd() + '/plots/', type=str, help="Path where are located the plot graphs for the loss and accuracy performance")
     parser.add_argument("--name", default='ResNet50', type=str, help='Name of the experiment')
-    parser.add_argument("-ts","--type_split",default="kfold",nargs="?", choices=["cross", "kfold"], help="Diferent kind of split to train the models.")
-    parser.add_argument("-r","--reproduce",default="no",nargs="?", choices=["yes", "no"], help="Use static partition in order to reproduce the results.")
+    parser.add_argument("-ts","--type_split",default="kfold",nargs="?", choices=["cross", "kfold", "unbalanced"], help="Diferent kind of split to train the models.")
+    parser.add_argument("--static",default="no",nargs="?", choices=["yes", "no"], help="If 'yes', use static csv. If 'no', use your custom csv partition.")
+    parser.add_argument("--pretrained",default="no",nargs="?", choices=["yes", "no"], help="If 'yes', use our trained network. If 'no', use your custom trained network.")
     
     # flag for baseline code
     parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')

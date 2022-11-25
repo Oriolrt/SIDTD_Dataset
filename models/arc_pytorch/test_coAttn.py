@@ -157,17 +157,18 @@ def test(opt, save_model_path, iteration):
         bce = bce.cuda()
 
     # csv path for train and validation
-    if opt.reproduce == 'no':
+    if opt.static == 'no':
         if opt.type_split =='kfold':
             path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
         elif opt.type_split =='cross':
             path_test = os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
     else:
         if opt.type_split =='kfold':
-            path_test = os.getcwd() + "/static/split_kfold/test_split_{}_it_{}.csv".format(opt.dataset, iteration)
-
+            path_test = os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)
         elif opt.type_split =='cross':
-            path_test = os.getcwd() + "/static/split_normal/test_split_{}.csv".format(opt.dataset)
+            path_test = os.getcwd() + "/static/split_normal/test_split_SIDTD.csv"
+        elif opt.type_split =='unbalanced':
+            path_test = os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)
 
     # load the dataset in memory.
     paths_splits = {'test' :{}}
@@ -250,8 +251,11 @@ def test_coAttn_models(opt, iteration=0) -> None:
     #writers to write the results obtained for each split
     f_test, writer_test = save_results_test(opt)
     if opt.pretrained == 'yes':
-        save_model_path = os.getcwd() + "/pretrained_models/coatten_fcn_model_trained_models/"
-    if opt.pretrained == 'no':
+        if opt.type_split == 'kfold':
+            save_model_path = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/coatten_fcn_model_trained_models/"
+        elif opt.type_split == 'unbalanced':
+            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/coatten_fcn_model_trained_models/"
+    else:
         save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     
         

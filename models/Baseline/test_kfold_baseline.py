@@ -105,7 +105,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
     mean, std = get_mean_std(args, model)
     print('fold number :', iteration)
 
-    if args.reproduce == 'no':
+    if args.static == 'no':
         if args.type_split =='kfold':
             if os.path.exists(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
                 print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
@@ -120,14 +120,20 @@ def test_baseline_models(args, LOGGER, iteration=0):
     
     else:
         if args.type_split =='kfold':
-            if os.path.exists(os.getcwd() + "/static/split_kfold/test_split_{}_it_{}.csv".format(args.dataset, iteration)):
-                print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
-                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_{}_it_{}.csv".format(args.dataset, iteration)) 
+            if os.path.exists(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)):
+                print("Loading existing partition: ", "split_SIDTD_it_{}".format(iteration))
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)) 
             else:
                 print('ERROR : WRONG PATH')
         elif args.type_split =='cross':
-            if os.path.exists(os.getcwd() + "/static/split_normal/test_split_{}.csv".format(args.dataset)):
-                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/test_split_{}.csv".format(args.dataset))
+            if os.path.exists(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv"):
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv")
+            else:
+                print('ERROR : WRONG PATH')
+
+        elif args.type_split == 'unbalanced':
+            if os.path.exists(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)):
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration))
             else:
                 print('ERROR : WRONG PATH')
     
@@ -151,9 +157,12 @@ def test_baseline_models(args, LOGGER, iteration=0):
         print('Test with your own trained models.')
         save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
         PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
-    elif args.pretrained == 'yes':
+    else:
         print('Test with SIDTD trained models.')
-        save_model_path = os.getcwd() + '/pretrained_models/' + args.model + "_trained_models/"
+        if args.type_split == 'unbalanced':
+            save_model_path = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/"
+        elif args.type_split == 'kfold':
+            save_model_path = os.getcwd() + '/pretrained_models/balanced_templates_SIDTD/' + args.model + "_trained_models/"
         PATH = save_model_path + '/MIDV2020_{}_best_accuracy_n{}.pth'.format(args.model, iteration)
 
     

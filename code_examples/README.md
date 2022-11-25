@@ -100,8 +100,8 @@ Results by fold are generated in csv file in the 'results_files' directory. The 
 
 The script __test.py__ load a trained model and evaluate it on the test partitions. It is possible to test the same models as mentionned in the Train models section. 
 
-
-To test one of the five models with *CUDA*, you should run the line that correspond to your model with the corresponding name of the dataset used:
+### Test your trained model on custom 10-fold partitions with CUDA
+To test one of the five models with *CUDA* after training your own model, you should run the line that correspond to your model with the corresponding name of the dataset used:
 ```
 # Test EfficientNet model with CUDA
 CUDA_VISIBLE_DEVICES=0 python test.py --name='EfficientNet' --dataset='dataset_raw' --model='efficientnet-b3'
@@ -119,23 +119,82 @@ CUDA_VISIBLE_DEVICES=0 python test.py --name='trans_fg' --dataset='dataset_raw' 
 CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'dataset_raw' --model='coatten_fcn_model'
 ```
 
-To test one of the five models with *your CPU*, you should run the line that correspond to your model with the corresponding name of the dataset used:
+### Test your trained model on custom 10-fold partitions without CUDA
+To test one of the five models with *your CPU* after training your own model, you should run the line that correspond to your model with the corresponding name of the dataset used:
 ```
-# Test EfficientNet model with CPU
+# Test EfficientNet model without CPU
 python test.py --name='EfficientNet' --dataset='dataset_raw' --model='efficientnet-b3' --device='cpu'
 
-# Test ResNet50 model with CPU
+# Test ResNet50 model without CPU
 python test.py --name='ResNet50' --dataset='dataset_raw' --model='resnet50' --device='cpu'
 
-# Test ViT model with CPU
+# Test ViT model without CPU
 python test.py --name='vit_large_patch16' --dataset='dataset_raw' --model='vit_large_patch16_224' --device='cpu'
 
-# Test Trans FG model with CPU
+# Test Trans FG model without CPU
 python test.py --name='trans_fg' --dataset='dataset_raw' --model='trans_fg' --device='cpu'
 
-# Test Co-Attention ARC model with CPU
+# Test Co-Attention ARC model without CPU
 python test.py --name='coatten_fcn_model' --dataset 'dataset_raw' --model='coatten_fcn_model' --device='cpu'
 ```
+
+### Test 10-fold partitions on our trained model on custom 10-fold partitions with CUDA
+To test one of *our trained model* with CUDA, you should run the line that correspond to your model with the corresponding name of the dataset used:
+```
+# Test EfficientNet model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='EfficientNet' --dataset='dataset_raw' --model='efficientnet-b3' --pretrained='yes'
+
+# Test ResNet50 model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='ResNet50' --dataset='dataset_raw' --model='resnet50' --pretrained='yes'
+
+# Test ViT model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='vit_large_patch16' --dataset='dataset_raw' --model='vit_large_patch16_224' --pretrained='yes'
+
+# Test Trans FG model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='trans_fg' --dataset='dataset_raw' --model='trans_fg' --pretrained='yes'
+
+# Test Co-Attention ARC model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'dataset_raw' --model='coatten_fcn_model' --pretrained='yes'
+```
+
+### Reproduce our results on SIDTD on our 10-fold partitions on templates SIDTD
+To *reproduce our results using our trained model* with CUDA, you should run the line that correspond to your model with the corresponding name of the dataset used:
+```
+# Test EfficientNet model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='EfficientNet' --dataset='SIDTD' --model='efficientnet-b3' --pretrained='yes' --static='yes'
+
+# Test ResNet50 model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='ResNet50' --dataset='SIDTD' --model='resnet50' --pretrained='yes' --static='yes'
+
+# Test ViT model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='vit_large_patch16' --dataset='SIDTD' --model='vit_large_patch16_224' --pretrained='yes' --static='yes'
+
+# Test Trans FG model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='trans_fg' --dataset='SIDTD' --model='trans_fg' --pretrained='yes' --static='yes'
+
+# Test Co-Attention ARC model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'SIDTD' --model='coatten_fcn_model' --pretrained='yes' --static='yes'
+```
+
+### Reproduce our results on SIDTD on our 10-fold partitions on video clips SIDTD
+To *reproduce our results using our trained model* with CUDA, you should run the line that correspond to your model with the corresponding name of the dataset used:
+```
+# Test EfficientNet model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='EfficientNet' --dataset='SIDTD' --model='efficientnet-b3' --pretrained='yes' --static='yes' -ts unbalanced
+
+# Test ResNet50 model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='ResNet50' --dataset='SIDTD' --model='resnet50' --pretrained='yes' --static='yes' -ts unbalanced
+
+# Test ViT model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='vit_large_patch16' --dataset='SIDTD' --model='vit_large_patch16_224' --pretrained='yes' --static='yes' -ts unbalanced
+
+# Test Trans FG model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='trans_fg' --dataset='SIDTD' --model='trans_fg' --pretrained='yes' --static='yes' -ts unbalanced
+
+# Test Co-Attention ARC model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'SIDTD' --model='coatten_fcn_model' --pretrained='yes' --static='yes' -ts unbalanced
+```
+
 You can test a model with your trained weight or with our trained models to reproduce results on the chosen dataset. You can choose it with the flag --pretrained. If --pretrained='yes', use trained network on MIDV2020 to reproduce results. If --pretrained='no', use the custom trained network on your own partitions.
 
 Remember to choose a name for your experiment with the flag --name. It should be the same name for the test than the training you performed earlier in order to use the correct trained models.
