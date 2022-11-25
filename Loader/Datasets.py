@@ -49,9 +49,8 @@ class Dataset(ABC):
     def download_dataset(self, output_directory:str = None):
         raise NotImplementedError
 
+        
 
-        
-        
 
 class Dogs(Dataset):
     pass

@@ -83,9 +83,9 @@ class DataLoader(object):
 
         assert dataset in ["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"]
 
-
         ### PLACEHOLDERS  ###
         self._dataset = dataset
+        self._dataset_type = kind
         self._model_name = kind_models
         self._type_split = type_split
         self._batch_size = batch_size
@@ -106,12 +106,12 @@ class DataLoader(object):
         
         logging.info("Searching for the dataset in the current working directory")
         # search:str="dataset", root:str="datasets"
-        flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
+        flag, self._dataset_path = self.control_download_dataset()
 
         if flag is False:
             logging.warning("The dataset hasnt been found, starting to download")
             time.sleep(1)
-            if self._dt.__name__ == "SIDTD":
+            if self._dataset == "SIDTD":
                 self._dt.download_dataset(type_download=kind)
             else:
                 self._dt.download_dataset()
@@ -379,6 +379,18 @@ class DataLoader(object):
                 result.append(os.path.join(root, "/".join(dir)))
 
         return (True and len(result) != 0), result
+
+    def control_download_dataset(self):
+        abs_path = os.getcwd()
+        abs_path_dataset = os.path.join(abs_path, "datasets", self._dataset, self._dataset_type)
+        if os.path.exists(abs_path_dataset):
+            search_path = glob.glob(abs_path_dataset + '/Images/*/*.jpg')
+            if len(search_path) == 0:
+                return False, abs_path_dataset
+            else:
+                return True, abs_path_dataset
+        else:
+            return False, abs_path_dataset
 
     def control_download_csv(self):
         abs_path = os.getcwd()
