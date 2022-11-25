@@ -159,7 +159,7 @@ class SIDTD(Dataset):
             if self._download_original:self.create_structure_images()
             
         else:
-            print("Option: do not download dataset files") 
+            print("OPTION: do not download dataset files") 
 
     def download_models(self, unbalanced:str="yes", type_models:str="transfg_img_net"):
         
@@ -172,23 +172,23 @@ class SIDTD(Dataset):
         server_path_model = os.path.join(self._uri, balanced_folder)
 
         if type_models == "all_trained_models":   
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model,server_path_model +"/efficientnet-b3_trained_models.zip" ))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,server_path_model +"/efficientnet-b3_trained_models.zip" ))
             with zipfile.ZipFile(abs_path_model+"/efficientnet-b3_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model,server_path_model+"/resnet50_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,server_path_model+"/resnet50_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/resnet50_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model, server_path_model+"/vit_large_patch16_224_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+"/vit_large_patch16_224_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/vit_large_patch16_224_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model, server_path_model+"/trans_fg_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+"/trans_fg_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/trans_fg_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model, server_path_model+"/coatten_fcn_model_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+"/coatten_fcn_model_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/coatten_fcn_model_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
@@ -197,22 +197,22 @@ class SIDTD(Dataset):
                 zip_ref.extractall(self.abs_path_trans_fg)
 
         if type_models == "effnet":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model,server_path_model+"/efficientnet-b3_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,server_path_model+"/efficientnet-b3_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/efficientnet-b3_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
         elif type_models == "resnet":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model,server_path_model+"/resnet50_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,server_path_model+"/resnet50_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/resnet50_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
         elif type_models == "vit":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model,server_path_model+"/vit_large_patch16_224_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,server_path_model+"/vit_large_patch16_224_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/vit_large_patch16_224_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
         elif type_models == "transfg":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model, server_path_model+ "/trans_fg_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+ "/trans_fg_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/trans_fg_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
@@ -221,7 +221,7 @@ class SIDTD(Dataset):
                 zip_ref.extractall(self.abs_path_trans_fg)
 
         elif type_models == "arc":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(abs_path_model, server_path_model+ "/coatten_fcn_model_trained_models.zip"))
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+ "/coatten_fcn_model_trained_models.zip"))
             with zipfile.ZipFile(abs_path_model+"/coatten_fcn_model_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
@@ -231,7 +231,7 @@ class SIDTD(Dataset):
                 zip_ref.extractall(self.abs_path_trans_fg)
 
         else:
-            pass
+            print("OPTION: do not download trained model files") 
            
                           
     # TODO test it
