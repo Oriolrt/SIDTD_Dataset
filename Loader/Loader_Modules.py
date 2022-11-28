@@ -7,7 +7,6 @@ from abc import ABC, abstractmethod
 import time
 import os
 import sys
-import logging
 import argparse
 import glob
 from sklearn.utils import shuffle
@@ -19,6 +18,9 @@ from PIL.Image import Image
 from math import *
 from pathlib import Path
 import random
+
+import logging
+logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', encoding='utf-8', level=logging.DEBUG)
 
 class DataLoader(object):
 
@@ -56,7 +58,7 @@ class DataLoader(object):
 
 
 
-    def __init__(self, dataset:str="SIDTD",kind:str="images", kind_models:str="transfg_img_net", type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
+    def __init__(self, dataset:str="SIDTD",kind:str="images", kind_models:str="transfg_img_net", download_static:bool= False,type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
 , few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False):
 
         """
@@ -71,6 +73,18 @@ class DataLoader(object):
                                         conditioned --> flag to define if you want to train with the metaclasses inside the dataset thath downloaded 
         
         """
+        #["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"]
+        models = {
+            "effnet":"efficientnet-b3_trained_models",
+            "resnet": "resnet50_trained_models",
+            "vit": "vit_large_patch16_224_trained_models",
+            "transfg": "trans_fg_trained_models",
+            "transfg_img_net": "transfg_pretrained",
+            "arc": "coatten_fcn_model_trained_models",
+            "no": "no"
+        }
+        
+        
 
         ### ASSERTS AND ERROR CONTROL ###
         cross_split = list(float(x) for x in cross_split)
@@ -86,6 +100,7 @@ class DataLoader(object):
         ### PLACEHOLDERS  ###
         self._dataset = dataset
         self._dataset_type = kind
+        self._model_folder_name = models[kind_models]
         self._model_name = kind_models
         self._type_split = type_split
         self._batch_size = batch_size
@@ -94,6 +109,7 @@ class DataLoader(object):
         self._normal_split = cross_split
         self._conditioned = conditioned
         self._unbalanced = unbalanced
+        
         
         current_path = os.getcwd()
         self._save_dir = os.path.join(current_path,"code_examples")
@@ -106,7 +122,7 @@ class DataLoader(object):
         
         logging.info("Searching for the dataset in the current working directory")
         # search:str="dataset", root:str="datasets"
-        flag, self._dataset_path = self.control_download_dataset()
+        flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
 
         if flag is False:
             logging.warning("The dataset hasnt been found, starting to download")
@@ -117,53 +133,67 @@ class DataLoader(object):
                 self._dt.download_dataset()
                
             logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "code_examples")))
-
-
-        logging.info("Searching for the model in the current working directory")
-        # search:str="dataset", root:str="datasets"
-        flag_1, _ = self.control_download(search="model", root="code_examples")   
-        flag_2, _ = self.control_download(search="model", root="models")
-           
-        if (flag_1 & flag_2) is False:
-            logging.warning("The model hasnt been found, starting to download")
-            time.sleep(1)
-            self._dt.download_models(unbalanced = self._unbalanced,type_models=kind_models)
-
-               
-            logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
-    
-
-        flag_csv = self.control_download_csv()
-
-        if flag_csv is False:
-            logging.warning("Static csv hasnt been downloaded, starting to download")
-            time.sleep(1)
-            self._dt.download_static_csv()
-
-            logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "code_examples", "static")))
-
-
-        new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
-
-        ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
-        #self.set_static_path()
-        ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
-
-        if len(new_df)  == 0:
-            logging.error("Some error occurred and the data couldnt been downloaded")
-            sys.exit()
-
-        if type_split == "kfold":
-            self._kfold_partition(new_df)
-
-        elif type_split == "few_shot":
-            if few_shot_split[0] != "random":
-                raise NotImplementedError
-            
-            self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses)
-
         else:
-            self._train_val_test_split(new_df)
+            logging.info(f"Dataset found in {self._dataset_path}")
+            
+        if kind_models != "no":
+            logging.warning("Searching for the model in the current working directory")
+            # search:str="dataset", root:str="datasets"
+            flag_1, _ = self.control_download(search="models", root="code_examples")   
+            flag_2, _ = self.control_download(search="models", root="models")
+
+            if (flag_1 | flag_2) is False:
+                logging.warning("The model hasnt been found, starting to download")
+                self._dt.download_models(unbalanced = self._unbalanced,type_models=kind_models)
+                
+                logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
+            
+            else:logging.info(f"Model found in code examples\' directory or in models\' directory")
+        
+        else:logging.info("No model is set, not searching for")
+            
+        if download_static == True:
+
+            if not os.path.exists(self.abs_path_code_ex_csv):
+                os.makedirs(self._dt.abs_path_code_ex_csv)
+            
+            flag_csv = self.control_download_csv()
+
+            if flag_csv is False:
+                logging.warning("Static csv hasnt been downloaded, starting to download")
+                time.sleep(1)
+                self._dt.download_static_csv()
+
+                logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "code_examples", "static")))
+            else:
+                logging.info("Static CSV had been downloaded, avoiding to download them")
+        
+        else:
+            logging.info(f"Preparing partitions for the {type_split} partition behaviour")
+            new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
+
+            ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
+            #self.set_static_path()
+            ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
+
+            if len(new_df)  == 0:
+                logging.error("Some error occurred and the data couldnt been downloaded")
+                sys.exit()
+
+            if type_split == "kfold":
+                self._kfold_partition(new_df)
+
+            elif type_split == "few_shot":
+                if few_shot_split[0] != "random":
+                    raise NotImplementedError
+                
+                self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses)
+
+            else:
+                self._train_val_test_split(new_df)
+                
+                
+                
 
     def change_path(self,path:str='/home/users/SIDTD/code_examples/split_normal/test_split_SIDTD.csv'):
         current_path = os.getcwd()
@@ -192,7 +222,6 @@ class DataLoader(object):
         k = len(new_df) / self._kfold_split
         shuffled_df = shuffle(new_df)
         for iteration in range(self._kfold_split):
-            print("holas")
             b_low = int(iteration * k)
             b_high = int((1 + iteration) * k)
             df_test = shuffled_df[b_low:b_high]
@@ -219,7 +248,8 @@ class DataLoader(object):
 
 
         split_dir = os.path.join(self._save_dir,'split_shot', self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'split_shot_unbalanced', self._dataset)
-
+        metatrain_prop, metatest_prop = float(proportion[0]), float(proportion[1])
+         
         ngroups = len(metaclasses)
         assert ngroups >0
         if ngroups > 1:
@@ -239,13 +269,19 @@ class DataLoader(object):
 
         train = pd.DataFrame()
         test = pd.DataFrame()
+        
+        groups = list(grouped_pandas.groups.keys())
+      
+        train_groups = random.sample(groups, round(metatrain_prop * len(groups)))
+        test_groups = list(set(groups)- set(train_groups))
+
         for name, group in grouped_pandas:
-            temp_train = (group.sample(frac=float(proportion[0]), random_state=1))
-            train = pd.concat([train,temp_train])
 
-            temp_test = (group.drop(temp_train.index.values))
-            test = pd.concat([test,temp_test])
-
+            if bool(set([name])&set(train_groups)) == True:             
+                train = pd.concat([train,group])
+                
+            elif bool(set([name])&set(test_groups)) == True:
+                test = pd.concat([test,group])
             
         df_train = train.reset_index().drop("index", axis=1)
         df_test = test.reset_index().drop("index", axis=1)
@@ -372,13 +408,13 @@ class DataLoader(object):
     
     def control_download(self, search:str="dataset", root:str="datasets"):
         result = []
-        to_search = self._dataset if search == "dataset" else self._model_name
+        to_search = self._dataset if search == "dataset" else self._model_folder_name
         # Wlaking top-down from the Working directory
-        for root, dir, files in os.walk(os.getcwd()):
-            if to_search in dir and root == root:
-                result.append(os.path.join(root, "/".join(dir)))
-
-        return (True and len(result) != 0), result
+        for rt, dir, files in os.walk(os.path.join(os.getcwd(), root)):            
+            if (to_search in dir):
+                return True, os.path.join(rt, "/".join(dir))
+        
+        return False, []
 
     def control_download_dataset(self):
         abs_path = os.getcwd()
@@ -454,6 +490,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
     parser.add_argument("--kind",default="images",nargs="?", type=str, choices=["images", "clips", "videos","no"],help="Define what kind of the info from the benchmark do you want to download to use. If no is selected, then the dataset will not be download.")
+    parser.add_argument("--download_static", action="store_true", help="set to 1 if you want to download the static csv for reproducibility of the models" )
     parser.add_argument("--kind_models",default="transfg_img_net",nargs="?", type=str, choices=["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"],help="Define what kind of the trained model from the benchmark you want to download in order to reproduce results. Choose transfg_img_net, if you want to train the trans fg model (default mode). Choose no if you do not want to download any model.")
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
@@ -463,14 +500,11 @@ if __name__ == "__main__":
 
     conditioned = False if opts.conditioned == 0 else True
 
-    print(conditioned)
-
-    print(opts.type_split)
     if opts.type_split != "kfold" and opts.type_split != "few_shot":
         parser.add_argument("--cross_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
         op = parser.parse_args()
 
-        t = DataLoader(dataset=op.dataset,kind=op.kind, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
 
     elif opts.type_split != "kfold" and opts.type_split != "cross":
         parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
@@ -478,10 +512,9 @@ if __name__ == "__main__":
 
         op = parser.parse_args()
         print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,kind=op.kind, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
 
     else:
         parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
         op = parser.parse_args()
-        print(op.kfold_split)
-        t = DataLoader(dataset=op.dataset,kind=op.kind, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)

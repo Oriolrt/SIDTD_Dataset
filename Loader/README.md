@@ -114,19 +114,19 @@ Below you have some examples for the different kin of partitions:
 ```python   
     # To make the few shot partition
         #balanced
-        python3 Loader/Loader_Modules.py -ts few_shot  --few_shot_split random 0.6 0.4 --kin images
+        python3 Loader/Loader_Modules.py -ts few_shot  --few_shot_split random 0.6 0.4 --kind images
 
         #imbalanced
-        python3 Loader/Loader_Modules.py -ts few_shot --unbalanced --few_shot_split random 0.6 0.4 --kin images
+        python3 Loader/Loader_Modules.py -ts few_shot --unbalanced --few_shot_split random 0.6 0.4 --kind images
 ```
 
 
 ```python   
     # To make the kfold partition
         #balanced
-        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kin images
+        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind images
         #imbalanced
-        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --unbalanced --kin images
+        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --unbalanced --kind images
 ```
 
 
@@ -135,7 +135,7 @@ Below you have some examples for the different kin of partitions:
         #balanced
         python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1--kin images
         #imbalanced
-        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --unbalanced --kin images
+        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --unbalanced --kind images
 ```
 
 

@@ -70,7 +70,14 @@ class SIDTD(Dataset):
     def __init__(self,conditioned:bool=True,download_original:bool =False) -> None:
         
         super().__init__()
+        
+        ######### Conditioned and original structure variables
+        self._conditioned = conditioned
+        self._download_original = download_original
+        
+        #dict to map classes
         self._map_classes = self.map_classes() if conditioned is True else None
+        
         ###### Static links
         self._uri = self._cluster_link + "/SIDTD"
         self._images_path = "http://datasets.cvc.uab.es/SIDTD/templates.zip "
@@ -81,9 +88,6 @@ class SIDTD(Dataset):
         self._uri_static_kfold_unbalanced = "http://datasets.cvc.uab.es/SIDTD/split_kfold_unbalanced.zip"
         self._uri_static_normal = 'http://datasets.cvc.uab.es/SIDTD/split_normal.zip'
         
-        ######### Conditioned and original structure variables
-        self._conditioned = conditioned
-        self._download_original = download_original
 
 
         if download_original == True:
@@ -98,8 +102,6 @@ class SIDTD(Dataset):
         self.abs_path_code_ex = os.path.join(os.getcwd(), "code_examples", "pretrained_models")
         self.abs_path_trans_fg = os.path.join(os.getcwd(), "models", "transfg", "transfg_pretrained")
 
-        if not os.path.exists(self.abs_path_code_ex_csv):
-            os.makedirs(self.abs_path_code_ex_csv)
         if not os.path.exists(self.abs_path_trans_fg):
             os.makedirs(self.abs_path_trans_fg)
             
@@ -119,7 +121,7 @@ class SIDTD(Dataset):
         self._original_clips_imgs_path = os.path.join(self._original_clips_path, "images")
         self._original_clips_ann_path  = os.path.join(self._original_clips_path, "annotations")
         
-    def download_static_csv(self):
+    def download_static_csv(self, type_download:str="images", unbalanced:bool=True):
         
         os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_balanced))
         with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold.zip", 'r') as zip_ref:
@@ -247,7 +249,6 @@ class SIDTD(Dataset):
                 shutil.copyfile(video, path_video_save+f"/{name_video}")           
         pass 
 
-    #TODO test it
     def create_structure_clips(self):
         clips_abs_path = os.path.join(self._abs_path, "clips","Images", "reals")
         clips_ann_abs_path = os.path.join(self._abs_path, "clips","Annotations", "reals")
@@ -322,7 +323,6 @@ class SIDTD(Dataset):
             spl = annotation.split("_")
             key = os.path.splitext("_".join(spl[:2]) if not spl[1].isnumeric() else spl[0])[0]
             class_ann = key
-            print(class_ann)
             original_class_path = os.path.join(self._path_to_download,path, class_ann)
 
             if os.path.exists(original_class_path):
@@ -347,7 +347,7 @@ class SIDTD(Dataset):
         
         for file in (fakes+reals):
             section = classes[file[1]]
-            clas = file[0].split("_")[0].split("/")[-1]
+            clas = file[0].split("/")[-1].split("_")[0]
             if clas.startswith("index"):continue
 
             section[file[0]] =  clas if self._conditioned else -1
@@ -399,5 +399,5 @@ class SIDTD(Dataset):
 
 
 if __name__ == "__main__":
-    data = SIDTD(type_download="videos", type_download_models="resnet")
-    data.download_dataset() 
+    data = SIDTD()
+    data.download_models(type_models="all_trained_models") 
