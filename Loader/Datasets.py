@@ -166,8 +166,10 @@ class SIDTD(Dataset):
         
         if not unbalanced:
             balanced_folder = "balanced_templates_SIDTD"
+            arc_name = "/coatten_fcn_model_trained_models.zip"
         else:
             balanced_folder = "unbalanced_clip_background_SIDTD"
+            arc_name = "/coattention_trained_models.zip"
         
         abs_path_model = os.path.join(self.abs_path_code_ex, balanced_folder)
         server_path_model = os.path.join(self._uri, balanced_folder)
@@ -189,8 +191,8 @@ class SIDTD(Dataset):
             with zipfile.ZipFile(abs_path_model+"/trans_fg_trained_models.zip", 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+"/coatten_fcn_model_trained_models.zip"))
-            with zipfile.ZipFile(abs_path_model+"/coatten_fcn_model_trained_models.zip", 'r') as zip_ref:
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+ arc_name))
+            with zipfile.ZipFile(abs_path_model+ arc_name, 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_trans_fg,self._uri_transfg_pretrained))
@@ -222,8 +224,8 @@ class SIDTD(Dataset):
                 zip_ref.extractall(self.abs_path_trans_fg)
 
         elif type_models == "arc":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model+ "/coatten_fcn_model_trained_models.zip"))
-            with zipfile.ZipFile(abs_path_model+"/coatten_fcn_model_trained_models.zip", 'r') as zip_ref:
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex, server_path_model +  arc_name))
+            with zipfile.ZipFile(abs_path_model+ arc_name, 'r') as zip_ref:
                 zip_ref.extractall(abs_path_model)
 
         elif type_models == "transfg_img_net":
