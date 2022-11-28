@@ -20,7 +20,7 @@ from pathlib import Path
 import random
 
 import logging
-logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', level=logging.DEBUG)
 
 class DataLoader(object):
 
@@ -81,7 +81,8 @@ class DataLoader(object):
             "transfg": "trans_fg_trained_models",
             "transfg_img_net": "transfg_pretrained",
             "arc": "coatten_fcn_model_trained_models",
-            "no": "no"
+            "all_trained_models":"all_trained_models",
+            "no":"no"
         }
         
         
