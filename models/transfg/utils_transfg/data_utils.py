@@ -45,7 +45,7 @@ def get_loader(args, training_iteration):
     train_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='train')
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
     if args.static == 'no':
-        if args.type_split =='kfold':
+        if args.type_split in ['kfold','unbalanced']:
             train_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
             val_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
         elif args.type_split =='cross':
@@ -100,7 +100,7 @@ def get_loader_test(args, training_iteration):
     test_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
 
     if args.static == 'no':
-        if args.type_split =='kfold':
+        if args.type_split in ['kfold','unbalanced']:
             test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
         elif args.type_split =='cross':
             test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))

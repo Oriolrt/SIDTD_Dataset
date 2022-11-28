@@ -158,7 +158,7 @@ def test(opt, save_model_path, iteration):
 
     # csv path for train and validation
     if opt.static == 'no':
-        if opt.type_split =='kfold':
+        if opt.type_split in ['kfold','unbalanced']:
             path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
         elif opt.type_split =='cross':
             path_test = os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
@@ -194,10 +194,14 @@ def test(opt, save_model_path, iteration):
         coAtten.eval()
     
     if opt.pretrained == 'yes':
-        discriminator.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
-        discriminator.eval()
-        resNet.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
-        coAtten.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
+        if opt.type_split == 'unbalanced':
+            discriminator.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
+            resNet.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
+            coAtten.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
+        else:
+            discriminator.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
+            resNet.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
+            coAtten.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
         discriminator.eval()
         resNet.eval()
         coAtten.eval()
@@ -254,7 +258,7 @@ def test_coAttn_models(opt, iteration=0) -> None:
         if opt.type_split == 'kfold':
             save_model_path = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/coatten_fcn_model_trained_models/"
         elif opt.type_split == 'unbalanced':
-            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/coatten_fcn_model_trained_models/"
+            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/coattention_trained_models/"
     else:
         save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     

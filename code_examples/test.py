@@ -37,7 +37,7 @@ def main(args):
     if args.model in ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50']:
             
         # test model on all partition
-        if args.type_split =='kfold':
+        if args.type_split in ['kfold', 'unbalanced']:
             for iteration in range(args.nsplits):
                 test_baseline_models(args, LOGGER, iteration)
         
@@ -48,7 +48,7 @@ def main(args):
     if args.model == 'trans_fg':
 
         # test model on all partition
-        if args.type_split =='kfold':
+        if args.type_split in ['kfold', 'unbalanced']:
             for iteration in range(args.nsplits):
                 test_transfg_models(args, LOGGER, iteration)
         
@@ -59,7 +59,7 @@ def main(args):
     if args.model == 'coatten_fcn_model':
             
         # test model on all partition
-        if args.type_split =='kfold':
+        if args.type_split in ['kfold', 'unbalanced']:
             for iteration in range(args.nsplits):
                 test_coAttn_models(args, iteration)
         

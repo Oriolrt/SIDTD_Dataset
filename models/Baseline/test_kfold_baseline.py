@@ -106,14 +106,14 @@ def test_baseline_models(args, LOGGER, iteration=0):
     print('fold number :', iteration)
 
     if args.static == 'no':
-        if args.type_split =='kfold':
-            if os.path.exists(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+        if args.type_split in ['kfold','unbalanced']:
+            if os.path.exists(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
                 print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
                 test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
             else:
                 print('ERROR : WRONG PATH')
         elif args.type_split =='cross':
-            if os.path.exists(os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(args.dataset, args.dataset)):
+            if os.path.exists(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset)):
                 test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
             else:
                 print('ERROR : WRONG PATH')
@@ -160,10 +160,14 @@ def test_baseline_models(args, LOGGER, iteration=0):
     else:
         print('Test with SIDTD trained models.')
         if args.type_split == 'unbalanced':
-            save_model_path = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/"
+            if args.model== 'efficientnet-b3':
+                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/clip_background_MIDV2020_EfficientNet_best_accuracy_n{}.pth".format(iteration)
+            elif args.model== 'resnet50':
+                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/clip_background_MIDV2020_ResNet50_best_accuracy_n{}.pth".format(iteration)
+            else:
+                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/clip_background_MIDV2020_vit_large_patch16_best_accuracy_n{}.pth".format(iteration)
         elif args.type_split == 'kfold':
-            save_model_path = os.getcwd() + '/pretrained_models/balanced_templates_SIDTD/' + args.model + "_trained_models/"
-        PATH = save_model_path + '/MIDV2020_{}_best_accuracy_n{}.pth'.format(args.model, iteration)
+            PATH = os.getcwd() + '/pretrained_models/balanced_templates_SIDTD/' + args.model + "_trained_models/MIDV2020_{}_best_accuracy_n{}.pth".format(args.model, iteration)
 
     
     print('Use trained model saved in:', PATH)
