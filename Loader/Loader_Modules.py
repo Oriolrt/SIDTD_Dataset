@@ -20,7 +20,7 @@ from pathlib import Path
 import random
 
 import logging
-logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', level=logging.DEBUG)
 
 class DataLoader(object):
 
@@ -81,7 +81,8 @@ class DataLoader(object):
             "transfg": "trans_fg_trained_models",
             "transfg_img_net": "transfg_pretrained",
             "arc": "coatten_fcn_model_trained_models",
-            "no": "no"
+            "no": "no",
+            "all_trained_models": "all_trained_models"
         }
         
         
@@ -121,36 +122,67 @@ class DataLoader(object):
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
         
         logging.info("Searching for the dataset in the current working directory")
-        # search:str="dataset", root:str="datasets"
-        flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
+        if kind != "no":
+            flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
 
-        if flag is False:
-            logging.warning("The dataset hasnt been found, starting to download")
-            time.sleep(1)
-            if self._dataset == "SIDTD":
-                self._dt.download_dataset(type_download=kind)
+            if flag is False:
+                logging.warning("The dataset hasnt been found, starting to download")
+                time.sleep(1)
+                if self._dataset == "SIDTD":
+                    self._dt.download_dataset(type_download=kind)
+                else:
+                    self._dt.download_dataset()
+                
+                logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "code_examples")))
             else:
-                self._dt.download_dataset()
-               
-            logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "code_examples")))
-        else:
-            logging.info(f"Dataset found in {self._dataset_path}")
+                logging.info(f"Dataset found in {self._dataset_path}")
+
+        else:logging.info("No dataset is set to download, not searching for")
+
+
+        #### MODELS
             
         if kind_models != "no":
-            logging.warning("Searching for the model in the current working directory")
-            # search:str="dataset", root:str="datasets"
-            flag_1, _ = self.control_download(search="models", root="code_examples")   
-            flag_2, _ = self.control_download(search="models", root="models")
 
-            if (flag_1 | flag_2) is False:
-                logging.warning("The model hasnt been found, starting to download")
-                self._dt.download_models(unbalanced = self._unbalanced,type_models=kind_models)
-                
-                logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
+            if kind_models == "all_trained_models":
+
+                for model in list(models.keys())[:6]:
+                    self._model_folder_name = models[model]
+
+                    logging.warning("Searching for the model in the current working directory")
+                    # search:str="dataset", root:str="datasets"
+                    flag_1, _ = self.control_download(search="models", root="code_examples")   
+                    flag_2, _ = self.control_download(search="models", root="models")
+
+                    if (flag_1 | flag_2) is False:
+                        logging.warning("The model hasnt been found, starting to download")
+                        self._dt.download_models(unbalanced = self._unbalanced,type_models=model)
+                        
+                        logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
+                    
+                    else:logging.info(f"Model found in code examples\' directory or in models\' directory")
+
             
-            else:logging.info(f"Model found in code examples\' directory or in models\' directory")
+            else:
+
+                logging.warning("Searching for the model in the current working directory")
+                # search:str="dataset", root:str="datasets"
+                flag_1, _ = self.control_download(search="models", root="code_examples")   
+                flag_2, _ = self.control_download(search="models", root="models")
+
+                if (flag_1 | flag_2) is False:
+                    logging.warning("The model hasnt been found, starting to download")
+                    self._dt.download_models(unbalanced = self._unbalanced,type_models=model)
+                    
+                    logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
+                
+                else:logging.info(f"Model found in code examples\' directory or in models\' directory")
+
         
-        else:logging.info("No model is set, not searching for")
+        else:
+            logging.info("No model is set, not searching for")
+
+        ###### CSV DOWNLOAD PART
             
         if download_static == True:
 
@@ -162,37 +194,49 @@ class DataLoader(object):
             if flag_csv is False:
                 logging.warning("Static csv hasnt been downloaded, starting to download")
                 time.sleep(1)
-                self._dt.download_static_csv()
+                self._dt.download_static_csv(partition_kind=type_split, unbalanced=unbalanced)
 
                 logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "code_examples", "static")))
             else:
                 logging.info("Static CSV had been downloaded, avoiding to download them")
         
         else:
-            logging.info(f"Preparing partitions for the {type_split} partition behaviour")
-            new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
+            if kind == "no":
+                flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
 
-            ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
-            #self.set_static_path()
-            ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
-
-            if len(new_df)  == 0:
-                logging.error("Some error occurred and the data couldnt been downloaded")
+            if flag == False:
+                logging.warning("No dataset to make the partitions, pls download it before to create your own partitions or download our partitions!!")
                 sys.exit()
 
-            if type_split == "kfold":
-                self._kfold_partition(new_df)
-
-            elif type_split == "few_shot":
-                if few_shot_split[0] != "random":
-                    raise NotImplementedError
-                
-                self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses)
-
             else:
-                self._train_val_test_split(new_df)
+
+                logging.info(f"Preparing partitions for the {type_split} partition behaviour")
+                new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
+
+                ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
+                #self.set_static_path()
+                ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
+
+                if len(new_df)  == 0:
+                    logging.error("Some error occurred and the data couldnt been downloaded")
+                    sys.exit()
+
+                if type_split == "kfold":
+                    self._kfold_partition(new_df)
+
+                elif type_split == "few_shot":
+                    if few_shot_split[0] != "random":
+                        raise NotImplementedError
+                    
+                    self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses)
+
+                else:
+                    self._train_val_test_split(new_df)
                 
-                
+
+
+
+
                 
 
     def change_path(self,path:str='/home/users/SIDTD/code_examples/split_normal/test_split_SIDTD.csv'):
