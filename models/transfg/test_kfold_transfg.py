@@ -14,6 +14,7 @@ sys.path.insert(1, complete_path)
 
 import random 
 import numpy as np 
+import pandas as pd
 import time 
 import sklearn.metrics 
 import csv 
@@ -99,7 +100,27 @@ def count_parameters(model):
     params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     return params/1000000
 
+def get_FPR_FNR(actual, pred):
+    
+    df = pd.DataFrame({ 'actual': np.array(actual),  
+                    'predicted': np.asarray(pred)})
 
+    TP = df[(df['actual'] == 0) & (df['predicted'] == 0)].shape[0]
+    TN = df[(df['actual'] == 1) & (df['predicted'] == 1)].shape[0]
+    FN = df[(df['actual'] == 0) & (df['predicted'] == 1)].shape[0]
+    FP = df[(df['actual'] == 1) & (df['predicted'] == 0)].shape[0]
+
+    n = len(df['actual'])
+    try:
+        FNR = FN / (TP + FN)
+    except: 
+        FNR = -1
+    try:
+        FPR = FP / (FP + TN)
+    except: 
+        FPR = -1
+
+    return FPR, FNR
 
 def test(args, LOGGER, model, test_loader):
     # Validation!
@@ -150,6 +171,7 @@ def test(args, LOGGER, model, test_loader):
     except:
         roc_auc_score = -1
         
+    FPR, FNR = get_FPR_FNR(actual = all_label, pred = all_preds)
         
     LOGGER.info("\n")
     LOGGER.info("Validation Results")
@@ -157,7 +179,7 @@ def test(args, LOGGER, model, test_loader):
     LOGGER.info("Valid Accuracy: %2.5f" % val_accuracy)
     LOGGER.info("Valid ROC AUC score: %2.5f" % roc_auc_score)
         
-    return eval_losses.avg, val_accuracy, roc_auc_score
+    return eval_losses.avg, val_accuracy, roc_auc_score, FPR, FNR
 
 
 
@@ -181,7 +203,7 @@ def test_transfg_models(args, LOGGER, iteration=0):
             f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'w')
             # create the csv writer
             writer_test = csv.writer(f_test)
-            header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score']
+            header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score', 'FPR', 'FNR']
             writer_test.writerow(header_test)
     
     seed_torch(seed=777)
@@ -210,12 +232,12 @@ def test_transfg_models(args, LOGGER, iteration=0):
     
     model.load_state_dict(torch.load(model_checkpoint))
     with torch.no_grad():
-        test_loss, test_accuracy, test_roc_auc_score = test(args, LOGGER, model, test_loader)
+        test_loss, test_accuracy, test_roc_auc_score, FPR, FNR = test(args, LOGGER, model, test_loader)
 
 
     if args.save_results:
         
-        test_res = [iteration, test_loss, test_accuracy, test_roc_auc_score]
+        test_res = [iteration, test_loss, test_accuracy, test_roc_auc_score, FPR, FNR]
         
         writer_test.writerow(test_res)
 

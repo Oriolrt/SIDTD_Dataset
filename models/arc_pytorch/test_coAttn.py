@@ -59,6 +59,28 @@ def read_image(image_path, image_size):
     
     return np.moveaxis(image, -1, 0) 
 
+def get_FPR_FNR(actual, pred):
+    
+    df = pd.DataFrame({ 'actual': np.array(actual),  
+                    'predicted': np.asarray(pred)})
+
+    TP = df[(df['actual'] == 0) & (df['predicted'] == 0)].shape[0]
+    TN = df[(df['actual'] == 1) & (df['predicted'] == 1)].shape[0]
+    FN = df[(df['actual'] == 0) & (df['predicted'] == 1)].shape[0]
+    FP = df[(df['actual'] == 1) & (df['predicted'] == 0)].shape[0]
+
+    n = len(df['actual'])
+    try:
+        FNR = FN / (TP + FN)
+    except: 
+        FNR = -1
+    try:
+        FPR = FP / (FP + TN)
+    except: 
+        FPR = -1
+
+    return FPR, FNR
+
 def save_results_test(opt):
     """
     Helper function to create the files to save the final results for each iteration of the kfold
@@ -234,12 +256,13 @@ def test(opt, save_model_path, iteration):
 
     test_auc = roc_auc_score(df['Label_image'],df['Proba_label_image'])
     acc_test = accuracy_score(df['Label_image'], df['Pred_label_image'])
+    FPR, FNR = get_FPR_FNR(actual = df['Label_image'].values, pred = df['Pred_label_image'].values)
     
     print('****** TEST COMPLETED ******')
     print('Kfold number:',iteration)
     print('Final accuracy:', acc_test, 'test AUC:', test_auc)
     
-    return acc_test, test_auc
+    return acc_test, test_auc, FPR, FNR
 
 
 def test_coAttn_models(opt, iteration=0) -> None:
@@ -263,10 +286,10 @@ def test_coAttn_models(opt, iteration=0) -> None:
         save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     
         
-    acc_test, test_auc = test(opt, save_model_path, iteration)
+    acc_test, test_auc, FPR, FNR = test(opt, save_model_path, iteration)
     
     #save results on the output cvs file
-    test_res = [iteration, acc_test, test_auc]
+    test_res = [iteration, acc_test, test_auc, FPR, FNR]
     writer_test.writerow(test_res)
 
     if opt.save_results:

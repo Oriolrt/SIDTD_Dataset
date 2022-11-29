@@ -60,7 +60,7 @@ def save_results_test(opt):
         f_test = open(opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name), 'w')
         # create the csv writer
         writer_test = csv.writer(f_test)
-        header_test = ['training_iteration', 'accuracy', 'roc_auc_score']
+        header_test = ['training_iteration', 'accuracy', 'roc_auc_score', 'FPR', 'FNR']
         writer_test.writerow(header_test)
     
     return f_test, writer_test

@@ -16,6 +16,28 @@ import torch.nn as nn
 
 from utils import *
 
+def get_FPR_FNR(actual, pred):
+    
+    df = pd.DataFrame({ 'actual': np.array(actual),  
+                    'predicted': np.asarray(pred)})
+
+    TP = df[(df['actual'] == 0) & (df['predicted'] == 0)].shape[0]
+    TN = df[(df['actual'] == 1) & (df['predicted'] == 1)].shape[0]
+    FN = df[(df['actual'] == 0) & (df['predicted'] == 1)].shape[0]
+    FP = df[(df['actual'] == 1) & (df['predicted'] == 0)].shape[0]
+
+    n = len(df['actual'])
+    try:
+        FNR = FN / (TP + FN)
+    except: 
+        FNR = -1
+    try:
+        FPR = FP / (FP + TN)
+    except: 
+        FPR = -1
+
+    return FPR, FNR
+
 def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
                
     #Evaluation
@@ -50,10 +72,11 @@ def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
     except:
         roc_auc_score = -1
 
+    FPR, FNR = get_FPR_FNR(actual = reals, pred = preds)
     
     LOGGER.debug(f'TESTING: avg_test_loss: {avg_val_loss:.4f} F1: {score:.6f}  Accuracy: {accuracy:.6f} roc_auc_score: {roc_auc_score:.6f}') 
 
-    return avg_val_loss, accuracy, roc_auc_score
+    return avg_val_loss, accuracy, roc_auc_score, FPR, FNR
 
            
 def test_baseline_models(args, LOGGER, iteration=0):
@@ -80,7 +103,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
             f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'w')
             # create the csv writer
             writer_test = csv.writer(f_test)
-            header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score']
+            header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score', 'FPR', 'FNR']
             writer_test.writerow(header_test)
 
     # Adjust BATCH_SIZE and ACCUMULATION_STEPS to values that if multiplied results in 64 !
@@ -88,7 +111,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
     WORKERS = args.workers
     lr = args.learning_rate
     
-    if args.model in ['vit_large_patch16_224', 'pretrained_banknotes_vit_large_patch16_224']:
+    if args.model in ['vit_large_patch16_224']:
         WIDTH, HEIGHT = 224, 224
     else: 
         WIDTH, HEIGHT = 299, 299
@@ -175,10 +198,10 @@ def test_baseline_models(args, LOGGER, iteration=0):
     model.load_state_dict(torch.load(PATH))
     model.eval()
     
-    loss, accuracy, roc_auc_score = test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE)
+    loss, accuracy, roc_auc_score, FPR, FNR = test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE)
 
     if args.save_results:
-        test_res = [iteration, loss, accuracy, roc_auc_score]
+        test_res = [iteration, loss, accuracy, roc_auc_score, FPR, FNR]
         
         writer_test.writerow(test_res)
         
