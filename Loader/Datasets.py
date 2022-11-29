@@ -84,9 +84,14 @@ class SIDTD(Dataset):
         self._clips_path = "http://datasets.cvc.uab.es/SIDTD/clips.zip"
         self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/videos.zip"
         self._uri_transfg_pretrained = "http://datasets.cvc.uab.es/SIDTD/imagenet21k+imagenet2012_ViT-L_16.zip"
+
+        ## static Csv
         self._uri_static_kfold_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_kfold.zip'
         self._uri_static_kfold_unbalanced = "http://datasets.cvc.uab.es/SIDTD/split_kfold_unbalanced.zip"
-        self._uri_static_normal = 'http://datasets.cvc.uab.es/SIDTD/split_normal.zip'
+        self._uri_static_normal_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_normal.zip'
+        self._uri_static_normal_unbalanced = 'http://datasets.cvc.uab.es/SIDTD/split_normal_unbalanced.zip'
+        self._uri_static_shot_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_shot.zip'
+        self._uri_static_shot_unbalanced = 'http://datasets.cvc.uab.es/SIDTD/split_shot_unbalanced.zip'
         
 
 
@@ -121,19 +126,38 @@ class SIDTD(Dataset):
         self._original_clips_imgs_path = os.path.join(self._original_clips_path, "images")
         self._original_clips_ann_path  = os.path.join(self._original_clips_path, "annotations")
         
-    def download_static_csv(self, type_download:str="images", unbalanced:bool=True):
-        
-        os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_balanced))
-        with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold.zip", 'r') as zip_ref:
-            zip_ref.extractall(self.abs_path_code_ex_csv)
+    def download_static_csv(self, partition_kind:str="cross" ,unbalanced:bool=True):
 
-        os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_unbalanced))
-        with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_unbalanced.zip", 'r') as zip_ref:
-            zip_ref.extractall(self.abs_path_code_ex_csv)
+        if partition_kind == "kfold":
+            if unbalanced:                    
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_unbalanced))
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold.zip", 'r') as zip_ref:
+                    zip_ref.extractall(self.abs_path_code_ex_csv)
+            else:
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_unbalanced))
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_unbalanced.zip", 'r') as zip_ref:
+                    zip_ref.extractall(self.abs_path_code_ex_csv)
 
-        os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal))
-        with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_normal.zip", 'r') as zip_ref:
-            zip_ref.extractall(self.abs_path_code_ex_csv)
+        elif partition_kind == "cross":
+            if unbalanced:
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal_balanced))
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_normal.zip", 'r') as zip_ref:
+                    zip_ref.extractall(self.abs_path_code_ex_csv)
+            else:
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal_unbalanced))
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_normal_unbalanced.zip", 'r') as zip_ref:
+                    zip_ref.extractall(self.abs_path_code_ex_csv)
+
+        else:
+            if unbalanced:
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_shot_balanced))
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_shot.zip", 'r') as zip_ref:
+                    zip_ref.extractall(self.abs_path_code_ex_csv)
+            else:
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_shot_unbalanced))
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_shot_unbalanced.zip", 'r') as zip_ref:
+                    zip_ref.extractall(self.abs_path_code_ex_csv)
+
 
     def download_dataset(self, type_download:str = "images"):
         
