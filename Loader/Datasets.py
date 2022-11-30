@@ -89,7 +89,7 @@ class SIDTD(Dataset):
         self._uri_static_kfold_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_kfold.zip'
         self._uri_static_kfold_unbalanced = "http://datasets.cvc.uab.es/SIDTD/split_kfold_unbalanced.zip"
         self._uri_static_normal_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_normal.zip'
-        self._uri_static_normal_unbalanced = 'http://datasets.cvc.uab.es/SIDTD/split_normal_unbalanced.zip'
+        self._uri_static_normal_unbalanced = 'http://datasets.cvc.uab.es/SIDTD/cross_val_unbalanced.zip'
         self._uri_static_shot_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_shot.zip'
         self._uri_static_shot_unbalanced = 'http://datasets.cvc.uab.es/SIDTD/split_shot_unbalanced.zip'
         
@@ -129,8 +129,8 @@ class SIDTD(Dataset):
     def download_static_csv(self, partition_kind:str="cross" ,unbalanced:bool=True):
 
         if partition_kind == "kfold":
-            if unbalanced:                    
-                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_unbalanced))
+            if not unbalanced:                    
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_balanced))
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
             else:
@@ -139,17 +139,17 @@ class SIDTD(Dataset):
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
         elif partition_kind == "cross":
-            if unbalanced:
+            if not unbalanced:
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal_balanced))
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_normal.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
             else:
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal_unbalanced))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_normal_unbalanced.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/cross_val_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
         else:
-            if unbalanced:
+            if not unbalanced:
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_shot_balanced))
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_shot.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)

@@ -20,7 +20,7 @@ from pathlib import Path
 import random
 
 import logging
-logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', level=logging.DEBUG)
 
 class DataLoader(object):
 
@@ -81,7 +81,8 @@ class DataLoader(object):
             "transfg": "trans_fg_trained_models",
             "transfg_img_net": "transfg_pretrained",
             "arc": "coatten_fcn_model_trained_models",
-            "no": "no"
+            "no": "no",
+            "all_trained_models":"all_trained_models"
         }
         
         
@@ -171,7 +172,7 @@ class DataLoader(object):
 
                 if (flag_1 | flag_2) is False:
                     logging.warning("The model hasnt been found, starting to download")
-                    self._dt.download_models(unbalanced = self._unbalanced,type_models=model)
+                    self._dt.download_models(unbalanced = self._unbalanced,type_models=kind_models)
                     
                     logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
                 
@@ -185,7 +186,7 @@ class DataLoader(object):
             
         if download_static == True:
 
-            if not os.path.exists(self.abs_path_code_ex_csv):
+            if not os.path.exists(self._dt.abs_path_code_ex_csv):
                 os.makedirs(self._dt.abs_path_code_ex_csv)
             
             flag_csv = self.control_download_csv()
@@ -203,12 +204,11 @@ class DataLoader(object):
             if kind == "no":
                 flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
 
-            if flag == False:
-                logging.warning("No dataset to make the partitions, pls download it before to create your own partitions or download our partitions!!")
-                sys.exit()
+                if flag == False:
+                    logging.warning("No dataset to make the partitions, pls download it before to create your own partitions or download our partitions!!")
+                    sys.exit()
 
             else:
-
                 logging.info(f"Preparing partitions for the {type_split} partition behaviour")
                 new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
 
@@ -459,17 +459,6 @@ class DataLoader(object):
         
         return False, []
 
-    def control_download_dataset(self):
-        abs_path = os.getcwd()
-        abs_path_dataset = os.path.join(abs_path, "datasets", self._dataset, self._dataset_type)
-        if os.path.exists(abs_path_dataset):
-            search_path = glob.glob(abs_path_dataset + '/Images/*/*.jpg')
-            if len(search_path) == 0:
-                return False, abs_path_dataset
-            else:
-                return True, abs_path_dataset
-        else:
-            return False, abs_path_dataset
 
     def control_download_csv(self):
         abs_path = os.getcwd()
