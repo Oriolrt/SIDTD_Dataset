@@ -211,7 +211,7 @@ class DataLoader(object):
         
         else:
             if kind == "no":
-                flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
+                flag, self._dataset_path = self.control_download(to_search=dataset, search="dataset", root="datasets")
 
                 if flag == False:
                     logging.warning("No dataset to make the partitions, pls download it before to create your own partitions or download our partitions!!")
