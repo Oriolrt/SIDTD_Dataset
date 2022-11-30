@@ -85,6 +85,15 @@ class DataLoader(object):
             "all_trained_models":"all_trained_models"
         }
         
+        static_csv = {
+            ("cross", False): "split_normal",
+            ("kfold", False): "split_kfold",
+            ("few_shot", False):"split_shot",
+            ("cross", True) : "cross_val_unbalanced",
+            ("kfold", True) : "split_kfold_unbalanced",
+            ("few_shot", True): "split_shot_unbalanced"
+        }
+        
         
 
         ### ASSERTS AND ERROR CONTROL ###
@@ -123,7 +132,7 @@ class DataLoader(object):
         
         logging.info("Searching for the dataset in the current working directory")
         if kind != "no":
-            flag, self._dataset_path = self.control_download(search="dataset", root="datasets")
+            flag, self._dataset_path = self.control_download(to_search=dataset,search="dataset", root="datasets")
 
             if flag is False:
                 logging.warning("The dataset hasnt been found, starting to download")
@@ -147,12 +156,12 @@ class DataLoader(object):
             if kind_models == "all_trained_models":
 
                 for model in list(models.keys())[:6]:
-                    self._model_folder_name = models[model]
+                    model_folder_name = models[model]
 
                     logging.warning("Searching for the model in the current working directory")
                     # search:str="dataset", root:str="datasets"
-                    flag_1, _ = self.control_download(search="models", root="code_examples")   
-                    flag_2, _ = self.control_download(search="models", root="models")
+                    flag_1, _ = self.control_download(to_search=model_folder_name, search="models", root="code_examples")   
+                    flag_2, _ = self.control_download(to_search=model_folder_name, search="models", root="models")
 
                     if (flag_1 | flag_2) is False:
                         logging.warning("The model hasnt been found, starting to download")
@@ -167,8 +176,8 @@ class DataLoader(object):
 
                 logging.warning("Searching for the model in the current working directory")
                 # search:str="dataset", root:str="datasets"
-                flag_1, _ = self.control_download(search="models", root="code_examples")   
-                flag_2, _ = self.control_download(search="models", root="models")
+                flag_1, _ = self.control_download(to_search=self._model_folder_name, search="models", root="code_examples")   
+                flag_2, _ = self.control_download(to_search=self._model_folder_name, search="models", root="models")
 
                 if (flag_1 | flag_2) is False:
                     logging.warning("The model hasnt been found, starting to download")
@@ -188,8 +197,8 @@ class DataLoader(object):
 
             if not os.path.exists(self._dt.abs_path_code_ex_csv):
                 os.makedirs(self._dt.abs_path_code_ex_csv)
-            
-            flag_csv = self.control_download_csv()
+            to_search = static_csv[tuple([type_split, unbalanced])]
+            flag_csv = self.control_download(to_search=to_search, search="static", root="code_examples")
 
             if flag_csv is False:
                 logging.warning("Static csv hasnt been downloaded, starting to download")
@@ -449,9 +458,7 @@ class DataLoader(object):
         return new_df
 
     
-    def control_download(self, search:str="dataset", root:str="datasets"):
-        result = []
-        to_search = self._dataset if search == "dataset" else self._model_folder_name
+    def control_download(self, to_search:str, search:str="dataset", root:str="datasets"):
         # Wlaking top-down from the Working directory
         for rt, dir, files in os.walk(os.path.join(os.getcwd(), root)):            
             if (to_search in dir):
@@ -460,17 +467,6 @@ class DataLoader(object):
         return False, []
 
 
-    def control_download_csv(self):
-        abs_path = os.getcwd()
-        abs_path_csv = os.path.join(abs_path, "code_examples", "static")
-        path_split_unbalanced = glob.glob(abs_path_csv + "/split_kfold_unbalanced/*.csv")
-        path_split_balanced = glob.glob(abs_path_csv + "/split_kfold/*.csv")
-        path_split_normal = glob.glob(abs_path_csv + "/split_normal/*.csv")
-        if len(path_split_unbalanced) > 0 and len(path_split_balanced) > 0 and len(path_split_normal) > 0:
-            found = True
-        else:
-            found = False
-        return found
 
     def load_dataset(self, path: str) -> list:
         
