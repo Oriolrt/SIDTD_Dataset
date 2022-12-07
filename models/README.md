@@ -2,7 +2,7 @@ This folder contains the models used to evaluate the SIDTD dataset. Every model 
 
 # EfficientNet and ResNet
 
-ResNet and EfficientNet are widely used CNN models by the deep learning community. ResNet is short for Residual Network and was designed in order to avoid vanishing gradient problem which enables then to build deeper network. We chose to implement ResNet50, a Residual Network with 23 million parameters. EfficientNet is a network conceived to use the parameters more efficiently, good accuracy with a lower number of parameters. They build this network focusing on optimizing both accuracy and FLOPS (calculation speed) and it resulted with balanced networks in terms of width, depth, and resolution. We chose to implement EfficientNet-b3, a residual network with 10 million parameters, the most accurate efficientnet with a low number of parameters. 
+ResNet and EfficientNet are widely used CNN models by the deep learning community. ResNet is short for Residual Network and was designed in order to avoid vanishing gradient problem which enables to build deeper network. We chose to implement ResNet50, a Residual Network with 23 million parameters. EfficientNet is a network conceived to use the parameters more efficiently, good accuracy with a lower number of parameters. They build this network focusing on optimizing both accuracy and FLOPS (calculation speed) and it resulted with balanced networks in terms of width, depth, and resolution. We chose to implement EfficientNet-b3, a residual network with 10 million parameters, the most accurate efficientnet with a low number of parameters. 
 
 The EfficientNet-B3 and ResNet50 are built-in models from pytorch packages, respectively in order efficientnet_pytorch and torchvision. Both model are pretrained on ImageNet/1k (2012) at resolution 299x299x3 for EfficientNet-B3 and ResNet50.  
 
@@ -11,6 +11,10 @@ The EfficientNet-B3 and ResNet50 are built-in models from pytorch packages, resp
 Vision Transformer (ViT) is a recent innovation in computer vision inspired from Transformer architecture in Natural Language Processing. ViT split images into image patches and add position embedding, and input patch + position embeding into a Transformer encoder architecture were images are treated like tokens for NLP tasks. The ViT architecture implemented in this code is the ViT-L/16. The ViT-L/16 model is implemented in pytorch with a built-in model from timm package. The model is pretrained on ImageNet/1k (2012) at resolution 224x224x3 for EfficientNet-B3 and ResNet50.  
 
 The TransFG network is a model derived from ViT model. The innovation with this model is the addition of a Part Selection module between Transformer Encoder and the Transformer Layer. This new module aims to guide the network during the selection of the relevant image patches and to learn only from the discriminative image patches. We took the same ViT model as the backbone network for the TransFG model, ViT-L/16, pretrained on ImageNet21k and ImageNet1k (2012).
+
+![alt text](https://github.com/Oriolrt/SIDTD_Dataset/blob/main/models/trans_fg_architecture.png?raw=true)
+
+
 
 ### Pre-trained ViT models
 
