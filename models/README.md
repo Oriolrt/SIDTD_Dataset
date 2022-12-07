@@ -14,7 +14,7 @@ The TransFG network is a model derived from ViT model. The innovation with this 
 
 ![alt text](https://github.com/Oriolrt/SIDTD_Dataset/blob/main/models/trans_fg_architecture.png?raw=true "TransFG's architecture taken from TransFG's article (https://arxiv.org/abs/2103.07976). We inform that ViT's architecture is similar to Trans FG except for Part Selection module that has been added.")
 
-
+TransFG's architecture taken from TransFG's article (https://arxiv.org/abs/2103.07976). We inform that ViT's architecture is similar to Trans FG except for Part Selection module that has been added.
 
 ### Pre-trained ViT models
 
@@ -42,6 +42,8 @@ The code is adapted from the official PyTorch code of the paper:  [*TransFG: A T
 ARC is an algorithmic imitation of the human way that compares alternatively two images with a model based on a recurrent neural network controller and a CNN model that perform features exctraction. This algorithm iterates over different glimpses from pairs of images in order to search the region of interest which would help to decide if the two images are from the same class or not. In addition to this model, we join a co-attention module to focus on identifying the most relevant and crucial parts of the images.
 
 ![alt text](https://github.com/Oriolrt/SIDTD_Dataset/blob/main/models/trans_fg_architecture.png?raw=true "Co Attention ARC's architecture taken from the article Recurrent Comparator with attention models to detect counterfeit documents.")
+
+Co Attention ARC's architecture taken from the article Recurrent Comparator with attention models to detect counterfeit documents.
 
 We chose to use ResNet50 pretrained on ImageNet1k (2012) as the CNN network. 
 
