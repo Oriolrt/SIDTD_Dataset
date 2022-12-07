@@ -8,11 +8,11 @@ The EfficientNet-B3 and ResNet50 are built-in models from pytorch packages, resp
 
 # Transformer (ViT and TransFG)
 
-Vision Transformer (ViT) is a recent innovation in computer vision inspired from Transformer architecture in Natural Language Processing. ViT split images into image patches and add position embedding, and input patch + position embeding into a Transformer encoder architecture were images are treated like tokens for NLP tasks. The ViT architecture implemented in this code is the ViT-L/16. The ViT-L/16 model is implemented in pytorch with a built-in model from timm package. The model is pretrained on ImageNet/1k (2012) at resolution 224x224x3 for EfficientNet-B3 and ResNet50.  
+Vision Transformer (ViT) is a recent innovation in computer vision inspired from Transformer architecture in Natural Language Processing. ViT split images into patches and add position embedding, and input image patches with position embeding into a Transformer encoder architecture were images are treated as tokens like in NLP tasks. The ViT architecture implemented in this code is the ViT-L/16. The ViT-L/16 model is implemented in pytorch with a built-in model from timm package. The model is pretrained on ImageNet/1k (2012) at resolution 224x224x3 for EfficientNet-B3 and ResNet50.  
 
 The TransFG network is a model derived from ViT model. The innovation with this model is the addition of a Part Selection module between Transformer Encoder and the Transformer Layer. This new module aims to guide the network during the selection of the relevant image patches and to learn only from the discriminative image patches. We took the same ViT model as the backbone network for the TransFG model, ViT-L/16, pretrained on ImageNet21k and ImageNet1k (2012).
 
-![alt text](https://github.com/Oriolrt/SIDTD_Dataset/blob/main/models/trans_fg_architecture.png?raw=true)
+![alt text](https://github.com/Oriolrt/SIDTD_Dataset/blob/main/models/trans_fg_architecture.png?raw=true "TransFG's architecture taken from TransFG's article (https://arxiv.org/abs/2103.07976). We inform that ViT's architecture is similar to Trans FG except for Part Selection module that has been added.")
 
 
 
@@ -40,6 +40,8 @@ The code is adapted from the official PyTorch code of the paper:  [*TransFG: A T
 # Co-attention Attention Recurrent Comparator (Co-Attention ARC)
 
 ARC is an algorithmic imitation of the human way that compares alternatively two images with a model based on a recurrent neural network controller and a CNN model that perform features exctraction. This algorithm iterates over different glimpses from pairs of images in order to search the region of interest which would help to decide if the two images are from the same class or not. In addition to this model, we join a co-attention module to focus on identifying the most relevant and crucial parts of the images.
+
+![alt text](https://github.com/Oriolrt/SIDTD_Dataset/blob/main/models/trans_fg_architecture.png?raw=true "Co Attention ARC's architecture taken from the article Recurrent Comparator with attention models to detect counterfeit documents.")
 
 We chose to use ResNet50 pretrained on ImageNet1k (2012) as the CNN network. 
 
