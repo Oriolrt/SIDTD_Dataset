@@ -281,7 +281,7 @@ def test_coAttn_models(opt, iteration=0) -> None:
         if opt.type_split == 'kfold':
             save_model_path = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/coatten_fcn_model_trained_models/"
         elif opt.type_split == 'unbalanced':
-            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/coattention_trained_models/"
+            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/coattention_trained_models/"
     else:
         save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     

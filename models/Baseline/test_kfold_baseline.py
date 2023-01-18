@@ -184,11 +184,11 @@ def test_baseline_models(args, LOGGER, iteration=0):
         print('Test with SIDTD trained models.')
         if args.type_split == 'unbalanced':
             if args.model== 'efficientnet-b3':
-                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/clip_background_MIDV2020_EfficientNet_best_accuracy_n{}.pth".format(iteration)
+                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_cropped_SIDTD/' + args.model + "_trained_models/clip_cropped_MIDV2020_EfficientNet_best_accuracy_n{}.pth".format(iteration)
             elif args.model== 'resnet50':
-                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/clip_background_MIDV2020_ResNet50_best_accuracy_n{}.pth".format(iteration)
+                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_cropped_SIDTD/' + args.model + "_trained_models/clip_cropped_MIDV2020_ResNet50_best_accuracy_n{}.pth".format(iteration)
             else:
-                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_background_SIDTD/' + args.model + "_trained_models/clip_background_MIDV2020_vit_large_patch16_best_accuracy_n{}.pth".format(iteration)
+                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_cropped_SIDTD/' + args.model + "_trained_models/clip_cropped_MIDV2020_vit_large_patch16_best_accuracy_n{}.pth".format(iteration)
         elif args.type_split == 'kfold':
             PATH = os.getcwd() + '/pretrained_models/balanced_templates_SIDTD/' + args.model + "_trained_models/MIDV2020_{}_best_accuracy_n{}.pth".format(args.model, iteration)
 

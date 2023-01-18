@@ -192,7 +192,7 @@ class SIDTD(Dataset):
             balanced_folder = "balanced_templates_SIDTD"
             arc_name = "/coatten_fcn_model_trained_models.zip"
         else:
-            balanced_folder = "unbalanced_clip_background_SIDTD"
+            balanced_folder = "unbalanced_clip_cropped_SIDTD"
             arc_name = "/coattention_trained_models.zip"
         
         abs_path_model = os.path.join(self.abs_path_code_ex, balanced_folder)

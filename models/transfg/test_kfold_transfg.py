@@ -216,9 +216,9 @@ def test_transfg_models(args, LOGGER, iteration=0):
 
     if args.pretrained == 'yes':
         if args.type_split == 'unbalanced':
-            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/trans_fg_trained_models/"
+            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/trans_fg_trained_models/"
             model_checkpoint = os.path.join(save_model_path,
-                                    'clip_background_MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
+                                    'clip_cropped_MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
         elif args.type_split == 'kfold':
             save_model_path = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/trans_fg_trained_models/"
             model_checkpoint = os.path.join(save_model_path,
