@@ -6,6 +6,9 @@ from Datasets import *
 from abc import ABC, abstractmethod
 import time
 import os
+import os.path
+import json
+import cv2
 import sys
 import argparse
 import glob
@@ -501,6 +504,58 @@ class DataLoader(object):
         
         return res
 
+    def crop_clip_sidtd():
+
+        # --------------------------------------------------------------------------
+        # Definition of output paths
+        if not os.path.exists(os.getcwd() + '/datasets/SIDTD/clips/Cropped/fakes/'):
+            os.makedirs(os.getcwd() + '/datasets/SIDTD/clips/Cropped/fakes/')
+        if not os.path.exists(os.getcwd() + '/datasets/SIDTD/clips/Cropped/reals/'):
+            os.makedirs(os.getcwd() + '/datasets/SIDTD/clips/Cropped/reals/')
+
+
+        # --------------------------------------------------------------------------
+        # Start Looping over dataset
+        search_json = glob.glob(os.getcwd() + '/datasets/SIDTD/clips/annotations/*/*.json')
+        for json_path in search_json:
+            
+            r_or_f = json_path.split('/')[-2]
+            
+            with open(json_path) as f:
+                d = json.load(f)
+            clip_path = os.getcwd() + '/datasets/SIDTD/clips/Images/{}/{}'.format(r_or_f, d['filename'])
+            frame = cv2.imread(clip_path)
+
+            template_id_splitted = d['filename'].split('_')
+            if r_or_f == 'fakes':
+                template_decompose = template_id_splitted[:6]
+                fidx = template_id_splitted[7]
+            else:
+                template_decompose = template_id_splitted[:3]
+                fidx = template_id_splitted[4]
+            
+            template_id = '_'.join(template_decompose)
+            
+            out_path_frame_dewarped = os.path.join(os.getcwd() + "/datasets/SIDTD/clips/Cropped/{}/{}_frame_{}_dewarped.png".format(r_or_f, template_id, fidx))
+            
+            template_path = os.getcwd() + '/datasets/SIDTD/templates/Images/{}/{}.jpg'.format(r_or_f, template_id)
+            img_gt = cv2.imread(template_path)
+
+            # dewarp and save dewarped image
+            x = np.asarray(d['regions'][0]['shape_attributes']['all_points_x'])
+            y = np.asarray(d['regions'][0]['shape_attributes']['all_points_y'])
+            shape_object = np.float32([[x[0], y[0]],
+                                    [x[3], y[3]],
+                                    [x[2], y[2]],
+                                    [x[1], y[1]]])
+            shape_target = np.float32([[0, 0],
+                                    [0, img_gt.shape[0]-1],
+                                    [img_gt.shape[1]-1, img_gt.shape[0]-1],
+                                    [img_gt.shape[1]-1, 0]])
+        
+            trans = cv2.getPerspectiveTransform(shape_object, shape_target)
+            frame_dewarped = cv2.warpPerspective(frame, trans, (img_gt.shape[1], img_gt.shape[0]))
+            cv2.imwrite(out_path_frame_dewarped, frame_dewarped)
 
     @staticmethod
     def read_img(path: str) -> Image:
