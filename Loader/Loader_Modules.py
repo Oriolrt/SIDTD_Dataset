@@ -159,6 +159,20 @@ class DataLoader(object):
                         self._dt.download_dataset(type_download=kind)
                     else:
                         logging.info(f"Dataset found in {self._dataset_path}, check if it is empty")
+
+                if kind == "clips" and arg.crop_clip:
+                    crop_exist = os.path.exists(os.path.join(self._dataset_path, "clips", "Cropped"))
+                    empty_template = (len(glob.glob(os.path.join(self._dataset_path, "templates", "Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, "templates", "Images", "reals", "*"))) == 0)
+                    empty_clip_background = (len(glob.glob(os.path.join(self._dataset_path, "clips", "Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, "clips", "Images", "reals", "*"))) == 0)
+                    empty_clip_cropped = (len(glob.glob(os.path.join(self._dataset_path, "clips", "Cropped","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, "clips", "Cropped", "reals", "*"))) == 0)
+                    if not empty_template and not empty_clip_background:
+                        if not crop_exist:
+                            self.crop_clip_sidtd()
+                        else:
+                            if empty_clip_cropped:
+                                self.empty_clip_cropped()
+
+
     
     
         else:logging.info("No dataset is set to download, not searching for")
@@ -516,7 +530,7 @@ class DataLoader(object):
         
         return res
 
-    def crop_clip_sidtd():
+    def crop_clip_sidtd(self):
 
         # --------------------------------------------------------------------------
         # Definition of output paths
@@ -591,6 +605,7 @@ if __name__ == "__main__":
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
     parser.add_argument("--unbalanced", action="store_true", help="flag to prepare the unbalance partition")
+    parser.add_argument("--crop_clip", action="store_true", help="flag to crop video clip.")
     opts, rem_args = parser.parse_known_args()
 
     conditioned = False if opts.conditioned == 0 else True
