@@ -61,7 +61,7 @@ class DataLoader(object):
 
 
 
-    def __init__(self, dataset:str="SIDTD",kind:str="images", kind_models:str="transfg_img_net", download_static:bool= False,type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
+    def __init__(self, dataset:str="SIDTD",kind:str="templates", kind_models:str="transfg_img_net", download_static:bool= False,type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
 , few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False):
 
         """
@@ -135,6 +135,7 @@ class DataLoader(object):
         
         logging.info("Searching for the dataset in the current working directory")
         if kind != "no":
+
             flag, self._dataset_path = self.control_download(to_search=dataset,search="dataset", root="datasets")
 
             if flag is False:
@@ -147,8 +148,19 @@ class DataLoader(object):
                 
                 logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "code_examples")))
             else:
-                logging.info(f"Dataset found in {self._dataset_path}")
+                kinds = os.listdir(self._dataset_path)
+                if kind not in kinds:
+                    self._dt.download_dataset(type_download=kind)
 
+                else:   
+                    empty = (len(glob.glob(os.path.join(self._dataset_path, kind, "Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, kind, "Images", "reals", "*"))) == 0)
+                    if empty:
+                        os.rmdir(os.path.join(self._dataset_path, kind))
+                        self._dt.download_dataset(type_download=kind)
+                    else:
+                        logging.info(f"Dataset found in {self._dataset_path}, check if it is empty")
+    
+    
         else:logging.info("No dataset is set to download, not searching for")
 
 
@@ -222,7 +234,7 @@ class DataLoader(object):
 
             else:
                 logging.info(f"Preparing partitions for the {type_split} partition behaviour")
-                new_df =  self._prepare_csv() if unbalanced == False else self.get_unbalance_partition()
+                new_df =  self._prepare_csv(kind=kind) if unbalanced == False else self.get_unbalance_partition()
 
                 ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
                 #self.set_static_path()
@@ -233,16 +245,16 @@ class DataLoader(object):
                     sys.exit()
 
                 if type_split == "kfold":
-                    self._kfold_partition(new_df)
+                    self._kfold_partition(new_df, kind=kind)
 
                 elif type_split == "few_shot":
                     if few_shot_split[0] != "random":
                         raise NotImplementedError
                     
-                    self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses)
+                    self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses, kind=kind)
 
                 else:
-                    self._train_val_test_split(new_df)
+                    self._train_val_test_split(new_df, kind=kind)
                 
 
 
@@ -266,10 +278,10 @@ class DataLoader(object):
                 self.change_path(path_save_csv)
                 
 
-    def _kfold_partition(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
+    def _kfold_partition(self, new_df, kind:str= "templates") -> Tuple[List[Image], List[Image], List[Image]]:
 
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        split_kfold_dir = os.path.join(self._save_dir,'split_kfold', self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'split_kfold_unbalanced', self._dataset)
+        split_kfold_dir = os.path.join(self._save_dir,'split_kfold', kind ,self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'split_kfold_unbalanced', kind,self._dataset)
         if not os.path.exists(split_kfold_dir):
             os.makedirs(split_kfold_dir)
 
@@ -299,10 +311,10 @@ class DataLoader(object):
         print('Directory split_kfold created.')
 
 
-    def _shot_partition(self,new_df, proportion:list = [0.6,0.4], metaclasses:list = ["id", "passport"]):
+    def _shot_partition(self,new_df, proportion:list = [0.6,0.4], metaclasses:list = ["id", "passport"], kind:str= "templates"):
 
 
-        split_dir = os.path.join(self._save_dir,'split_shot', self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'split_shot_unbalanced', self._dataset)
+        split_dir = os.path.join(self._save_dir,'split_shot', kind, self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'split_shot_unbalanced', kind, self._dataset)
         metatrain_prop, metatest_prop = float(proportion[0]), float(proportion[1])
          
         ngroups = len(metaclasses)
@@ -355,12 +367,12 @@ class DataLoader(object):
 
 
     def _ranking_shot_partition(self, new_df, proportion, metaclasses:list = ["dni", "passport"]):
-        pass
+        raise NotImplementedError
 
-    def _train_val_test_split(self, new_df) -> Tuple[List[Image], List[Image], List[Image]]:
+    def _train_val_test_split(self, new_df, kind:str="templates") -> Tuple[List[Image], List[Image], List[Image]]:
 
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        split_dir = os.path.join(self._save_dir,'cross_val', self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'cross_val_unbalanced', self._dataset)
+        split_dir = os.path.join(self._save_dir,'cross_val', kind, self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'cross_val_unbalanced', kind, self._dataset)
 
         if not os.path.exists(split_dir):
             os.makedirs(split_dir)
@@ -381,12 +393,12 @@ class DataLoader(object):
         df_train = df_val_train.drop(df_val_train.index[:val_sec])
         df_train.to_csv(split_dir+'/train_split_' + self._dataset + '.csv', index=False)
 
-        print('Directory split_normal created.')
+        print(f'Directory cross_val {kind} created.')
 
-    ## Function to get the unbalance partitions that came from videos.
+    ## probably debug it
     def get_unbalance_partition(self, kin_data:str="images", proportion:list=[0.8, 0.2], path_to_conversion: Optional[Path] = None) -> None:
 
-        data_path =  os.path.join(os.getcwd(), "datasets",self._dataset, "templates", "Images") if kin_data == "images" else os.path.join(os.getcwd(), "datasets",self._dataset, "videos", "Images")
+        data_path =  os.path.join(os.getcwd(), "datasets",self._dataset, kin_data, "Images") 
         all_info_fakes = set(glob.glob(data_path+"/fakes/*"))
         all_info_reals = set(glob.glob(data_path+"/reals/*"))
 
@@ -433,11 +445,11 @@ class DataLoader(object):
         
 
 
-    def _prepare_csv(self):
+    def _prepare_csv(self, kind):
         l_label = []
         l_img = []
         l_conditioned = []
-        for file in glob.glob('{}/*/*'.format(os.path.join(os.getcwd(), "datasets",self._dataset, "templates", "Images"))):
+        for file in glob.glob('{}/*/*'.format(os.path.join(os.getcwd(), "datasets",self._dataset, kind, "Images"))):
             path = file.replace('\\', '/')
             path_decompose = path.split('/')
             if path_decompose[-1].startswith("index"):continue
@@ -572,7 +584,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
-    parser.add_argument("--kind",default="images",nargs="?", type=str, choices=["images", "clips", "videos","no"],help="Define what kind of the info from the benchmark do you want to download to use. If no is selected, then the dataset will not be download.")
+    parser.add_argument("--kind",default="templates",nargs="?", type=str, choices=["templates", "clips", "videos","no"],help="Define what kind of the info from the benchmark do you want to download to use. If no is selected, then the dataset will not be download.")
     parser.add_argument("--download_static", action="store_true", help="set to 1 if you want to download the static csv for reproducibility of the models" )
     parser.add_argument("--kind_models",default="transfg_img_net",nargs="?", type=str, choices=["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"],help="Define what kind of the trained model from the benchmark you want to download in order to reproduce results. Choose transfg_img_net, if you want to train the trans fg model (default mode). Choose no if you do not want to download any model.")
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")

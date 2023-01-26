@@ -39,7 +39,7 @@ To download the datasets we have the following code examples:
 ```
 ```python
         #load the templates depending of the nationality and also replicate the structure of the original benchmark (about 1.2G)
-        data = SIDTD(type_download="images", conditioned=True, download_original=True)
+        data = SIDTD(type_download="templates", conditioned=True, download_original=True)
 ```
 
 ```python
@@ -85,7 +85,7 @@ Inside this file you will see the DataLoader class who takes 7 different inputs 
     
                     The datasets have been changed in order to the different approach we are working on
     
-    kin --> in case of benchmark SIDTD define ("images", "clips", "videos), else set to None
+    kind --> in case of benchmark SIDTD define ("templates", "clips", "videos), else set to None
     
     Type_split --> Diferent kind of split for train the models. The diferents splits are [kfold, normal or few_shot]
 
@@ -114,28 +114,28 @@ Below you have some examples for the different kin of partitions:
 ```python   
     # To make the few shot partition
         #balanced
-        python3 Loader/Loader_Modules.py -ts few_shot  --few_shot_split random 0.6 0.4 --kind images
+        python3 Loader/Loader_Modules.py -ts few_shot  --few_shot_split random 0.6 0.4 --kind templates
 
         #imbalanced
-        python3 Loader/Loader_Modules.py -ts few_shot --unbalanced --few_shot_split random 0.6 0.4 --kind images
+        python3 Loader/Loader_Modules.py -ts few_shot --unbalanced --few_shot_split random 0.6 0.4 --kind templates
 ```
 
 
 ```python   
     # To make the kfold partition
         #balanced
-        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind images
+        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind templates
         #imbalanced
-        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --unbalanced --kind images
+        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --unbalanced --kind templates
 ```
 
 
 ```python   
     # To make the criss val  partition
         #balanced
-        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1--kin images
+        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1--kin templates
         #imbalanced
-        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --unbalanced --kind images
+        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --unbalanced --kind templates
 ```
 
 

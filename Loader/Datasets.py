@@ -159,7 +159,7 @@ class SIDTD(Dataset):
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
 
-    def download_dataset(self, type_download:str = "images"):
+    def download_dataset(self, type_download:str = "templates"):
         
         if type_download == "all_dataset":    
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
@@ -167,8 +167,11 @@ class SIDTD(Dataset):
 
         elif type_download == "clips":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
-            with zipfile.ZipFile(self._abs_path+"/clips.zip", 'r') as zip_ref:
-                zip_ref.extractall(self._abs_path)
+            try:
+                with zipfile.ZipFile(self._abs_path+"/clips.zip", 'r') as zip_ref:
+                    zip_ref.extractall(self._abs_path)
+            except:
+                print("Some Error Ocurred downloading the zip file, check if there is a corrupted zip inb the folder where you are trying to download ") 
             if self._download_original:raise NotImplementedError
         
         elif type_download == "videos":
@@ -177,7 +180,7 @@ class SIDTD(Dataset):
                 zip_ref.extractall(self._abs_path)
             if self._download_original:raise NotImplementedError
 
-        elif type_download == "images":
+        elif type_download == "templates":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._images_path))
             with zipfile.ZipFile(self._abs_path+"/templates.zip", 'r') as zip_ref:
                 zip_ref.extractall(self._abs_path)
