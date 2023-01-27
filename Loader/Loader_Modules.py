@@ -62,7 +62,7 @@ class DataLoader(object):
 
 
     def __init__(self, dataset:str="SIDTD",kind:str="templates", kind_models:str="transfg_img_net", download_static:bool= False,type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
-, few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False):
+, few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False, cropped:bool=True):
 
         """
             Input of the class:         dataset --> Define what kind of the different datasets do you want to download [SIDTD, Dogs, Fungus, Findit, Banknotes]
@@ -122,6 +122,7 @@ class DataLoader(object):
         self._normal_split = cross_split
         self._conditioned = conditioned
         self._unbalanced = unbalanced
+        self.cropped = cropped
         
         
         current_path = os.getcwd()
@@ -142,7 +143,7 @@ class DataLoader(object):
                 logging.warning("The dataset hasnt been found, starting to download")
                 time.sleep(1)
                 if self._dataset == "SIDTD":
-                    self._dt.download_dataset(type_download=kind)
+                    self._dt.download_dataset(type_download=kind, cropped=cropped)
                 else:
                     self._dt.download_dataset()
                 
@@ -150,13 +151,13 @@ class DataLoader(object):
             else:
                 kinds = os.listdir(self._dataset_path)
                 if kind not in kinds:
-                    self._dt.download_dataset(type_download=kind)
+                    self._dt.download_dataset(type_download=kind, cropped=cropped)
 
                 else:   
                     empty = (len(glob.glob(os.path.join(self._dataset_path, kind, "Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, kind, "Images", "reals", "*"))) == 0)
                     if empty:
                         os.rmdir(os.path.join(self._dataset_path, kind))
-                        self._dt.download_dataset(type_download=kind)
+                        self._dt.download_dataset(type_download=kind, cropped=cropped)
                     else:
                         logging.info(f"Dataset found in {self._dataset_path}, check if it is empty")
 
@@ -221,7 +222,7 @@ class DataLoader(object):
             if flag_csv is False:
                 logging.warning("Static csv hasnt been downloaded, starting to download")
                 time.sleep(1)
-                self._dt.download_static_csv(partition_kind=type_split, unbalanced=unbalanced)
+                self._dt.download_static_csv(partition_kind=type_split, unbalanced=unbalanced, cropped=cropped)
 
                 logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "code_examples", "static")))
             else:
@@ -519,59 +520,6 @@ class DataLoader(object):
         
         return res
 
-    def crop_clip_sidtd(self):
-
-        # --------------------------------------------------------------------------
-        # Definition of output paths
-        if not os.path.exists(os.getcwd() + '/datasets/SIDTD/clips/Cropped/fakes/'):
-            os.makedirs(os.getcwd() + '/datasets/SIDTD/clips/Cropped/fakes/')
-        if not os.path.exists(os.getcwd() + '/datasets/SIDTD/clips/Cropped/reals/'):
-            os.makedirs(os.getcwd() + '/datasets/SIDTD/clips/Cropped/reals/')
-
-
-        # --------------------------------------------------------------------------
-        # Start Looping over dataset
-        search_json = glob.glob(os.getcwd() + '/datasets/SIDTD/clips/annotations/*/*.json')
-        for json_path in search_json:
-            
-            r_or_f = json_path.split('/')[-2]
-            
-            with open(json_path) as f:
-                d = json.load(f)
-            clip_path = os.getcwd() + '/datasets/SIDTD/clips/Images/{}/{}'.format(r_or_f, d['filename'])
-            frame = cv2.imread(clip_path)
-
-            template_id_splitted = d['filename'].split('_')
-            if r_or_f == 'fakes':
-                template_decompose = template_id_splitted[:6]
-                fidx = template_id_splitted[7]
-            else:
-                template_decompose = template_id_splitted[:3]
-                fidx = template_id_splitted[4]
-            
-            template_id = '_'.join(template_decompose)
-            
-            out_path_frame_dewarped = os.path.join(os.getcwd() + "/datasets/SIDTD/clips/Cropped/{}/{}_frame_{}_dewarped.png".format(r_or_f, template_id, fidx))
-            
-            template_path = os.getcwd() + '/datasets/SIDTD/templates/Images/{}/{}.jpg'.format(r_or_f, template_id)
-            img_gt = cv2.imread(template_path)
-
-            # dewarp and save dewarped image
-            x = np.asarray(d['regions'][0]['shape_attributes']['all_points_x'])
-            y = np.asarray(d['regions'][0]['shape_attributes']['all_points_y'])
-            shape_object = np.float32([[x[0], y[0]],
-                                    [x[3], y[3]],
-                                    [x[2], y[2]],
-                                    [x[1], y[1]]])
-            shape_target = np.float32([[0, 0],
-                                    [0, img_gt.shape[0]-1],
-                                    [img_gt.shape[1]-1, img_gt.shape[0]-1],
-                                    [img_gt.shape[1]-1, 0]])
-        
-            trans = cv2.getPerspectiveTransform(shape_object, shape_target)
-            frame_dewarped = cv2.warpPerspective(frame, trans, (img_gt.shape[1], img_gt.shape[0]))
-            cv2.imwrite(out_path_frame_dewarped, frame_dewarped)
-
     @staticmethod
     def read_img(path: str) -> Image:
 
@@ -594,6 +542,7 @@ if __name__ == "__main__":
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
     parser.add_argument("--unbalanced", action="store_true", help="flag to prepare the unbalance partition")
+    parser.add_argument("--cropped", action="store_true", help="flag to use the cropped version of clips.")
     opts, rem_args = parser.parse_known_args()
 
     conditioned = False if opts.conditioned == 0 else True
@@ -602,7 +551,7 @@ if __name__ == "__main__":
         parser.add_argument("--cross_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
         op = parser.parse_args()
 
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced, cropped=op.cropped)
 
     elif opts.type_split != "kfold" and opts.type_split != "cross":
         parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
@@ -610,9 +559,9 @@ if __name__ == "__main__":
 
         op = parser.parse_args()
         print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced, cropped=op.cropped)
 
     else:
         parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
         op = parser.parse_args()
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced, cropped=op.cropped)

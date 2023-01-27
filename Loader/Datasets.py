@@ -82,12 +82,14 @@ class SIDTD(Dataset):
         self._uri = self._cluster_link + "/SIDTD"
         self._images_path = "http://datasets.cvc.uab.es/SIDTD/templates.zip "
         self._clips_path = "http://datasets.cvc.uab.es/SIDTD/clips.zip"
+        self._clips_cropped_path = "http://datasets.cvc.uab.es/SIDTD/clips_cropped.zip"
         self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/videos.zip"
         self._uri_transfg_pretrained = "http://datasets.cvc.uab.es/SIDTD/imagenet21k+imagenet2012_ViT-L_16.zip"
 
         ## static Csv
         self._uri_static_kfold_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_kfold.zip'
         self._uri_static_kfold_unbalanced = "http://datasets.cvc.uab.es/SIDTD/split_kfold_unbalanced.zip"
+        self._uri_static_kfold_cropped_unbalanced = "http://datasets.cvc.uab.es/SIDTD/split_kfold_cropped_unbalanced.zip"
         self._uri_static_normal_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_normal.zip'
         self._uri_static_normal_unbalanced = 'http://datasets.cvc.uab.es/SIDTD/cross_val_unbalanced.zip'
         self._uri_static_shot_balanced = 'http://datasets.cvc.uab.es/SIDTD/split_shot.zip'
@@ -126,7 +128,7 @@ class SIDTD(Dataset):
         self._original_clips_imgs_path = os.path.join(self._original_clips_path, "images")
         self._original_clips_ann_path  = os.path.join(self._original_clips_path, "annotations")
         
-    def download_static_csv(self, partition_kind:str="cross" ,unbalanced:bool=True):
+    def download_static_csv(self, partition_kind:str="cross" ,unbalanced:bool=True, cropped:bool=True):
 
         if partition_kind == "kfold":
             if not unbalanced:                    
@@ -134,9 +136,14 @@ class SIDTD(Dataset):
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
             else:
-                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_unbalanced))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_unbalanced.zip", 'r') as zip_ref:
-                    zip_ref.extractall(self.abs_path_code_ex_csv)
+                if cropped:
+                    os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_unbalanced))
+                    with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_unbalanced.zip", 'r') as zip_ref:
+                        zip_ref.extractall(self.abs_path_code_ex_csv)
+                else:    
+                    os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_cropped_unbalanced))
+                    with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_cropped_unbalanced.zip", 'r') as zip_ref:
+                        zip_ref.extractall(self.abs_path_code_ex_csv)
 
         elif partition_kind == "cross":
             if not unbalanced:
@@ -159,20 +166,29 @@ class SIDTD(Dataset):
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
 
-    def download_dataset(self, type_download:str = "templates"):
+    def download_dataset(self, type_download:str = "templates", cropped:bool=True):
         
         if type_download == "all_dataset":    
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
             if self._download_original:raise NotImplementedError
 
         elif type_download == "clips":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
-            try:
-                with zipfile.ZipFile(self._abs_path+"/clips.zip", 'r') as zip_ref:
-                    zip_ref.extractall(self._abs_path)
-            except:
-                print("Some Error Ocurred downloading the zip file, check if there is a corrupted zip inb the folder where you are trying to download ") 
-            if self._download_original:raise NotImplementedError
+            if cropped:
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_cropped_path))
+                try:
+                    with zipfile.ZipFile(self._abs_path+"/clips_cropped.zip", 'r') as zip_ref:
+                        zip_ref.extractall(self._abs_path)
+                except:
+                    print("Some Error Ocurred downloading the zip file, check if there is a corrupted zip inb the folder where you are trying to download ") 
+                if self._download_original:raise NotImplementedError
+            else:
+                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
+                try:
+                    with zipfile.ZipFile(self._abs_path+"/clips.zip", 'r') as zip_ref:
+                        zip_ref.extractall(self._abs_path)
+                except:
+                    print("Some Error Ocurred downloading the zip file, check if there is a corrupted zip inb the folder where you are trying to download ") 
+                if self._download_original:raise NotImplementedError
         
         elif type_download == "videos":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._videos_path))
