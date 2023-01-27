@@ -205,17 +205,21 @@ class SIDTD(Dataset):
         else:
             print("OPTION: do not download dataset files") 
 
-    def download_models(self, unbalanced:str="yes", type_models:str="transfg_img_net"):
+    def download_models(self, unbalanced:bool=False, cropped:bool=False, type_models:str="transfg_img_net"):
         
         if not unbalanced:
-            balanced_folder = "balanced_templates_SIDTD"
+            base_folder = "balanced_templates_SIDTD"
             arc_name = "/coatten_fcn_model_trained_models.zip"
         else:
-            balanced_folder = "unbalanced_clip_cropped_SIDTD"
             arc_name = "/coattention_trained_models.zip"
+            if cropped:
+                base_folder = "unbalanced_clip_cropped_SIDTD"
+            else:
+                base_folder = "unbalanced_clip_background_SIDTD"
+
         
-        abs_path_model = os.path.join(self.abs_path_code_ex, balanced_folder)
-        server_path_model = os.path.join(self._uri, balanced_folder)
+        abs_path_model = os.path.join(self.abs_path_code_ex, base_folder)
+        server_path_model = os.path.join(self._uri, base_folder)
 
         if type_models == "all_trained_models":   
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex,server_path_model +"/efficientnet-b3_trained_models.zip" ))

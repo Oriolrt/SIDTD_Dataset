@@ -122,7 +122,7 @@ class DataLoader(object):
         self._normal_split = cross_split
         self._conditioned = conditioned
         self._unbalanced = unbalanced
-        self.cropped = cropped
+        self._cropped = cropped
         
         
         current_path = os.getcwd()
@@ -160,10 +160,6 @@ class DataLoader(object):
                         self._dt.download_dataset(type_download=kind, cropped=cropped)
                     else:
                         logging.info(f"Dataset found in {self._dataset_path}, check if it is empty")
-
-
-
-    
     
         else:logging.info("No dataset is set to download, not searching for")
 
@@ -184,7 +180,7 @@ class DataLoader(object):
 
                     if (flag_1 | flag_2) is False:
                         logging.warning("The model hasnt been found, starting to download")
-                        self._dt.download_models(unbalanced = self._unbalanced,type_models=model)
+                        self._dt.download_models(unbalanced = self._unbalanced, cropped = self._cropped,type_models=model)
                         
                         logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "code_examples", )))
                     
