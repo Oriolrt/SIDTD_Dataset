@@ -481,7 +481,31 @@ class DataLoader(object):
         
         return False, []
 
+    def check_folder_not_empty(self, kind:str='clips', kind_models:str='clips', root:str="datasets"):
+        if root == 'datasets':
+            path_fake = os.path.join(os.getcwd(), root, self._dataset, kind, "Images","fakes")
+            path_real = os.path.join(os.getcwd(), root, self._dataset_path, kind, "Images","reals")
+            return (self.check_emptiness(path_fake) and self.check_emptiness(path_fake))
+                
+        elif root == 'models':
+            path_model = os.path.join(os.getcwd(), root, self._dataset, kind_models)
+            return self.check_emptiness(path_model)
+        
+        elif root == 'static':
+            path_model = os.path.join(os.getcwd(), root, self._dataset, kind_models)
+            return self.check_emptiness(path_model)
 
+    def check_emptiness(self, path):
+        if os.path.exists(path):
+                if (len(os.listdir(path))== 0):
+                    print('Folder exist but is empty')
+                    return False
+                else:    
+                    print('Folder is not empty. Files must have been already downloaded')
+                    return True
+        else:
+            print('Path is incorrect')
+            return False
 
     def load_dataset(self, path: str) -> list:
         
