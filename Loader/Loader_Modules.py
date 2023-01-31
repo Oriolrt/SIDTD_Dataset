@@ -62,7 +62,7 @@ class DataLoader(object):
 
 
     def __init__(self, dataset:str="SIDTD",kind:str="templates", kind_models:str="transfg_img_net", download_static:bool= False,type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
-, few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, conditioned:bool = True, unbalanced:bool=False, cropped:bool=True):
+, few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, unbalanced:bool= False, cropped:bool= False):
 
         """
             Input of the class:         dataset --> Define what kind of the different datasets do you want to download [SIDTD, Dogs, Fungus, Findit, Banknotes]
@@ -88,15 +88,6 @@ class DataLoader(object):
             "all_trained_models":"all_trained_models"
         }
         
-        static_csv = {
-            ("cross", False): "split_normal",
-            ("kfold", False): "split_kfold",
-            ("few_shot", False):"split_shot",
-            ("cross", True) : "cross_val_unbalanced",
-            ("kfold", True) : "split_kfold_unbalanced",
-            ("few_shot", True): "split_shot_unbalanced"
-        }
-        
         
 
         ### ASSERTS AND ERROR CONTROL ###
@@ -113,6 +104,8 @@ class DataLoader(object):
         ### PLACEHOLDERS  ###
         self._dataset = dataset
         self._dataset_type = kind
+        self._unbalanced = unbalanced
+        self._cropped = cropped
         self._model_folder_name = models[kind_models]
         self._model_name = kind_models
         self._type_split = type_split
@@ -120,9 +113,7 @@ class DataLoader(object):
         self._kfold_split = kfold_split
         self._few_shot_split = few_shot_split
         self._normal_split = cross_split
-        self._conditioned = conditioned
-        self._unbalanced = unbalanced
-        self._cropped = cropped
+
         
         
         current_path = os.getcwd()
@@ -130,7 +121,7 @@ class DataLoader(object):
         
         self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
-        self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](conditioned=conditioned)
+        self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0]()
 
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
         
@@ -143,7 +134,7 @@ class DataLoader(object):
                 logging.warning("The dataset hasnt been found, starting to download")
                 time.sleep(1)
                 if self._dataset == "SIDTD":
-                    self._dt.download_dataset(type_download=kind, cropped=cropped)
+                    self._dt.download_dataset(type_download=kind)
                 else:
                     self._dt.download_dataset()
                 
@@ -151,13 +142,13 @@ class DataLoader(object):
             else:
                 kinds = os.listdir(self._dataset_path)
                 if kind not in kinds:
-                    self._dt.download_dataset(type_download=kind, cropped=cropped)
+                    self._dt.download_dataset(type_download=kind)
 
                 else:   
                     empty = (len(glob.glob(os.path.join(self._dataset_path, kind, "Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, kind, "Images", "reals", "*"))) == 0)
                     if empty:
                         os.rmdir(os.path.join(self._dataset_path, kind))
-                        self._dt.download_dataset(type_download=kind, cropped=cropped)
+                        self._dt.download_dataset(type_download=kind)
                     else:
                         logging.info(f"Dataset found in {self._dataset_path}, check if it is empty")
     
@@ -212,13 +203,14 @@ class DataLoader(object):
 
             if not os.path.exists(self._dt.abs_path_code_ex_csv):
                 os.makedirs(self._dt.abs_path_code_ex_csv)
-            to_search = static_csv[tuple([type_split, unbalanced])]
-            flag_csv = self.control_download(to_search=to_search, search="static", root="code_examples")
+            to_search = type_split
+            #flag_csv = self.control_download(to_search=to_search, search="static", root="code_examples")
+            flag_csv = False
 
             if flag_csv is False:
                 logging.warning("Static csv hasnt been downloaded, starting to download")
                 time.sleep(1)
-                self._dt.download_static_csv(partition_kind=type_split, unbalanced=unbalanced, cropped=cropped)
+                self._dt.download_static_csv(partition_kind=type_split, type_download=kind)
 
                 logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "code_examples", "static")))
             else:
@@ -234,7 +226,7 @@ class DataLoader(object):
 
             else:
                 logging.info(f"Preparing partitions for the {type_split} partition behaviour")
-                new_df =  self._prepare_csv(kind=kind,cropped=cropped) if unbalanced == False else self.get_unbalance_partition()
+                new_df =  self._prepare_csv(kind=kind)
 
                 ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
                 #self.set_static_path()
@@ -258,9 +250,6 @@ class DataLoader(object):
                 
 
 
-
-
-                
 
     def change_path(self,path:str='/home/users/SIDTD/code_examples/split_normal/test_split_SIDTD.csv'):
         current_path = os.getcwd()
@@ -395,61 +384,13 @@ class DataLoader(object):
 
         print(f'Directory cross_val {kind} created.')
 
-    ## probably debug it
-    def get_unbalance_partition(self, kin_data:str="images", proportion:list=[0.8, 0.2], path_to_conversion: Optional[Path] = None) -> None:
-
-        data_path =  os.path.join(os.getcwd(), "datasets",self._dataset, kin_data, "Images") 
-        all_info_fakes = set(glob.glob(data_path+"/fakes/*"))
-        all_info_reals = set(glob.glob(data_path+"/reals/*"))
-
-        defined_number_of_images = 191
-        new_data = {}
-
-        static_info = None
-
-        assert (sum(proportion) == 1) and (proportion[-1] <= 0.2) and len(proportion)==2, "The proportion is out of bounds of the proper behaviour"
-
-        if path_to_conversion is not None:
-            c_file = pd.read_csv(os.getcwd()+"/Fake_MIDV2020_videos_2_templates.csv")
-            static_info = set(c_file["Fake_Document_ID"].apply(lambda x: os.path.join(data_path,"fakes", x)).values)
-            classes = c_file["Nationality"].values
-
-        _number_fakes = round((proportion[-1] * defined_number_of_images)/0.2)
-        _number_reals = len(all_info_reals)
-
-        ## Updating real part
-        new_data["image_path"] = random.choices(list(all_info_reals), k=_number_reals)
-        new_data["label"] = np.full(_number_reals, 0).tolist()
-        new_data["class"] = self._dt.map_metaclass(new_data["image_path"])
-
-        #updating fake part
-        if isinstance(static_info, str):
-            new_data["image_path"].extend(list(all_info_fakes & static_info))
-            new_data["label"].extend((np.full_like(static_info, 1).tolist()))
-            new_data["class"].extend(classes)
-
-        else:
-            tmp_data = random.choices(list(all_info_fakes), k=_number_fakes)
-            new_data["image_path"].extend(tmp_data)
-            new_data["label"].extend(np.full(_number_fakes, 1))
-            new_data["class"].extend(self._dt.map_metaclass(tmp_data))
 
 
-        new_data = pd.DataFrame(new_data)
-        new_data["label_name"] = new_data["label"].map({0: "reals",1: 'fakes'},na_action=None)
-
-
-
-        return new_data.sample(frac=1).reset_index(drop=True)
-        
-        
-
-
-    def _prepare_csv(self, kind, cropped):
+    def _prepare_csv(self, kind):
         l_label = []
         l_img = []
         l_conditioned = []
-        if cropped:
+        if kind=='clips_cropped':
             kind = 'cropped'
         for file in glob.glob('{}/*/*'.format(os.path.join(os.getcwd(), "datasets",self._dataset, kind, "Images"))):
             path = file.replace('\\', '/')
@@ -458,11 +399,9 @@ class DataLoader(object):
             label = list(filter(lambda x: x in ["reals", "fakes"], path_decompose))[0]
             l_label.append(label)
             l_img.append(file)
-            if self._conditioned is True:
-                clas_to_ap = self._dt._map_classes[label]
-                l_conditioned.append(clas_to_ap.get(file, -1))
-            else:
-                l_conditioned.append(-1)
+            clas_to_ap = self._dt._map_classes[label]
+            l_conditioned.append(clas_to_ap.get(file, -1))
+
 
         columns = ["label_name", "label", "image_path", "class"]
         data = np.array([l_label, l_label, l_img, l_conditioned]).T
@@ -532,23 +471,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
-    parser.add_argument("--kind",default="templates",nargs="?", type=str, choices=["templates", "clips", "videos","no"],help="Define what kind of the info from the benchmark do you want to download to use. If no is selected, then the dataset will not be download.")
+    parser.add_argument("--kind",default="templates",nargs="?", type=str, choices=["templates", "clips", "clips_cropped", "videos","no"],help="Define what kind of the info from the benchmark do you want to download to use. If no is selected, then the dataset will not be download.")
     parser.add_argument("--download_static", action="store_true", help="set to 1 if you want to download the static csv for reproducibility of the models" )
     parser.add_argument("--kind_models",default="transfg_img_net",nargs="?", type=str, choices=["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"],help="Define what kind of the trained model from the benchmark you want to download in order to reproduce results. Choose transfg_img_net, if you want to train the trans fg model (default mode). Choose no if you do not want to download any model.")
     parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
-    parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
     parser.add_argument("--unbalanced", action="store_true", help="flag to prepare the unbalance partition")
     parser.add_argument("-c","--cropped", action="store_true", help="flag to use the cropped version of clips.")
     opts, rem_args = parser.parse_known_args()
-
-    conditioned = False if opts.conditioned == 0 else True
 
     if opts.type_split != "kfold" and opts.type_split != "few_shot":
         parser.add_argument("--cross_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
         op = parser.parse_args()
 
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=op.unbalanced, cropped=op.cropped)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=opts.unbalanced, cropped=opts.cropped)
 
     elif opts.type_split != "kfold" and opts.type_split != "cross":
         parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
@@ -556,9 +492,9 @@ if __name__ == "__main__":
 
         op = parser.parse_args()
         print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses,unbalanced=op.unbalanced, cropped=op.cropped)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses, unbalanced=opts.unbalanced, cropped=opts.cropped)
 
     else:
         parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
         op = parser.parse_args()
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models, conditioned=conditioned,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=op.unbalanced, cropped=op.cropped)
+        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=opts.unbalanced, cropped=opts.cropped)
