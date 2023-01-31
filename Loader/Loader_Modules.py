@@ -234,7 +234,7 @@ class DataLoader(object):
 
             else:
                 logging.info(f"Preparing partitions for the {type_split} partition behaviour")
-                new_df =  self._prepare_csv(kind=kind) if unbalanced == False else self.get_unbalance_partition()
+                new_df =  self._prepare_csv(kind=kind,cropped=cropped) if unbalanced == False else self.get_unbalance_partition()
 
                 ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
                 #self.set_static_path()
@@ -445,10 +445,12 @@ class DataLoader(object):
         
 
 
-    def _prepare_csv(self, kind):
+    def _prepare_csv(self, kind, cropped):
         l_label = []
         l_img = []
         l_conditioned = []
+        if cropped:
+            kind = 'cropped'
         for file in glob.glob('{}/*/*'.format(os.path.join(os.getcwd(), "datasets",self._dataset, kind, "Images"))):
             path = file.replace('\\', '/')
             path_decompose = path.split('/')
@@ -537,7 +539,7 @@ if __name__ == "__main__":
     parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
     parser.add_argument("--conditioned", default=1 ,nargs="?",type=int, help="Flag to define if you want to train with the metaclasses inside the dataset thath downloaded ")
     parser.add_argument("--unbalanced", action="store_true", help="flag to prepare the unbalance partition")
-    parser.add_argument("--cropped", action="store_true", help="flag to use the cropped version of clips.")
+    parser.add_argument("-c","--cropped", action="store_true", help="flag to use the cropped version of clips.")
     opts, rem_args = parser.parse_known_args()
 
     conditioned = False if opts.conditioned == 0 else True

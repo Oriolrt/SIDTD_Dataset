@@ -80,7 +80,7 @@ class SIDTD(Dataset):
         
         ###### Static links
         self._uri = self._cluster_link + "/SIDTD"
-        self._images_path = "http://datasets.cvc.uab.es/SIDTD/templates.zip "
+        self._images_path = "http://datasets.cvc.uab.es/SIDTD/templates.zip"
         self._clips_path = "http://datasets.cvc.uab.es/SIDTD/clips.zip"
         self._clips_cropped_path = "http://datasets.cvc.uab.es/SIDTD/clips_cropped.zip"
         self._uri_videos = "http://datasets.cvc.uab.es/SIDTD/videos.zip"
