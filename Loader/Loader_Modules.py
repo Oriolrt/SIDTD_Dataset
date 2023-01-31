@@ -124,13 +124,13 @@ class DataLoader(object):
         self._unbalanced = unbalanced
         self._cropped = cropped
         
-        
         current_path = os.getcwd()
         self._save_dir = os.path.join(current_path,"code_examples")
         
         self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
         self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](conditioned=conditioned)
+        self._map_classes = self._dt.map_classes(type_data=kind)
 
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
         
@@ -459,7 +459,7 @@ class DataLoader(object):
             l_label.append(label)
             l_img.append(file)
             if self._conditioned is True:
-                clas_to_ap = self._dt._map_classes[label]
+                clas_to_ap = self._map_classes[label]
                 l_conditioned.append(clas_to_ap.get(file, -1))
             else:
                 l_conditioned.append(-1)

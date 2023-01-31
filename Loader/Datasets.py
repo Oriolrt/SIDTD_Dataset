@@ -75,8 +75,6 @@ class SIDTD(Dataset):
         self._conditioned = conditioned
         self._download_original = download_original
         
-        #dict to map classes
-        self._map_classes = self.map_classes() if conditioned is True else None
         
         ###### Static links
         self._uri = self._cluster_link + "/SIDTD"
