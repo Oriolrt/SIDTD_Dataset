@@ -122,6 +122,7 @@ class DataLoader(object):
         self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
         self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0]()
+        self._map_classes = self._dt.map_classes(type_data=kind)
 
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
         
@@ -399,7 +400,7 @@ class DataLoader(object):
             label = list(filter(lambda x: x in ["reals", "fakes"], path_decompose))[0]
             l_label.append(label)
             l_img.append(file)
-            clas_to_ap = self._dt._map_classes[label]
+            clas_to_ap = self._map_classes[label]
             l_conditioned.append(clas_to_ap.get(file, -1))
 
 

@@ -74,8 +74,6 @@ class SIDTD(Dataset):
         ######### Conditioned and original structure variables
         self._download_original = download_original
         
-        #dict to map classes
-        self._map_classes = self.map_classes()
         
         ###### Static links
         self._uri = self._cluster_link + "/SIDTD"
