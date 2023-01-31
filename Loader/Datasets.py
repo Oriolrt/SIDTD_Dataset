@@ -107,9 +107,6 @@ class SIDTD(Dataset):
         self.abs_path_code_ex_csv = os.path.join(os.getcwd(), "code_examples", "static")
         self.abs_path_code_ex = os.path.join(os.getcwd(), "code_examples", "pretrained_models")
         self.abs_path_trans_fg = os.path.join(os.getcwd(), "models", "transfg", "transfg_pretrained")
-
-        if not os.path.exists(self.abs_path_trans_fg):
-            os.makedirs(self.abs_path_trans_fg)
             
   
     def _define_paths(self) ->None:        

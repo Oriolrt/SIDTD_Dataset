@@ -111,33 +111,64 @@ Below you have some examples for the different kin of partitions:
 
 ## Run Example
 
+To load dataset and make the few shot partition
 ```python   
-    # To make the few shot partition
-        #balanced
-        python3 Loader/Loader_Modules.py -ts few_shot  --few_shot_split random 0.6 0.4 --kind templates
+    #templates
+    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind templates
 
-        #imbalanced
-        python3 Loader/Loader_Modules.py -ts few_shot --unbalanced --few_shot_split random 0.6 0.4 --kind templates
+    #clips
+    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind clip
+
+    #cropped clips
+    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind clips_cropped
 ```
 
-
+To load dataset and make the kfold partition
 ```python   
-    # To make the kfold partition
-        #balanced
-        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind templates
-        #imbalanced
-        python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --unbalanced --kind templates
+    #templates
+    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind templates
+
+    #clips
+    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind clip
+
+    #cropped clips
+    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind clips_cropped
 ```
 
-
+To load dataset and make the cross val partition
 ```python   
-    # To make the criss val  partition
-        #balanced
-        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1--kin templates
-        #imbalanced
-        python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --unbalanced --kind templates
+    #templates
+    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1--kind templates
+    
+    #clips
+    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --kind clip
+    
+    #cropped clips
+    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --kind clips_cropped
 ```
 
+To load all pretrained models on SIDTD at once without downloading datasets
+```python   
+    #templates
+    python3 Loader/Loader_Modules.py --kind_models all_trained_models --kind no
 
+    #clips with background
+    python3 Loader/Loader_Modules.py --kind_models all_trained_models --kind no --unbalanced
+
+    #cropped clips
+    python3 Loader/Loader_Modules.py --kind_models all_trained_models --kind no --unbalanced --cropped
+```
+
+To load dataset and static csv on kfold partition to reproduce results
+```python   
+    #templates
+    python3 Loader/Loader_Modules.py -ts kfold --kind templates --download_static
+
+    #clips with background
+    python3 Loader/Loader_Modules.py -ts kfold --kind clip --download_static
+
+    #cropped clips
+    python3 Loader/Loader_Modules.py -ts kfold --kind clips_cropped --download_static
+```
 
 
