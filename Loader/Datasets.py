@@ -392,7 +392,7 @@ class SIDTD(Dataset):
             clas = file[0].split("/")[-1].split("_")[0]
             if clas.startswith("index"):continue
 
-            section[file[0]] =  clas if self._conditioned else -1
+            section[file[0]] =  clas
 
         return classes
 
