@@ -120,11 +120,7 @@ class DataLoader(object):
         
         self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
-<<<<<<< HEAD
         self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0]()
-=======
-        self._dt = list(filter(lambda dts : dts.__name__ == self._dataset, self._datasets))[0](conditioned=conditioned)
->>>>>>> main
         self._map_classes = self._dt.map_classes(type_data=kind)
 
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
@@ -403,17 +399,9 @@ class DataLoader(object):
             label = list(filter(lambda x: x in ["reals", "fakes"], path_decompose))[0]
             l_label.append(label)
             l_img.append(file)
-<<<<<<< HEAD
             clas_to_ap = self._map_classes[label]
             l_conditioned.append(clas_to_ap.get(file, -1))
 
-=======
-            if self._conditioned is True:
-                clas_to_ap = self._map_classes[label]
-                l_conditioned.append(clas_to_ap.get(file, -1))
-            else:
-                l_conditioned.append(-1)
->>>>>>> main
 
         columns = ["label_name", "label", "image_path", "class"]
         data = np.array([l_label, l_label, l_img, l_conditioned]).T
