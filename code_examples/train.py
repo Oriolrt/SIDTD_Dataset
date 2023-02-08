@@ -83,7 +83,7 @@ if __name__ == "__main__":
     parser.add_argument("--plot_path", default = os.getcwd() + '/plots/', type=str, help="Path where are located the plot graphs for the loss and accuracy performance")
     parser.add_argument("--name", default='ResNet50', type=str, help='Name of the experiment')
     parser.add_argument("-ts","--type_split",default="kfold",nargs="?", choices=["cross", "kfold"], help="Diferent kind of split to train the models.")
-    parser.add_argument("-td","--type_data",default="kfold",nargs="?", choices=["templates", "clips", "clips_cropped"], help="Diferent kind of data to train the models.")
+    parser.add_argument("-td","--type_data",default="templates",nargs="?", choices=["templates", "clips", "clips_cropped"], help="Diferent kind of data to train the models.")
     parser.add_argument("--static",default="no",nargs="?", choices=["yes", "no"], help="If 'yes', use static csv. If 'no', use your custom csv partition.")
     parser.add_argument("--pretrained",default="no",nargs="?", choices=["yes", "no"], help="If 'yes', use our trained network. If 'no', use your custom trained network.")
     

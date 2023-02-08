@@ -85,7 +85,9 @@ You can choose the model with the flag --model, but be careful to write without 
 + ResNet -> 'resnet50'
 + ViT -> 'vit_large_patch16_224'
 + Trans FG -> 'trans_fg'
-+ Co-Attention ARC 'coatten_fcn_model' 
++ CoAARC 'coatten_fcn_model' 
+
+If you have downloaded the static csv, you can reproduce the training by adding the flag --static=='yes'. Please, remember to train according to the static csv you have downloaded. For instance, if you have downloaded the k-fold cross validation version of cropped clips you should add the corresponding flag, hence, here it would be: --type_data='clips_cropped' --type_split='kfold'.
 
 More flags can be added to modify the default parameters. If you need to fine-tune the parameters you can modify the models' parameter thanks to the flags such as the --epochs (number of epochs), --batch_size (batch size for training and validation), --learning rate (learning rate chosen for the training of EfficientNet, ResNet and ViT). Flag model parameter can be different from one model to another, so flag model paramet are grouped by model in train.py (see code).
 
@@ -138,7 +140,7 @@ python test.py --name='trans_fg' --dataset='dataset_raw' --model='trans_fg' --de
 python test.py --name='coatten_fcn_model' --dataset 'dataset_raw' --model='coatten_fcn_model' --device='cpu'
 ```
 
-### Test 10-fold partitions on our trained model on custom 10-fold partitions with CUDA
+### Test 10-fold partitions with our trained model on custom 10-fold partitions with CUDA
 To test one of *our trained model* with CUDA, you should run the line that correspond to your model with the corresponding name of the dataset used:
 ```
 # Test EfficientNet model
@@ -180,19 +182,38 @@ CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'SIDT
 To *reproduce our results using our trained model* with CUDA, you should run the line that correspond to your model with the corresponding name of the dataset used:
 ```
 # Test EfficientNet model
-CUDA_VISIBLE_DEVICES=0 python test.py --name='EfficientNet' --dataset='SIDTD' --model='efficientnet-b3' --pretrained='yes' --static='yes' -ts unbalanced
+CUDA_VISIBLE_DEVICES=0 python test.py --name='EfficientNet' --dataset='SIDTD' --model='efficientnet-b3' --pretrained='yes' --static='yes' -td clips
 
 # Test ResNet50 model
-CUDA_VISIBLE_DEVICES=0 python test.py --name='ResNet50' --dataset='SIDTD' --model='resnet50' --pretrained='yes' --static='yes' -ts unbalanced
+CUDA_VISIBLE_DEVICES=0 python test.py --name='ResNet50' --dataset='SIDTD' --model='resnet50' --pretrained='yes' --static='yes' -td clips
 
 # Test ViT model
-CUDA_VISIBLE_DEVICES=0 python test.py --name='vit_large_patch16' --dataset='SIDTD' --model='vit_large_patch16_224' --pretrained='yes' --static='yes' -ts unbalanced
+CUDA_VISIBLE_DEVICES=0 python test.py --name='vit_large_patch16' --dataset='SIDTD' --model='vit_large_patch16_224' --pretrained='yes' --static='yes' -td clips
 
 # Test Trans FG model
-CUDA_VISIBLE_DEVICES=0 python test.py --name='trans_fg' --dataset='SIDTD' --model='trans_fg' --pretrained='yes' --static='yes' -ts unbalanced
+CUDA_VISIBLE_DEVICES=0 python test.py --name='trans_fg' --dataset='SIDTD' --model='trans_fg' --pretrained='yes' --static='yes' -td clips
 
 # Test Co-Attention ARC model
-CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'SIDTD' --model='coatten_fcn_model' --pretrained='yes' --static='yes' -ts unbalanced
+CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'SIDTD' --model='coatten_fcn_model' --pretrained='yes' --static='yes' -td clips
+```
+
+### Reproduce our results on SIDTD on our 10-fold partitions on cropped video clips SIDTD
+To *reproduce our results using our trained model* with CUDA, you should run the line that correspond to your model with the corresponding name of the dataset used:
+```
+# Test EfficientNet model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='EfficientNet' --dataset='SIDTD' --model='efficientnet-b3' --pretrained='yes' --static='yes' -td clips_cropped
+
+# Test ResNet50 model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='ResNet50' --dataset='SIDTD' --model='resnet50' --pretrained='yes' --static='yes' -td clips_cropped
+
+# Test ViT model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='vit_large_patch16' --dataset='SIDTD' --model='vit_large_patch16_224' --pretrained='yes' --static='yes' -td clips_cropped
+
+# Test Trans FG model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='trans_fg' --dataset='SIDTD' --model='trans_fg' --pretrained='yes' --static='yes' -td clips_cropped
+
+# Test Co-Attention ARC model
+CUDA_VISIBLE_DEVICES=0 python test.py --name='coatten_fcn_model' --dataset 'SIDTD' --model='coatten_fcn_model' --pretrained='yes' --static='yes' -td clips_cropped
 ```
 
 You can test a model with your trained weight or with our trained models to reproduce results on the chosen dataset. You can choose it with the flag --pretrained. If --pretrained='yes', use trained network on MIDV2020 to reproduce results. If --pretrained='no', use the custom trained network on your own partitions.
