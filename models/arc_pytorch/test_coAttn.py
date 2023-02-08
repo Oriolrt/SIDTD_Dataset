@@ -180,17 +180,26 @@ def test(opt, save_model_path, iteration):
 
     # csv path for train and validation
     if opt.static == 'no':
-        if opt.type_split in ['kfold','unbalanced']:
+        if opt.type_split == 'kfold':
             path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
         elif opt.type_split =='cross':
             path_test = os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
     else:
         if opt.type_split =='kfold':
-            path_test = os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)
+            if opt.type_data == 'templates':
+                path_test = os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)
+            elif opt.type_data == 'clips':
+                path_test = os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)
+            elif opt.type_data == 'clips_cropped':
+                path_test = os.getcwd() + "/static/split_kfold_cropped_unbalanced/test_split_clip_cropped_SIDTD_it_{}.csv".format(iteration)
         elif opt.type_split =='cross':
-            path_test = os.getcwd() + "/static/split_normal/test_split_SIDTD.csv"
-        elif opt.type_split =='unbalanced':
-            path_test = os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)
+            if opt.type_data == 'templates':
+                path_test = os.getcwd() + "/static/split_normal/test_split_SIDTD.csv"
+            elif opt.type_data == 'clips':
+                path_test = os.getcwd() + "/static/cross_val_unbalanced/test_split_SIDTD.csv"
+            elif opt.type_data == 'clips_cropped':
+                path_test = os.getcwd() + "/static/cross_val_cropped_unbalanced/test_split_clip_cropped_SIDTD.csv"
+
 
     # load the dataset in memory.
     paths_splits = {'test' :{}}
@@ -216,11 +225,11 @@ def test(opt, save_model_path, iteration):
         coAtten.eval()
     
     if opt.pretrained == 'yes':
-        if opt.type_split == 'unbalanced':
+        if opt.type_data in ['clips', 'clips_cropped']:
             discriminator.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
             resNet.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
             coAtten.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
-        else:
+        elif opt.type_data == 'templates':
             discriminator.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
             resNet.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
             coAtten.load_state_dict(torch.load(save_model_path + '/MIDV2020_coatten_fcn_model_coatten_best_accuracy_n{}.pth'.format(iteration)))
@@ -278,10 +287,12 @@ def test_coAttn_models(opt, iteration=0) -> None:
     #writers to write the results obtained for each split
     f_test, writer_test = save_results_test(opt)
     if opt.pretrained == 'yes':
-        if opt.type_split == 'kfold':
+        if opt.type_data == 'templates':
             save_model_path = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/coatten_fcn_model_trained_models/"
-        elif opt.type_split == 'unbalanced':
+        elif opt.type_data == 'clips_cropped':
             save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/coattention_trained_models/"
+        elif opt.type_data == 'clips':
+            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/coattention_trained_models/"
     else:
         save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     

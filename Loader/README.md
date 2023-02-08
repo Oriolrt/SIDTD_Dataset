@@ -117,7 +117,7 @@ To load dataset and make the few shot partition
     python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind templates
 
     #clips
-    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind clip
+    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind clips
 
     #cropped clips
     python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind clips_cropped
@@ -129,7 +129,7 @@ To load dataset and make the kfold partition
     python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind templates
 
     #clips
-    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind clip
+    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind clips
 
     #cropped clips
     python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind clips_cropped
@@ -141,7 +141,7 @@ To load dataset and make the cross val partition
     python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1--kind templates
     
     #clips
-    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --kind clip
+    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --kind clips
     
     #cropped clips
     python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --kind clips_cropped
@@ -165,7 +165,7 @@ To load dataset and static csv on kfold partition to reproduce results
     python3 Loader/Loader_Modules.py -ts kfold --kind templates --download_static
 
     #clips with background
-    python3 Loader/Loader_Modules.py -ts kfold --kind clip --download_static
+    python3 Loader/Loader_Modules.py -ts kfold --kind clips --download_static
 
     #cropped clips
     python3 Loader/Loader_Modules.py -ts kfold --kind clips_cropped --download_static

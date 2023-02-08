@@ -215,11 +215,15 @@ def test_transfg_models(args, LOGGER, iteration=0):
     test_loader = get_loader_test(args, iteration)
 
     if args.pretrained == 'yes':
-        if args.type_split == 'unbalanced':
+        if args.type_data == 'clips_cropped':
             save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/trans_fg_trained_models/"
             model_checkpoint = os.path.join(save_model_path,
                                     'clip_cropped_MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
-        elif args.type_split == 'kfold':
+        elif args.type_data == 'clips':
+            save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/trans_fg_trained_models/"
+            model_checkpoint = os.path.join(save_model_path,
+                                    'clip_background_MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
+        elif args.type_data == 'templates':
             save_model_path = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/trans_fg_trained_models/"
             model_checkpoint = os.path.join(save_model_path,
                                     'MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))

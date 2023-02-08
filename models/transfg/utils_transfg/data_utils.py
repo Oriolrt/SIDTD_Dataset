@@ -45,7 +45,7 @@ def get_loader(args, training_iteration):
     train_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='train')
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
     if args.static == 'no':
-        if args.type_split in ['kfold','unbalanced']:
+        if args.type_split == 'kfold':
             train_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
             val_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
         elif args.type_split =='cross':
@@ -53,14 +53,26 @@ def get_loader(args, training_iteration):
             val_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(args.dataset, args.dataset))
     else:
         if args.type_split =='kfold':
-            train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(training_iteration))
-            val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(training_iteration))
+            if args.type_data == 'templates':
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(training_iteration))
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(training_iteration))
+            elif args.type_split =='clips_cropped':
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_cropped_unbalanced/train_split_clip_cropped_SIDTD_it_{}.csv".format(training_iteration))
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_cropped_unbalanced/val_split_clip_cropped_SIDTD_it_{}.csv".format(training_iteration))
+            elif args.type_split =='clips':
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/train_split_clip_background_SIDTD_it_{}.csv".format(training_iteration))
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/val_split_clip_background_SIDTD_it_{}.csv".format(training_iteration))
         elif args.type_split =='cross':
-            train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/train_split_SIDTD.csv")
-            val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/val_split_SIDTD.csv")
-        elif args.type_split =='unbalanced':
-            train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/train_split_clip_background_SIDTD_it_{}.csv".format(training_iteration))
-            val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/val_split_clip_background_SIDTD_it_{}.csv".format(training_iteration))
+            if args.type_data =='templates':
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/train_split_SIDTD.csv")
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/val_split_SIDTD.csv")
+            elif args.type_data == 'clips':
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_unbalanced/train_split_SIDTD.csv")
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_unbalanced/val_split_SIDTD.csv")
+            elif args.type_data == 'clips_cropped':
+                train_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/train_split_clip_cropped_SIDTD.csv")
+                val_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/val_split_clip_cropped_SIDTD.csv")
+
     
     train_paths = train_metadata_split['image_path'].values.tolist()
     train_ids = train_metadata_split['label'].values.tolist()
@@ -100,19 +112,25 @@ def get_loader_test(args, training_iteration):
     test_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
 
     if args.static == 'no':
-        if args.type_split in ['kfold','unbalanced']:
+        if args.type_split == 'kfold':
             test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
         elif args.type_split =='cross':
             test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
     else:
         if args.type_split =='kfold':
-            test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(training_iteration))
-
+            if args.type_data == 'templates':
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(training_iteration))
+            elif args.type_split =='clips_cropped':
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_cropped_unbalanced/test_split_clip_cropped_SIDTD_it_{}.csv".format(training_iteration))
+            elif args.type_split =='clips':
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(training_iteration))
         elif args.type_split =='cross':
-            test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv")
-
-        elif args.type_split =='unbalanced':
-            test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(training_iteration))
+            if args.type_data =='templates':
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv")
+            elif args.type_data == 'clips':
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_unbalanced/test_split_SIDTD.csv")
+            elif args.type_data == 'clips_cropped':
+                test_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/test_split_clip_cropped_SIDTD.csv")
 
     
     test_paths = test_metadata_split['image_path'].values.tolist()

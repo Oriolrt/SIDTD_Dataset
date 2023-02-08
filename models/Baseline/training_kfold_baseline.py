@@ -112,7 +112,7 @@ def setup_model(args, N_CLASSES, pretrained=True):
         model.avgpool = nn.AdaptiveAvgPool2d(1)
         model.fc = nn.Linear(model.fc.in_features, N_CLASSES)
         
-    elif args.model == 'vit_large_patch16_224':
+    elif args.model in ['vit_large_patch16_224', 'vit_small_patch16_224']:
         model = timm.create_model(args.model, pretrained=pretrained)
         net_cfg = model.default_cfg
         last_layer = net_cfg['classifier']
@@ -131,7 +131,7 @@ def get_mean_std(args, model):
         mean=[0.485, 0.456, 0.406]
         std=[0.229, 0.224, 0.225]
         
-    elif args.model == 'vit_large_patch16_224':
+    elif args.model in ['vit_large_patch16_224', 'vit_small_patch16_224']:
         mean = list(model.default_cfg['mean'])
         std = list(model.default_cfg['std'])    
     return mean, std
@@ -312,7 +312,7 @@ def train_baseline_models(args, LOGGER, iteration = 0):
     WORKERS = args.workers
     lr = args.learning_rate
     
-    if args.model == 'vit_large_patch16_224':
+    if args.model in ['vit_large_patch16_224', 'vit_small_patch16_224']:
         WIDTH, HEIGHT = 224, 224
     else: 
         WIDTH, HEIGHT = 299, 299
@@ -350,34 +350,55 @@ def train_baseline_models(args, LOGGER, iteration = 0):
                 print('ERROR : WRONG PATH')
 
     else:
-
         if args.type_split =='kfold':
-
-            if os.path.exists(os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(iteration)) and \
-                os.path.exists(os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(iteration)):
-                print("Loading existing partition: ", "split_{}_it_{}".format(iteration))
-                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(iteration))
-                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(iteration))
+            if args.type_data =='templates':
+                if (os.path.exists(os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(iteration))) and (os.path.exists(os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(iteration))):
+                    print("Loading static train and val partition")
+                    train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(iteration)) 
+                    val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(iteration)) 
+                else:
+                    print('ERROR : WRONG PATH')
                 
-            else:
-                print('ERROR : WRONG PATH')
-        
-        elif args.type_split =='cross':
+            elif args.type_data == 'clips':
+                if (os.path.exists(os.getcwd() + "/static/split_kfold_unbalanced/train_split_clip_background_SIDTD_it_{}.csv".format(iteration))) and (os.path.exists(os.getcwd() + "/static/split_kfold_unbalanced/val_split_clip_background_SIDTD_it_{}.csv".format(iteration))):
+                    print("Loading static train and val partition")
+                    train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/train_split_clip_background_SIDTD_it_{}.csv".format(iteration))
+                    val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/val_split_clip_background_SIDTD_it_{}.csv".format(iteration))
+                else:
+                    print('ERROR : WRONG PATH')
 
-            if os.path.exists(os.getcwd() + "/static/split_normal/train_split_SIDTD.csv") and \
-                os.path.exists(os.getcwd() + "/static/split_normal/val_split_SIDTD.csv"):
-                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/train_split_SIDTD.csv")
-                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/val_split_SIDTD.csv")
-                
             else:
-                print('ERROR : WRONG PATH')
+                if (os.path.exists(os.getcwd() + "/static/split_kfold_cropped_unbalanced/train_split_clip_cropped_SIDTD_it_{}.csv".format(iteration))) and (os.path.exists(os.getcwd() + "/static/split_kfold_cropped_unbalanced/val_split_clip_cropped_SIDTD_it_{}.csv".format(iteration))):
+                    print("Loading static train and val partition")
+                    train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_cropped_unbalanced/train_split_clip_cropped_SIDTD_it_{}.csv".format(iteration))
+                    val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_cropped_unbalanced/val_split_clip_cropped_SIDTD_it_{}.csv".format(iteration))
+                else:
+                    print('ERROR : WRONG PATH')
 
-        elif args.type_split == 'unbalanced':
-            if os.path.exists(os.getcwd() + "/static/split_kfold_unbalanced/train_split_clip_background_SIDTD_it_{}.csv".format(iteration)) and os.path.exists(os.getcwd() + "/static/split_kfold_unbalanced/val_split_clip_background_SIDTD_it_{}.csv".format(iteration)):
-                train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/train_split_clip_background_SIDTD_it_{}.csv".format(iteration))
-                val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/val_split_clip_background_SIDTD_it_{}.csv".format(iteration))
-            else:
-                print('ERROR : WRONG PATH')
+        else:
+            if args.type_data =='templates':
+                if (os.path.exists(os.getcwd() + "/static/split_normal/train_split_SIDTD.csv")) and (os.path.exists(os.getcwd() + "/static/split_normal/val_split_SIDTD.csv")):
+                    print("Loading static train and val partition")
+                    train_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/train_split_SIDTD.csv")
+                    val_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/val_split_SIDTD.csv")
+                else:
+                        print('ERROR : WRONG PATH')
+
+            elif args.type_data == 'clips':
+                if (os.path.exists(os.getcwd() + "/static/cross_val_unbalanced/train_split_SIDTD.csv")) and (os.path.exists(os.getcwd() + "/static/cross_val_unbalanced/val_split_SIDTD.csv")):
+                    print("Loading static train and val partition")
+                    train_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_unbalanced/train_split_SIDTD.csv")
+                    val_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_unbalanced/val_split_SIDTD.csv")
+                else:
+                    print('ERROR : WRONG PATH')
+
+            elif args.type_data == 'clips_cropped':
+                if (os.path.exists(os.getcwd() + "/static/cross_val_cropped_unbalanced/train_split_clip_cropped_SIDTD.csv")) and (os.path.exists(os.getcwd() + "/static/cross_val_cropped_unbalanced/val_split_clip_cropped_SIDTD.csv")):
+                    print("Loading static train and val partition")
+                    train_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/train_split_clip_cropped_SIDTD.csv")
+                    val_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/val_split_clip_cropped_SIDTD.csv")
+                else:
+                    print('ERROR : WRONG PATH')
 
 
     train_paths = train_metadata_split['image_path'].values.tolist()

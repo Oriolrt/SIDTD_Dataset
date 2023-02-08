@@ -108,14 +108,25 @@ def train(opt, save_model_path, iteration):
             path_val = os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(opt.dataset, opt.dataset)
     else:
         if opt.type_split =='kfold':
-            path_train = os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(iteration)
-            path_val = os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(iteration)
+            if opt.type_data == 'templates':
+                path_train = os.getcwd() + "/static/split_kfold/train_split_SIDTD_it_{}.csv".format(iteration)
+                path_val = os.getcwd() + "/static/split_kfold/val_split_SIDTD_it_{}.csv".format(iteration)
+            elif opt.type_data == 'clips':
+                path_train = os.getcwd() + "/static/split_kfold_unbalanced/train_split_clip_background_SIDTD_it_{}.csv".format(iteration)
+                path_val = os.getcwd() + "/static/split_kfold_unbalanced/val_split_clip_background_SIDTD_it_{}.csv".format(iteration)
+            elif opt.type_data == 'clips_cropped':
+                path_train = os.getcwd() + "/static/split_kfold_cropped_unbalanced/train_split_clip_cropped_SIDTD_it_{}.csv".format(iteration)
+                path_val = os.getcwd() + "/static/split_kfold_cropped_unbalanced/val_split_clip_cropped_SIDTD_it_{}.csv".format(iteration)
         elif opt.type_split =='cross':
-            path_train = os.getcwd() + "/static/split_normal/train_split_SIDTD.csv"
-            path_val = os.getcwd() + "/static/split_normal/val_split_SIDTD.csv"
-        elif opt.type_split =='unbalanced':
-            path_train = os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)
-            path_val = os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)
+            if opt.type_data == 'templates':
+                path_train = os.getcwd() + "/static/split_normal/train_split_SIDTD.csv"
+                path_val = os.getcwd() + "/static/split_normal/val_split_SIDTD.csv"
+            elif opt.type_data == 'clips':
+                path_train = os.getcwd() + "/static/cross_val_unbalanced/train_split_SIDTD.csv"
+                path_val = os.getcwd() + "/static/cross_val_unbalanced/val_split_SIDTD.csv"
+            elif opt.type_data == 'clips_cropped':
+                path_train = os.getcwd() + "/static/cross_val_cropped_unbalanced/train_split_clip_cropped_SIDTD.csv"
+                path_val = os.getcwd() + "/static/cross_val_cropped_unbalanced/val_split_clip_cropped_SIDTD.csv"
 
     # load the dataset in python dictionnary to make the trainingg faster.
     paths_splits = {'train':{}, 'val' :{}}

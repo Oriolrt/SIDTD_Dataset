@@ -129,7 +129,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
     print('fold number :', iteration)
 
     if args.static == 'no':
-        if args.type_split in ['kfold','unbalanced']:
+        if args.type_split == 'kfold':
             if os.path.exists(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
                 print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
                 test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
@@ -143,22 +143,43 @@ def test_baseline_models(args, LOGGER, iteration=0):
     
     else:
         if args.type_split =='kfold':
-            if os.path.exists(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)):
-                print("Loading existing partition: ", "split_SIDTD_it_{}".format(iteration))
-                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)) 
-            else:
-                print('ERROR : WRONG PATH')
-        elif args.type_split =='cross':
-            if os.path.exists(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv"):
-                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv")
-            else:
-                print('ERROR : WRONG PATH')
+            if args.type_data =='templates':
+                if os.path.exists(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)):
+                    print("Loading existing partition: ", "split_SIDTD_it_{}".format(iteration))
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(iteration)) 
+                else:
+                    print('ERROR : WRONG PATH')
+                
+            elif args.type_data == 'clips':
+                if os.path.exists(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)):
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration))
+                else:
+                    print('ERROR : WRONG PATH')
 
-        elif args.type_split == 'unbalanced':
-            if os.path.exists(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration)):
-                test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(iteration))
             else:
-                print('ERROR : WRONG PATH')
+                if os.path.exists(os.getcwd() + "/static/split_kfold_cropped_unbalanced/test_split_clip_cropped_SIDTD_it_{}.csv".format(iteration)):
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_cropped_unbalanced/test_split_clip_cropped_SIDTD_it_{}.csv".format(iteration))
+                else:
+                    print('ERROR : WRONG PATH')
+
+        else:
+            if args.type_data =='templates':
+                if os.path.exists(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv"):
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_normal/test_split_SIDTD.csv")
+                else:
+                    print('ERROR : WRONG PATH')
+
+            elif args.type_data == 'clips':
+                if os.path.exists(os.getcwd() + "/static/cross_val_unbalanced/test_split_SIDTD.csv"):
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_unbalanced/test_split_SIDTD.csv")
+                else:
+                    print('ERROR : WRONG PATH')
+
+            else:
+                if os.path.exists(os.getcwd() + "/static/cross_val_cropped_unbalanced/test_split_clip_cropped_SIDTD.csv"):
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/test_split_clip_cropped_SIDTD.csv")
+                else:
+                    print('ERROR : WRONG PATH')
     
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()
@@ -171,8 +192,6 @@ def test_baseline_models(args, LOGGER, iteration=0):
     
     #Evaluation
     #inside kfold loop because it has to reset to default before initialising a new training
-    optimizer = SGD(model.parameters(), lr=lr, momentum=0.9)
-    scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.9, patience=1, verbose=True, eps=1e-6)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     
@@ -182,15 +201,22 @@ def test_baseline_models(args, LOGGER, iteration=0):
         PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
     else:
         print('Test with SIDTD trained models.')
-        if args.type_split == 'unbalanced':
+        if args.type_data == 'clips':
             if args.model== 'efficientnet-b3':
-                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_cropped_SIDTD/' + args.model + "_trained_models/clip_cropped_MIDV2020_EfficientNet_best_accuracy_n{}.pth".format(iteration)
+                PATH = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/{}_trained_models/clip_background_MIDV2020_EfficientNet_best_accuracy_n{}.pth".format(args.model, iteration)
             elif args.model== 'resnet50':
-                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_cropped_SIDTD/' + args.model + "_trained_models/clip_cropped_MIDV2020_ResNet50_best_accuracy_n{}.pth".format(iteration)
+                PATH = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/{}_trained_models/clip_background_MIDV2020_ResNet50_best_accuracy_n{}.pth".format(args.model, iteration)
             else:
-                PATH = os.getcwd() + '/pretrained_models/unbalanced_clip_cropped_SIDTD/' + args.model + "_trained_models/clip_cropped_MIDV2020_vit_large_patch16_best_accuracy_n{}.pth".format(iteration)
-        elif args.type_split == 'kfold':
-            PATH = os.getcwd() + '/pretrained_models/balanced_templates_SIDTD/' + args.model + "_trained_models/MIDV2020_{}_best_accuracy_n{}.pth".format(args.model, iteration)
+                PATH = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/{}_trained_models/clip_background_MIDV2020_vit_large_patch16_best_accuracy_n{}.pth".format(args.model, iteration)
+        elif args.type_data == 'clips_cropped':
+            if args.model== 'efficientnet-b3':
+                PATH = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/{}_trained_models/clip_cropped_MIDV2020_EfficientNet_best_accuracy_n{}.pth".format(args.model, iteration)
+            elif args.model== 'resnet50':
+                PATH = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/{}_trained_models/clip_cropped_MIDV2020_ResNet50_best_accuracy_n{}.pth".format(args.model, iteration)
+            else:
+                PATH = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/{}_trained_models/clip_cropped_MIDV2020_vit_large_patch16_best_accuracy_n{}.pth".format(args.model, iteration)
+        elif args.type_data == 'templates':
+            PATH = os.getcwd() + "/pretrained_models/balanced_templates_SIDTD/{}_trained_models/MIDV2020_{}_best_accuracy_n{}.pth".format(args.model, args.model, iteration)
 
     
     print('Use trained model saved in:', PATH)
