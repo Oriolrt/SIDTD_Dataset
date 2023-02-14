@@ -15,7 +15,7 @@ import os
 import inspect, sys
 import random
 import copy
-from utils import *
+from Fake_Generator.utils import *
 from PIL import ImageFont, ImageDraw, Image
 import tqdm
 from typing import *

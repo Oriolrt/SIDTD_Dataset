@@ -46,7 +46,7 @@ def get_optimal_font_scale(text, width):
     return font
 
 
-def get_font_scale(inner_path: str = "/usr/share/fonts/TTF"):
+def get_font_scale(inner_path: str = "/home/mtalarmain/Documents/SIDTD_Dataset/code_examples/TTF"):
 
     deja = [i for i in os.listdir(inner_path) if "DejaVu" in i]
     
@@ -54,7 +54,7 @@ def get_font_scale(inner_path: str = "/usr/share/fonts/TTF"):
 
     return os.path.join(inner_path,selected)
 
-def mask_from_info(img, shape:np.ndarray,flag:int=1,shaped:bool = False,  shaped_kin:str="rect"):
+def mask_from_info(img, shape:np.ndarray,flag:int=0,shaped:bool = False,  shaped_kin:str="rect"):
     def midpoint(x1, y1, x2, y2):
         x_mid = int((x1 + x2) / 2)
         y_mid = int((y1 + y2) / 2)
@@ -64,8 +64,12 @@ def mask_from_info(img, shape:np.ndarray,flag:int=1,shaped:bool = False,  shaped
         x0, y0, w, h = bbox_info(shape, flag)
         shape = bbox_to_coord(x0, y0, w, h)
 
-    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
-    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
+    if shaped_kin =="rect":
+        x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] 
+        y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
+    else:
+        x0, x1, x2, x3 = shape[0], shape[1], shape[2], shape[3]
+        y0, y1, y2, y3 = shape[0], shape[1], shape[2], shape[3]
 
     xmid0, ymid0 = midpoint(x1, y1, x2, y2)
     xmid1, ymid1 = midpoint(x0, y0, x3, y3)
@@ -161,7 +165,7 @@ def store(img_loader: list,path_store:str=None):
         
     print("Data Successfuly stored")
 
-def bbox_to_coord(x, y, w, h) ->Tuple[List[Int, Int],List[Int, Int],List[Int, Int],List[Int, Int]]:
+def bbox_to_coord(x, y, w, h):
     
     """This function convert the kin of the shape from bbox rectangle x0,y0 + heigh and weight to the polygon coordenades.
 
@@ -198,8 +202,13 @@ def bbox_info(info, flag, shaped:bool=False, shaped_kin:str="rect") -> Tuple[Int
         return x,y,w,h
           
     shape = info["quad"] if not shaped else info   #here if the info is like [[x0,y0], [x1,y1]...] #Here if the info is x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
-    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
-    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1] if shaped_kin =="rect" else shape[0], shape[1], shape[2], shape[3]
+    
+    if shaped_kin =="rect":
+        x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] 
+        y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
+    else:
+        x0, x1, x2, x3 = shape[0], shape[1], shape[2], shape[3]
+        y0, y1, y2, y3 = shape[0], shape[1], shape[2], shape[3]
 
     w = np.max([x0, x1, x2, x3]) - np.min([x0, x1, x2, x3])
     h = np.max([y0, y1, y2, y3]) - np.min([y0, y1, y2, y3])

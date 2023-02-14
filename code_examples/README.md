@@ -37,7 +37,7 @@ if you want more information about the arguments
     python fake_id_ex.py --transformation 'cr' --src_path 'Samples_Test/alb00.jpg' --src_annotations 'Samples_Test/alb_0_id.json' --trg_path 'Samples_Test/alb01.jpg' --trg_annotations 'Samples_Test/alb_1_id.json' --shift_boundary 10
 
     # Inpaint
-    python fake_id_ex.py --transformation 'cr' --src_path 'Samples_Test/alb00.jpg' --src_annotations 'Samples_Test/alb_0_id.json' --field_to_change 'name'
+    python fake_id_ex.py --transformation 'ir' --src_path 'Samples_Test/alb00.jpg' --src_annotations 'Samples_Test/alb_0_id.json' --field_to_change 'name'
 
 ```
 
