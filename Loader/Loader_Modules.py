@@ -63,7 +63,7 @@ class DataLoader(object):
 
     def __init__(self, dataset:str="SIDTD",kind:str="templates", kind_models:str="transfg_img_net", download_static:bool= False,type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
 , few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, unbalanced:bool= False, cropped:bool= False):
-
+        if kind == "clips_cropped": kind = "cropped"
         """
             Input of the class:         dataset --> Define what kind of the different datasets do you want to download [SIDTD, Dogs, Fungus, Findit, Banknotes]
                                                     This datasets have been changed in order to the different approach we are working on
