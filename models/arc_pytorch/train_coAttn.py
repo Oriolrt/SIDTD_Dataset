@@ -129,21 +129,39 @@ def train(opt, save_model_path, iteration):
                 path_val = os.getcwd() + "/static/cross_val_cropped_unbalanced/val_split_clip_cropped_SIDTD.csv"
 
     # load the dataset in python dictionnary to make the trainingg faster.
-    paths_splits = {'train':{}, 'val' :{}}
+    paths_splits = {'train':{'reals':{}, 'fakes':{}}, 'val' :{'reals':{}, 'fakes':{}}}
     for d_set in ['train', 'val']:
         if d_set == 'val':
             df = pd.read_csv(path_val)
             n_val = len(df)
         else:
             df = pd.read_csv(path_train)
+            path_images = list(df.image_path.values)
         for key in ['reals','fakes']:
-            imgs_path = df[df['label_name']==key].image_path.values
-            array_data = []
-            for path in imgs_path:
-                img = read_image(path, image_size=opt.imageSize)  # read and resize image
-                array_data.append(img)
-            paths_splits[d_set][key] = list(array_data)
-    loader = Batcher(paths_splits = paths_splits, batch_size=opt.batchSize, image_size=opt.imageSize)
+            imgs_path = list(df[df['label_name']==key].image_path.values)
+            array_img = []
+            for path_image in imgs_path:
+                image = cv2.imread(path_image)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                array_img.append(image)
+            paths_splits[d_set][key]['img'] = list(array_img)
+            paths_splits[d_set][key]['path'] = list(imgs_path)
+    loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)
+
+    # load the dataset in python dictionnary to make the trainingg faster.
+
+    path_images = list(df.image_path.values)
+    for key in ['reals','fakes']:
+        imgs_path = list(df[df['label_name']==key].image_path.values)
+        array_img = []
+        for path_image in imgs_path:              
+            image = cv2.imread(path_image)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            array_img.append(image)
+        paths_splits[d_set][key]['img'] = list(array_img)
+        paths_splits[d_set][key]['path'] = list(imgs_path)
+        
+    loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)
 
     # ready to train ...
     best_validation_loss = None

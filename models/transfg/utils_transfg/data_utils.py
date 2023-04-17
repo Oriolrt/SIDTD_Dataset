@@ -7,7 +7,7 @@ import os
 
 from torch.utils.data import DataLoader
 
-from .dataset import TrainDataset
+from .dataset import TrainDataset, TrainDatasets_augmented
 
 
 from albumentations import Compose, Normalize, Resize 
@@ -75,7 +75,12 @@ def get_loader(args, training_iteration):
 
     
     train_paths = train_metadata_split['image_path'].values.tolist()
-    train_ids = train_metadata_split['label'].values.tolist()
+    if not args.faker_data_augmentation:
+        train_ids = train_metadata_split['label'].values.tolist()
+    else:
+        dataset_dict = {'train':{}}
+        for label in [0,1]:
+            dataset_dict['train'][label] = train_metadata_split[train_metadata_split['label'] == label]['image_path'].values.tolist()
     
     val_paths = val_metadata_split['image_path'].values.tolist()
     val_ids = val_metadata_split['label'].values.tolist()
@@ -84,7 +89,10 @@ def get_loader(args, training_iteration):
     print("Training images: ", len(train_paths),'N training classes:', len(list(set(train_ids))))
     print("Validation images: ", len(val_paths), 'N val classes: ', len(list(set(val_ids))))
     
-    trainset = TrainDataset(train_paths, train_ids, transform=train_transforms)
+    if not args.faker_data_augmentation:
+        trainset = TrainDataset(train_paths, train_ids, transform=train_transforms)
+    else:
+        trainset = TrainDatasets_augmented(args, dataset_dict['train'], train_paths, transform = train_transforms)
     valset = TrainDataset(val_paths, val_ids, transform=test_transforms)
     
 

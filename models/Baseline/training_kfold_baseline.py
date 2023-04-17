@@ -30,6 +30,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.metrics import f1_score, accuracy_score
 
 from efficientnet_pytorch import EfficientNet
+from datasets import *
 
 
 import tqdm 
@@ -402,7 +403,12 @@ def train_baseline_models(args, LOGGER, iteration = 0):
 
 
     train_paths = train_metadata_split['image_path'].values.tolist()
-    train_ids = train_metadata_split['label'].values.tolist()
+    if not args.faker_data_augmentation:
+        train_ids = train_metadata_split['label'].values.tolist()
+    else:
+        dataset_dict = {'train':{}}
+        for label in [0,1]:
+            dataset_dict['train'][label] = train_metadata_split[train_metadata_split['label'] == label]['image_path'].values.tolist()
     
     val_paths = val_metadata_split['image_path'].values.tolist()
     val_ids = val_metadata_split['label'].values.tolist()
@@ -411,7 +417,11 @@ def train_baseline_models(args, LOGGER, iteration = 0):
     print("Training images: ", len(list(set(train_ids))))
     print("Validation images: ", len(list(set(val_ids))))
     
-    train_dataset = TrainDataset(train_paths, train_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'), dataset_crop = dataset_crop)
+    if not args.faker_data_augmentation:
+        train_dataset = TrainDataset(train_paths, train_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'), dataset_crop = dataset_crop)
+    else:
+        train_dataset = TrainDatasets_augmented(args, dataset_dict['train'], train_paths, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'))
+
     val_dataset = TrainDataset(val_paths, val_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='train'), dataset_crop = dataset_crop)
     
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=WORKERS)
