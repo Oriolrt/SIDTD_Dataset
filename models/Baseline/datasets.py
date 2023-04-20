@@ -6,7 +6,12 @@ from PIL import Image
 import cv2
 import names
 from faker import Faker
-from data_augm_utils import *
+import sys
+import os
+
+sys.path.insert(1, os.getcwd())
+
+from Fake_Generator.utils import CopyPaste, CropReplace, Inpainting, read_json
 
 
 ######################## dataloader for forgery data augmentation ##################################
