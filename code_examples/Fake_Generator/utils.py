@@ -11,7 +11,7 @@ import cv2
 from tqdm import tqdm
 import os
 import imageio
-
+from PIL import Image
 import matplotlib.pyplot as plt
 from traitlets import Int
 
@@ -46,7 +46,7 @@ def get_optimal_font_scale(text, width):
     return font
 
 
-def get_font_scale(inner_path: str = "/home/mtalarmain/Documents/SIDTD_Dataset/code_examples/TTF"):
+def get_font_scale(inner_path: str = os.getcwd() + "/TTF"):
 
     deja = [i for i in os.listdir(inner_path) if "DejaVu" in i]
     
@@ -61,7 +61,7 @@ def mask_from_info(img, shape:np.ndarray,flag:int=0,shaped:bool = False,  shaped
         return (x_mid, y_mid)
 
     if not shaped:
-        x0, y0, w, h = bbox_info(shape, flag)
+        x0, y0, w, h = bbox_info(shape)
         shape = bbox_to_coord(x0, y0, w, h)
 
     if shaped_kin =="rect":
@@ -83,12 +83,12 @@ def mask_from_info(img, shape:np.ndarray,flag:int=0,shaped:bool = False,  shaped
 
     return mask, masked
 
-def inpaint_image(img: np.ndarray, swap_info: dict, text_str: str, flag:int=1):
+def inpaint_image(img: np.ndarray, swap_info: dict, text_str: str):
     
     mask, img_masked = mask_from_info(img, swap_info)
     inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
     fake_text_image = copy.deepcopy(inpaint)
-    x0, y0, w, h = bbox_info(swap_info, flag=flag)
+    x0, y0, w, h = bbox_info(swap_info)
 
     color = (0,0,0)
     font = get_optimal_font_scale(text_str, w)
@@ -179,7 +179,7 @@ def bbox_to_coord(x, y, w, h):
 
     return [c1, c2, c3, c4]
 
-def bbox_info(info, flag, shaped:bool=False, shaped_kin:str="rect") -> Tuple[Int, Int, Int, Int]:
+def bbox_info(info) -> Tuple[Int, Int, Int, Int]:
     
     """This function return the rectangle of the template where are in located,
     
@@ -190,25 +190,12 @@ def bbox_info(info, flag, shaped:bool=False, shaped_kin:str="rect") -> Tuple[Int
 
     Returns:
         Tuple[Int, Int, Int, Int]
-    """
+    """ 
     
-    if flag == 1:
-        shape = info["shape_attributes"]
-        x = shape["x"]
-        y = shape["y"]
-        w = shape["width"]
-        h = shape["height"]
-        
-        return x,y,w,h
-          
-    shape = info["quad"] if not shaped else info   #here if the info is like [[x0,y0], [x1,y1]...] #Here if the info is x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
+    shape = info["quad"]   #here if the info is like [[x0,y0], [x1,y1]...] #Here if the info is x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
     
-    if shaped_kin =="rect":
-        x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] 
-        y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
-    else:
-        x0, x1, x2, x3 = shape[0], shape[1], shape[2], shape[3]
-        y0, y1, y2, y3 = shape[0], shape[1], shape[2], shape[3]
+    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0] 
+    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
 
     w = np.max([x0, x1, x2, x3]) - np.min([x0, x1, x2, x3])
     h = np.max([y0, y1, y2, y3]) - np.min([y0, y1, y2, y3])
@@ -216,20 +203,10 @@ def bbox_info(info, flag, shaped:bool=False, shaped_kin:str="rect") -> Tuple[Int
     return x0, y0, w, h
 
 
-def compute_homography(info1, info2, flag:int=1, mixed:bool=False):
+def compute_homography(info1, info2):
     # take the coordinates of the region to replace
-    if not mixed:   
-        x, y, w, h = bbox_info(info1, flag=flag)
-        x2, y2, w2, h2 = bbox_info(info2, flag=flag)
-    else:
-        try:
-            x, y, w, h = bbox_info(info1, flag=flag)
-            x2, y2, w2, h2 = bbox_info(info2, flag=abs(flag-1))
-        except:
-            x, y, w, h = bbox_info(info1, flag=abs(flag-1))
-            x2, y2, w2, h2 = bbox_info(info2, flag=flag)
-    
-    
+    x, y, w, h = bbox_info(info1)
+    x2, y2, w2, h2 = bbox_info(info2)
                        
     coord0 = np.array(bbox_to_coord(x, y, w, h), dtype=np.float32())
     coord1 = np.array(bbox_to_coord(x2, y2, w2, h2), dtype=np.float32())
@@ -238,13 +215,14 @@ def compute_homography(info1, info2, flag:int=1, mixed:bool=False):
     # (where @ denotes matricial product, inv the inverse of the homography
     # and p0 and p1 are homogeneous coordinates for the pixel coordinates)
 
-    H, mask = cv2.findHomography(coord0, coord1, cv2.RANSAC, 1.0)
+    H, mask = cv2.findHomography(coord1, coord0, cv2.RANSAC, 1.0)
 
     return H, coord0, coord1, mask
 
 
 def replace_one_document(im_a, im_b, coord_a, H,dx1,dy1,dx2,dy2):
 
+    dim_issue = False
     mask_a = np.zeros_like(im_a)
     cv2.drawContours(mask_a, [coord_a.astype(int)], -1, color=(255, 255, 255), thickness=cv2.FILLED)
     y_a, x_a = np.where((mask_a[..., 0] / 255).astype(int) == 1)
@@ -259,18 +237,166 @@ def replace_one_document(im_a, im_b, coord_a, H,dx1,dy1,dx2,dy2):
     y_b = coordh_b.T[:, 1].astype(int)
 
     im_rep = copy.deepcopy(im_b)
-    im_rep[y_b +  dy1, x_b + dx1, ...] = im_a[y_a + dy2, x_a + dx2, ...]
 
-    return im_rep
+    try :
+        im_rep[y_b +  dy1, x_b + dx1, ...] = im_a[y_a + dy2, x_a + dx2, ...]
+    except:
+        print('ERROR SHAPE CROP REPLACE')
+        dim_issue = True
 
-def replace_info_documents(im0, im1, data0, data1, delta1, delta2, flag:int=1, mixed:bool=False):
-    H, coord0, coord1, _ = compute_homography(data0, data1, flag=flag, mixed=mixed)
+    return im_rep, dim_issue
+
+def replace_info_documents(im0, im1, data0, data1, delta1, delta2):
+    H, coord0, coord1, _ = compute_homography(data0, data1)
 
     dx1,dy1 = delta1
     dx2,dy2 = delta2
 
-    im1_rep = replace_one_document(im0, im1, coord0, H, dx1,dy1,dx2,dy2)
+    im_rep, dim_issue = replace_one_document(im1, im0, coord1, H, dx1,dy1,dx2,dy2)
 
-    im0_rep = replace_one_document(im1, im0, coord1, np.linalg.inv(H), dx1,dy1,dx2,dy2)
+    return im_rep, dim_issue
 
-    return im0_rep, im1_rep
+
+
+def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
+
+    im_rep = copy.deepcopy(im_a)
+    r_noise = random.randint(10,shift_copy)
+    
+    x1, y1, w1, h1 = bbox_info(coord_a)
+    source = im_a[y1:y1+h1, x1:x1+w1]
+    
+    x2, y2, w2, h2 = bbox_info(coord_b)
+    
+    try:
+        im_rep[y2 + r_noise:y2 + r_noise + h1, x2 + r_noise:x2 + r_noise + w1] = source
+        dim_issue = False
+    except:
+        dim_issue = True
+        print('COPY PASTE ERROR')
+
+    
+    return im_rep, dim_issue
+
+
+
+def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
+
+    im_rep = copy.deepcopy(im_a)
+    r_noise = random.randint(10,shift_crop)
+    
+    x1, y1, w1, h1 = bbox_info(coord_b)
+    source = im_b[y1:y1+h1, x1:x1+w1]
+    
+    x2, y2, w2, h2 = bbox_info(coord_a)
+    source = cv2.resize(source, (w2,h2))
+    
+    try:
+        im_rep[y2 + r_noise:y2 + r_noise + h2, x2 + r_noise:x2 + r_noise + w2] = source
+        dim_issue = False
+    except:
+        dim_issue = True
+
+    
+    return im_rep, dim_issue
+
+def CopyPaste(images, annotations, shift_copy):
+    """Copy a text randomly chosen among the field available and Paste in a random text field area.
+
+    Args:
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
+    """
+
+    list_text_field = list(annotations.keys())
+    if 'image' in list_text_field:
+        list_text_field.remove('image')
+    if 'photo' in list_text_field:
+        list_text_field.remove('photo')
+    if 'signature' in list_text_field:
+        list_text_field.remove('signature')
+    if 'face' in list_text_field:
+        list_text_field.remove('face')
+    
+    dim_issue = True
+    while dim_issue:
+        source_field_to_change_txt = random.choice(list_text_field)
+        target_field_to_change_txt = random.choice(list_text_field)
+        source_info_txt = annotations[source_field_to_change_txt]
+        target_info_txt = annotations[target_field_to_change_txt]
+        img_tr, dim_issue = copy_paste_on_document(images, source_info_txt, target_info_txt, shift_copy)
+    
+    return img_tr
+
+
+def CropReplace(image, annotations, image_target, annotations_target, list_image_field, shift_crop):
+    """Copy a text randomly chosen among the field available and Paste in a random text field area.
+
+    Args:
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
+    """
+
+
+    field_to_change = random.choice(list_image_field)
+    info_source = annotations[field_to_change]
+    if field_to_change == 'photo':
+        field_to_change = 'image'
+    info_target = annotations_target[field_to_change]
+    img_tr, dim_issue = copy_paste_on_two_documents(image, info_source, image_target, info_target, shift_crop)
+    return img_tr, dim_issue
+
+
+def Inpainting(image, annotations, id_country):
+    """Copy a text randomly chosen among the field available and Paste in a random text field area.
+
+    Args:
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
+    """
+    list_text_field = list(annotations.keys())
+    if 'image' in list_text_field:
+        list_text_field.remove('image')
+    if 'photo' in list_text_field:
+        list_text_field.remove('photo')
+    if 'signature' in list_text_field:
+        list_text_field.remove('signature')
+    if 'face' in list_text_field:
+        list_text_field.remove('face')
+    field_to_change = random.choice(list_text_field)
+
+    if field_to_change == 'name':
+        text_str = names.get_first_name()
+    elif field_to_change == 'surname':
+        text_str = names.get_last_name()
+    elif field_to_change == 'sex':
+        if id_country in ['esp', 'alb', 'fin', 'grc', 'svk']:
+            text_str = random.choice(['F','M'])
+        else:
+            text_str = random.choice(['K/M','N/F'])
+    elif field_to_change == 'nationality':
+        if id_country == 'esp':
+            text_str = 'ESP'
+        elif id_country == 'alb':
+            text_str = 'Shqiptare/Albanian'
+        elif id_country == 'aze':
+            text_str = 'AZORBAYCA/AZERBAIJAN'
+        elif id_country == 'est':
+            text_str = 'EST'
+        elif id_country == 'fin':
+            text_str = 'FIN'
+        elif id_country == 'grc':
+            text_str = 'EAAHNIKH/HELLENIC'
+        elif id_country == 'lva':
+            text_str = 'LVA'
+        elif id_country == 'rus':
+            text_str = 'AOMNHNKA'
+        elif id_country == 'srb':
+            text_str = 'SRPSKO'
+        elif id_country == 'svk':
+            text_str = 'SVK'
+    elif field_to_change == 'birthdate':
+        fake = Faker()
+        t = fake.date_time_between(start_date='-60y', end_date='-18y')
+        text_str = t.strftime('%d %m %Y')
+    
+    swap_info = annotations[field_to_change]
+    img_tr = inpaint_image(img=image, swap_info=swap_info, text_str=text_str)
+    return img_tr

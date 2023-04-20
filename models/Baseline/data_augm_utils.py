@@ -299,3 +299,104 @@ def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
 
     
     return im_rep, dim_issue
+
+def CopyPaste(images, annotations, shift_copy):
+    """Copy a text randomly chosen among the field available and Paste in a random text field area.
+
+    Args:
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
+    """
+
+    list_text_field = list(annotations.keys())
+    if 'image' in list_text_field:
+        list_text_field.remove('image')
+    if 'photo' in list_text_field:
+        list_text_field.remove('photo')
+    if 'signature' in list_text_field:
+        list_text_field.remove('signature')
+    if 'face' in list_text_field:
+        list_text_field.remove('face')
+    
+    dim_issue = True
+    while dim_issue:
+        source_field_to_change_txt = random.choice(list_text_field)
+        target_field_to_change_txt = random.choice(list_text_field)
+        source_info_txt = annotations[source_field_to_change_txt]
+        target_info_txt = annotations[target_field_to_change_txt]
+        img_tr, dim_issue = copy_paste_on_document(images, source_info_txt, target_info_txt, shift_copy)
+    
+    return img_tr
+
+
+def CropReplace(image, annotations, image_target, annotations_target, list_image_field, shift_crop):
+    """Copy a text randomly chosen among the field available and Paste in a random text field area.
+
+    Args:
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
+    """
+
+
+    field_to_change = random.choice(list_image_field)
+    info_source = annotations[field_to_change]
+    if field_to_change == 'photo':
+        field_to_change = 'image'
+    info_target = annotations_target[field_to_change]
+    img_tr, dim_issue = copy_paste_on_two_documents(image, info_source, image_target, info_target, shift_crop)
+    return img_tr, dim_issue
+
+
+def Inpainting(image, annotations, id_country):
+    """Copy a text randomly chosen among the field available and Paste in a random text field area.
+
+    Args:
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
+    """
+    list_text_field = list(annotations.keys())
+    if 'image' in list_text_field:
+        list_text_field.remove('image')
+    if 'photo' in list_text_field:
+        list_text_field.remove('photo')
+    if 'signature' in list_text_field:
+        list_text_field.remove('signature')
+    if 'face' in list_text_field:
+        list_text_field.remove('face')
+    field_to_change = random.choice(list_text_field)
+
+    if field_to_change == 'name':
+        text_str = names.get_first_name()
+    elif field_to_change == 'surname':
+        text_str = names.get_last_name()
+    elif field_to_change == 'sex':
+        if id_country in ['esp', 'alb', 'fin', 'grc', 'svk']:
+            text_str = random.choice(['F','M'])
+        else:
+            text_str = random.choice(['K/M','N/F'])
+    elif field_to_change == 'nationality':
+        if id_country == 'esp':
+            text_str = 'ESP'
+        elif id_country == 'alb':
+            text_str = 'Shqiptare/Albanian'
+        elif id_country == 'aze':
+            text_str = 'AZORBAYCA/AZERBAIJAN'
+        elif id_country == 'est':
+            text_str = 'EST'
+        elif id_country == 'fin':
+            text_str = 'FIN'
+        elif id_country == 'grc':
+            text_str = 'EAAHNIKH/HELLENIC'
+        elif id_country == 'lva':
+            text_str = 'LVA'
+        elif id_country == 'rus':
+            text_str = 'AOMNHNKA'
+        elif id_country == 'srb':
+            text_str = 'SRPSKO'
+        elif id_country == 'svk':
+            text_str = 'SVK'
+    elif field_to_change == 'birthdate':
+        fake = Faker()
+        t = fake.date_time_between(start_date='-60y', end_date='-18y')
+        text_str = t.strftime('%d %m %Y')
+    
+    swap_info = annotations[field_to_change]
+    img_tr = inpaint_image(img=image, swap_info=swap_info, text_str=text_str)
+    return img_tr
