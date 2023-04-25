@@ -47,7 +47,7 @@ To get the Dataloader package you will need to:
 
 Enter to any python terminal and now you can
 ```bash
-  import Loader
+  import DataLoader
 ```
 It shouldnt exist any type of error
 
