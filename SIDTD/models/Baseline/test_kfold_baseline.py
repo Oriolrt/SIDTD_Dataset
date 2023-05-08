@@ -2,19 +2,16 @@ import matplotlib
 matplotlib.use('Agg')
 import sys
 import os
-
-hard_path = ''
-for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
-complete_path = hard_path + '/models/Baseline/'
-sys.path.insert(1, complete_path)
-
 import torch
+
 from torch.utils.data import DataLoader 
 from torch.optim import SGD 
-import torch.nn as nn 
-
-
 from _utils import *
+
+
+import torch.nn as nn
+
+
 
 def get_FPR_FNR(actual, pred):
     

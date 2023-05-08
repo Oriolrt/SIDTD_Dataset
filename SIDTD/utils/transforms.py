@@ -1,19 +1,14 @@
-import json
-from ntpath import join
-import random
-import copy
 from util import *
-import sys
 from typing import *
 from PIL import ImageFont, ImageDraw, Image
-import numpy as np
+
+
+import random
+import copy
 import cv2
-from tqdm import tqdm
-import os
-import imageio
-from PIL import Image
-import matplotlib.pyplot as plt
-from traitlets import Int
+
+
+import numpy as np
 
 
 def inpaint_image(img: np.ndarray, swap_info: dict, text_str: str):

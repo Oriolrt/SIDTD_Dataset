@@ -1,24 +1,16 @@
 import numpy as np, pandas as pd, copy, torch, random, os
 
-from PIL import Image
-import cv2
-import tqdm
-import names
-from faker import Faker
-
 from image_augmenter import ImageAugmenter
 from tqdm import tqdm
 from random import choice
-import torch
 from torch.autograd import Variable
+
+import cv2
+import tqdm
+import torch
 import imageio
 
-import sys
-import os
-
-sys.path.insert(1, os.getcwd())
-
-from Fake_Generator.utils import CopyPaste, CropReplace, Inpainting, read_json
+from SIDTD.utils.transforms import CopyPaste, CropReplace, Inpainting, read_json
 
 class Binary(object):
     def __init__(self, batch_size, image_size):

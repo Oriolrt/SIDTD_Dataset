@@ -2,8 +2,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import os
-import matplotlib.pyplot as plt 
-
+import matplotlib.pyplot as plt
 import csv 
 
 def plot_loss(opt, training_loss_list, training_acc_list, validation_loss_list, validation_acc_list, training_iteration_list, iteration):

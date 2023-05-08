@@ -1,11 +1,11 @@
+from SIDTD.utils.transforms import  *
+
 from torch.utils.data import Dataset
+
+
 import cv2
 import sys
 import os
-
-sys.path.insert(1, os.getcwd())
-
-from SIDTD.utils.transforms import  *
 ######################## dataloader for forgery data augmentation ##################################
 
 flatten = lambda l: [item for sublist in l for item in sublist]

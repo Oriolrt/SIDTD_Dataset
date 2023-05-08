@@ -1,12 +1,7 @@
-import copy
-from Fake_Loader.Midv  import Midv
-from ..utils import *
+from SIDTD.data.DataGenerator.Midv  import Midv
+from SIDTD.utils.util  import *
+
 import os
-import numpy as np
-import random
-import cv2
-import tqdm
-from PIL import ImageFont, ImageDraw, Image
 
 
 

@@ -1,19 +1,14 @@
 from importlib.resources import path
-import json
-from ntpath import join
-import random
-import copy
-import sys
 from typing import *
 from PIL import ImageFont, ImageDraw, Image
-import numpy as np
+
+import json
+import random
 import cv2
-from tqdm import tqdm
 import os
 import imageio
-from PIL import Image
-import matplotlib.pyplot as plt
-from traitlets import Int
+
+import numpy as np
 
 # TODO This function need to be refactored (generalize the fonts)
 def get_optimal_font_scale(text, width):

@@ -20,7 +20,7 @@ setup(
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=long_description,
-    packages=find_packages(),
+    packages=find_packages(include=['SIDTD', 'SIDTD.*']),
     install_requires=[line.strip() for line in open("requirements.txt").readlines()],
     keywords=['python', 'benchmarks', "documents","classification", "binary", "fakes", "reals"],
     classifiers=[

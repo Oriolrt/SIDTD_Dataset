@@ -1,34 +1,25 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function 
+from contextlib import contextmanager
+from tqdm import tqdm
+from models.modeling import VisionTransformer, CONFIGS
+from utils_transfg.data_utils import get_loader_test
 
 import matplotlib 
-matplotlib.use('Agg') 
-
+matplotlib.use('Agg')
 import os 
 import sys
-
-hard_path = ''
-for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
-complete_path = hard_path + '/models/transfg/'
-sys.path.insert(1, complete_path)
-
-import random 
-import numpy as np 
-import pandas as pd
-import time 
-import sklearn.metrics 
-import csv 
+import random
+import time
+import csv
 import os.path
+import torch
+import sklearn.metrics
 
-from contextlib import contextmanager
-import torch 
-import torch.nn.functional as F 
-from tqdm import tqdm 
+import numpy as np
+import pandas as pd
+import torch.nn.functional as F
 
-
-#from torch.utils.tensorboard import SummaryWriter 
-from models.modeling import VisionTransformer, CONFIGS 
-from utils_transfg.data_utils import get_loader_test
 
 
 

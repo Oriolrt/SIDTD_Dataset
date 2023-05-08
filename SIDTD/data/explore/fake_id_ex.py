@@ -1,6 +1,8 @@
 from SIDTD.utils.transforms import *
-import matplotlib.pyplot as plt
+
 from PIL import Image
+
+import matplotlib.pyplot as plt
 import argparse
 import random 
 

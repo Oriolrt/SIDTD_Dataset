@@ -1,40 +1,36 @@
+from datasets import *
+
 import matplotlib
 matplotlib.use('Agg')
-
 import os
 import cv2
 import time 
 import timm
 import torch 
 import random
-import sklearn.metrics 
-import matplotlib.pyplot as plt 
+import sklearn.metrics
+import tqdm
+import csv
 
-from contextlib import contextmanager 
-
+import matplotlib.pyplot as plt
 import numpy as np 
 import pandas as pd 
 import torch.nn as nn 
+import torch.nn.functional as F
+import torchvision.models as models
+
 
 from torch.optim import SGD
 from torch.utils.data import DataLoader, Dataset 
-import torch.nn.functional as F 
-
+from contextlib import contextmanager
 from albumentations import Compose, Normalize, Resize 
 from albumentations.pytorch import ToTensorV2 
 from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContrast, RandomResizedCrop
-
-import torchvision.models as models 
-
 from torch.optim.lr_scheduler import ReduceLROnPlateau 
 from sklearn.metrics import f1_score, accuracy_score
-
 from efficientnet_pytorch import EfficientNet
-from datasets import *
 
 
-import tqdm 
-import csv 
 
 
 @contextmanager 

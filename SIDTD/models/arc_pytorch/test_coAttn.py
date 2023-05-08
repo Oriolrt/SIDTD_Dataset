@@ -1,24 +1,19 @@
+from torch.autograd import Variable
+from batcher_kfold_binary import Batcher
+from sklearn.metrics import roc_auc_score, accuracy_score
+from models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
+
 import sys
 import os
-
-hard_path = ''
-for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
-complete_path = hard_path + '/models/arc_pytorch/'
-sys.path.insert(1, complete_path)
-
 import random
 import pandas as pd
 import numpy as np
 import imageio.v2 as imageio
 import cv2
 import torch
-from torch.autograd import Variable
-from batcher_kfold_binary import Batcher
-from sklearn.metrics import roc_auc_score, accuracy_score
-
 import models_binary
-from models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
-import csv 
+import csv
+
 
 def seed_torch(seed=777):
     """

@@ -1,12 +1,14 @@
 #Description This file has the super classes with the image class, the video class and the façade of the Midv500 loader
+from SIDTD.utils.transforms import *
 
 from ast import Str
 from dataclasses import dataclass
-import inspect
-from SIDTD.utils.transforms import *
-
 from PIL import Image
 from typing import *
+
+
+import inspect
+
 
 class Midv():
 

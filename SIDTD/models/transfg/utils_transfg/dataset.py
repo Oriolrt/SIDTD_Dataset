@@ -1,11 +1,6 @@
 import cv2
 
 from torch.utils.data import Dataset
-import sys
-import os
-
-sys.path.insert(1, os.getcwd())
-
 from SIDTD.utils.transforms import  *
 
 

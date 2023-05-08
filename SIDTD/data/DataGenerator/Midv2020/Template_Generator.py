@@ -1,15 +1,13 @@
-from ast import Str
-import copy
+from SIDTD.data.DataGenerator.Midv  import Midv
+from SIDTD.utils.util  import *
+
 from typing import *
 from unicodedata import name
-from Midv  import Midv
-from utils import *
-import os
-import numpy as np
-import random
-import cv2
-import tqdm
 from PIL import ImageFont, ImageDraw, Image
+
+import os
+import random
+import tqdm
 
 
 class Template_Generator(Midv):
