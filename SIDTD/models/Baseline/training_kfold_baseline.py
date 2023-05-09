@@ -1,4 +1,4 @@
-from datasets import *
+from .datasets import *
 
 import matplotlib
 matplotlib.use('Agg')

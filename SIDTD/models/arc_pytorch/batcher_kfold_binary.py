@@ -1,6 +1,8 @@
+from .image_augmenter import ImageAugmenter
+
+
 import numpy as np, pandas as pd, copy, torch, random, os
 
-from image_augmenter import ImageAugmenter
 from tqdm import tqdm
 from random import choice
 from torch.autograd import Variable

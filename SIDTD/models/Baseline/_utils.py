@@ -46,7 +46,7 @@ import tqdm
 import csv 
 
 #custom library for the dataset functions
-from dataset.custom_dataset import TrainDataset, get_transforms
+from .dataset.custom_dataset import TrainDataset, get_transforms
 
 @contextmanager 
 def timer(name, LOGGER):

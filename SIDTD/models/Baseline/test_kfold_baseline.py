@@ -6,7 +6,7 @@ import torch
 
 from torch.utils.data import DataLoader 
 from torch.optim import SGD 
-from _utils import *
+from ._utils import *
 
 
 import torch.nn as nn

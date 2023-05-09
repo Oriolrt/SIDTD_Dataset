@@ -1,3 +1,5 @@
+from .transforms import crop_replace
+
 from importlib.resources import path
 from typing import *
 from PIL import ImageFont, ImageDraw, Image
@@ -50,7 +52,8 @@ def get_font_scale(inner_path: str = os.getcwd() + "/TTF"):
 
 
 
-def mask_from_info(img, shape:np.ndarray ,shaped:bool = False,  shaped_kin:str="rect"):
+
+def mask_from_info(img:np.ndarray, shape:np.ndarray):
 
     """"
         This f(x) extract the  ROI that will be inpainted
@@ -61,18 +64,9 @@ def mask_from_info(img, shape:np.ndarray ,shaped:bool = False,  shaped_kin:str="
         y_mid = int((y1 + y2) / 2)
         return (x_mid, y_mid)
 
-    ## TODO Això també he de fer que no hagi d'entrar al json, això s'hauria de fer fora
-    if not shaped:
-        x0, y0, w, h = bbox_info(shape)
-        shape = bbox_to_coord(x0, y0, w, h)
+    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0]
+    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
 
-    # TODO need to be refactored
-    if shaped_kin =="rect":
-        x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0]
-        y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
-    else:
-        x0, x1, x2, x3 = shape[0][0], shape[0][1], shape[0][2], shape[0][3]
-        y0, y1, y2, y3 = shape[1][0], shape[1][1], shape[1][2], shape[1][3]
 
     xmid0, ymid0 = midpoint(x1, y1, x2, y2)
     xmid1, ymid1 = midpoint(x0, y0, x3, y3)
@@ -161,25 +155,71 @@ def bbox_to_coord(x, y, w, h):
     return [c1, c2, c3, c4]
 
 
-def bbox_info(info) -> Tuple[Int, Int, Int, Int]:
+def bbox_info(info) -> Tuple[int,...]:
     """This function return the rectangle of the template where are in located,
-
-    Shaped: if shaped is True assume that the form of the info is an array that can represent the polygon or the rectangle
-
-            If shapend kin is set to rect the info have this form [[x0,y0], [x1,y1]...]
-            If shaped kin is polygon the info have this form x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
 
     Returns:
         Tuple[Int, Int, Int, Int]
     """
 
-    shape = info[
-        "quad"]  # here if the info is like [[x0,y0], [x1,y1]...] #Here if the info is x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
+    try:
+        shape = info["quad"]  # here if the info is like [[x0,y0], [x1,y1]...] #Here if the info is x = [x0,x1,x2,x3] and y = [y0,y1,y2,y3]
+        x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0]
+        y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
 
-    x0, x1, x2, x3 = shape[0][0], shape[1][0], shape[2][0], shape[3][0]
-    y0, y1, y2, y3 = shape[0][1], shape[1][1], shape[2][1], shape[3][1]
+        w = np.max([x0, x1, x2, x3]) - np.min([x0, x1, x2, x3])
+        h = np.max([y0, y1, y2, y3]) - np.min([y0, y1, y2, y3])
 
-    w = np.max([x0, x1, x2, x3]) - np.min([x0, x1, x2, x3])
-    h = np.max([y0, y1, y2, y3]) - np.min([y0, y1, y2, y3])
+    except:
+        shape = info["shape_attributes"]
+        x0 = shape["x"]
+        y0 = shape["y"]
+        w = shape["width"]
+        h = shape["height"]
+
+
 
     return x0, y0, w, h
+
+
+def replace_info_documents(im0:np.ndarray, im1:np.ndarray, data0:dict, data1:dict, delta1:np.ndarray[float, ...], delta2:np.ndarray[float, ...]):
+
+    """
+    This function replaces a rectangular region of interest (ROI) in one image with a homography-transformed ROI from another image.
+
+    Args:
+        im0 (np.ndarray): The first input image as a NumPy array.
+        im1 (np.ndarray): The second input image as a NumPy array.
+        data0 (dict): A dictionary containing information about the first image's ROI.
+        data1 (dict): A dictionary containing information about the second image's ROI.
+        delta1 (np.ndarray[float, ...]): An array containing the x and y translation values for the first ROI.
+        delta2 (np.ndarray[float, ...]): An array containing the x and y translation values for the second ROI.
+
+    Returns:
+        Tuple[np.ndarray, bool]: Returns a tuple containing the resulting image after replacing the ROI and a boolean indicator specifying if there was a dimension issue or not.
+    """
+    # take the coordinates of the region to replace
+    x, y, w, h = bbox_info(data0)
+    x2, y2, w2, h2 = bbox_info(data1)
+
+    coord0 = np.array(bbox_to_coord(x, y, w, h), dtype=np.float32())
+    coord1 = np.array(bbox_to_coord(x2, y2, w2, h2), dtype=np.float32())
+
+    H, _ = compute_homography(coord0, coord1)
+
+    dx1,dy1 = delta1
+    dx2,dy2 = delta2
+
+    im_rep, dim_issue = crop_replace(im1, im0, coord1, H, dx1,dy1,dx2,dy2)
+
+    return im_rep, dim_issue
+
+# TODO Refactor this function in order not to pass as input the json info (only coordenates)
+def compute_homography(coord0:np.ndarray, coord1:np.ndarray):
+
+    # Homography: p1 = H@p0 | p0 = inv(H)@p1
+    # (where @ denotes matricial product, inv the inverse of the homography
+    # and p0 and p1 are homogeneous coordinates for the pixel coordinates)
+    H, mask = cv2.findHomography(coord1, coord0, cv2.RANSAC, 1.0)
+
+    return H, mask

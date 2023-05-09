@@ -3,14 +3,9 @@ import sys
 import argparse
 import os
 
-hard_path = ''
-for x in os.getcwd().split('/')[1:-1]: hard_path = hard_path + '/' + x
-complete_path = hard_path + '/models/'
-sys.path.insert(1, complete_path)
-
-from Baseline.test_kfold_baseline import *
-from arc_pytorch.test_coAttn import *
-from transfg.test_kfold_transfg import *
+from SIDTD.models.Baseline.test_kfold_baseline import *
+from SIDTD.models.arc_pytorch.test_coAttn import *
+from SIDTD.models.transfg.test_kfold_transfg import *
 
 
 def init_logger(log_file='train.log'):

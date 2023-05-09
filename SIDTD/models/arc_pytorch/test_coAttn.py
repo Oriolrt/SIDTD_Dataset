@@ -1,7 +1,9 @@
+from .batcher_kfold_binary import Batcher
+from .models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
+
+
 from torch.autograd import Variable
-from batcher_kfold_binary import Batcher
 from sklearn.metrics import roc_auc_score, accuracy_score
-from models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
 
 import sys
 import os

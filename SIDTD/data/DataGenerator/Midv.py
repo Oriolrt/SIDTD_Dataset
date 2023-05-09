@@ -1,5 +1,6 @@
 #Description This file has the super classes with the image class, the video class and the façade of the Midv500 loader
 from SIDTD.utils.transforms import *
+from SIDTD.utils.util   import *
 
 from ast import Str
 from dataclasses import dataclass
@@ -8,6 +9,7 @@ from typing import *
 
 
 import inspect
+import sys
 
 
 class Midv():
@@ -131,18 +133,24 @@ class Midv():
     def Inpaint_and_Rewrite(self,img: np.ndarray, info: dict,img_id: int=None, mark:str=None, force_flag:int=1) -> Tuple[Image.Image, Str]:
         if bool(self._flag) is True or bool(force_flag) is True:
             swap_info, field_to_change = self.get_field_info(info=info,img_id1=img_id, mark=mark)
+
         else:
-            swap_info, field_to_change = self.get_field_info(info=info, mark=mark) 
-            
+            swap_info, field_to_change = self.get_field_info(info=info, mark=mark)
+
+        x0, y0, w, h = bbox_info(swap_info)
+        shape = bbox_to_coord(x0, y0, w, h)
+
         
         try:
             text_str = swap_info["region_attributes"]["value"]
 
         except:
             text_str =  swap_info["value"]
-            
-        fake_text_image =  inpaint_image(img, swap_info, text_str, flag=self._flag)
 
+        mask, _ = mask_from_info(img, shape)
+        coord = [x0, y0, w, h]
+
+        fake_text_image =  inpaint_image(img=img, coord=coord, mask=mask, text_str=text_str)
         return fake_text_image, field_to_change
 
     ####################################################################################################

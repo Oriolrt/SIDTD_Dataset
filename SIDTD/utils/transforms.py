@@ -1,4 +1,4 @@
-from util import *
+from .util import *
 from typing import *
 from PIL import ImageFont, ImageDraw, Image
 
@@ -11,15 +11,24 @@ import cv2
 import numpy as np
 
 
-def inpaint_image(img: np.ndarray, swap_info: dict, text_str: str):
+def inpaint_image(img: np.ndarray, coord:np.ndarray[int, ...], mask: np.ndarray, text_str: str):
+    """
+    Inpaints the masked region in the input image using the TELEA algorithm and adds text to it.
 
-    if text_str is None:
-        text_str = swap_info["value"]
+    Args:
+        img (np.ndarray): Input image.
+        coord (np.ndarray[int, ...]): An array of integers representing the (x,y) coordinates of the top-left corner,
+            as well as the width and height of the region where the text will be added.
+        mask (np.ndarray): A binary mask with the same shape as `img`, where the masked pixels have value 0.
+        text_str (str): The text to be added to the inpainted region.
 
-    mask, img_masked = mask_from_info(img, swap_info)
+    Returns:
+        np.ndarray: A numpy array representing the inpainted image with the text added to it.
+    """
+
     inpaint = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
     fake_text_image = copy.deepcopy(inpaint)
-    x0, y0, w, h = bbox_info(swap_info)
+    x0, y0, w, h = coord
 
     color = (0, 0, 0)
     font = get_optimal_font_scale(text_str, w)
@@ -32,25 +41,26 @@ def inpaint_image(img: np.ndarray, swap_info: dict, text_str: str):
     return fake_text_image
 
 
-# TODO Refactor this function in order not to pass as input the json info (only coordenates)
-def compute_homography(info1, info2):
-    # take the coordinates of the region to replace
-    x, y, w, h = bbox_info(info1)
-    x2, y2, w2, h2 = bbox_info(info2)
 
-    coord0 = np.array(bbox_to_coord(x, y, w, h), dtype=np.float32())
-    coord1 = np.array(bbox_to_coord(x2, y2, w2, h2), dtype=np.float32())
 
-    # Homography: p1 = H@p0 | p0 = inv(H)@p1
-    # (where @ denotes matricial product, inv the inverse of the homography
-    # and p0 and p1 are homogeneous coordinates for the pixel coordinates)
+def crop_replace(im_a:np.ndarray, im_b:np.ndarray, coord_a:np.ndarray[int,...], H:np.matrix, dx1:int, dy1:int, dx2:int, dy2:int):
 
-    H, mask = cv2.findHomography(coord1, coord0, cv2.RANSAC, 1.0)
+    """
+    Crop and replace a region from one image onto another using a homography matrix.
 
-    return H, coord0, coord1, mask
+    Args:
+        im_a (numpy.ndarray): The source image to crop the region from.
+        im_b (numpy.ndarray): The target image to replace the region in.
+        coord_a (numpy.ndarray): The coordinates of the region to crop from im_a, in the form of a 3xN array.
+        H (numpy.matrix): The homography matrix used to warp the coordinates of the region from im_a to im_b.
+        dx1 (int): The horizontal shift applied to the region after it is pasted onto im_b.
+        dy1 (int): The vertical shift applied to the region after it is pasted onto im_b.
+        dx2 (int): The horizontal shift applied to the region before it is pasted onto im_b.
+        dy2 (int): The vertical shift applied to the region before it is pasted onto im_b.
 
-def replace_one_document(im_a, im_b, coord_a, H,dx1,dy1,dx2,dy2):
-
+    Returns:
+        A tuple containing the resulting image with the region replaced, and a boolean value indicating if there was an issue with the dimensions.
+    """
     dim_issue = False
     mask_a = np.zeros_like(im_a)
     cv2.drawContours(mask_a, [coord_a.astype(int)], -1, color=(255, 255, 255), thickness=cv2.FILLED)
@@ -76,28 +86,29 @@ def replace_one_document(im_a, im_b, coord_a, H,dx1,dy1,dx2,dy2):
     return im_rep, dim_issue
 
 
-# TODO check if this function is necessary and it is not redundant
-def replace_info_documents(im0, im1, data0, data1, delta1, delta2):
-    H, coord0, coord1, _ = compute_homography(data0, data1)
-
-    dx1,dy1 = delta1
-    dx2,dy2 = delta2
-
-    im_rep, dim_issue = replace_one_document(im1, im0, coord1, H, dx1,dy1,dx2,dy2)
-
-    return im_rep, dim_issue
 
 
-# TODO refactor this function per que és una guarrada
-# TODO also need to be refactored in order to not need to get into the metadata json
-def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
-    im_rep = copy.deepcopy(im_a)
+
+# TODO FUnció Refactoritzada falta explicar que fa la funció
+def copy_paste(image:np.ndarray, coord_a:List[int, ...], coord_b:List[int, ...], shift_copy:int) -> Tuple[np.ndarray, bool]:
+    """
+    This function performs a deep copy of an input image and pastes a region of interest (ROI) at a specific position in the output image.
+
+    Args:
+        image (np.ndarray): The input image as a NumPy array.
+        coord_a (List[int, ...]): Coordinates of the rectangle containing the ROI. Expected to be a list with four integer values representing x, y, width, and height coordinates of the ROI respectively.
+        coord_b (List[int, ...]): Coordinates of the rectangle in the output image where the ROI will be pasted. Expected to be a list with four integer values representing x, y, width, and height coordinates of the rectangle respectively.
+        shift_copy (int): Integer value that will be used as a shift for copying the ROI.
+
+    Returns:
+        Tuple[np.ndarray, bool]: Returns a tuple containing the resulting image after pasting the ROI and a boolean indicator specifying if there was a dimension issue or not.
+    """
+    im_rep = copy.deepcopy(image)
     r_noise = random.randint(10, shift_copy)
 
-    x1, y1, w1, h1 = bbox_info(coord_a)
-    source = im_a[y1:y1 + h1, x1:x1 + w1]
-
-    x2, y2, w2, h2 = bbox_info(coord_b)
+    x1, y1, w1, h1 = coord_a
+    source = image[y1:y1 + h1, x1:x1 + w1]
+    x2, y2, w2, h2 = coord_b
 
     try:
         im_rep[y2 + r_noise:y2 + r_noise + h1, x2 + r_noise:x2 + r_noise + w1] = source
@@ -108,14 +119,15 @@ def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
 
     return im_rep, dim_issue
 
-# TODO canviar aquesta funció també per que és una guarrada
 
-def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
-    im_rep = copy.deepcopy(im_a)
+#### AIXÒ ho he de discutir amb en maxime
+#TODO Aquesta funció no s'utilitza en ningun lloc
+def copy_paste_on_two_documents(image_a:np.ndarray, image_b:np.ndarray, coord_a:List[int, ...], coord_b:List[int, ...], shift_crop:int) -> Tuple[np.ndarray, bool]:
+    im_rep = copy.deepcopy(image_a)
     r_noise = random.randint(10, shift_crop)
 
     x1, y1, w1, h1 = bbox_info(coord_b)
-    source = im_b[y1:y1 + h1, x1:x1 + w1]
+    source = image_b[y1:y1 + h1, x1:x1 + w1]
 
     x2, y2, w2, h2 = bbox_info(coord_a)
     source = cv2.resize(source, (w2, h2))
@@ -129,7 +141,7 @@ def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
     return im_rep, dim_issue
 
 
-def CopyPaste(images, annotations, shift_copy):
+def copy_paste_on_document(image:np.ndarray, annotations:dict, shift_copy):
     """Copy a text randomly chosen among the field available and Paste in a random text field area.
 
     Args:
@@ -152,7 +164,7 @@ def CopyPaste(images, annotations, shift_copy):
         target_field_to_change_txt = random.choice(list_text_field)
         source_info_txt = annotations[source_field_to_change_txt]
         target_info_txt = annotations[target_field_to_change_txt]
-        img_tr, dim_issue = copy_paste_on_document(images, source_info_txt, target_info_txt, shift_copy)
+        img_tr, dim_issue = copy_paste(image, source_info_txt, target_info_txt, shift_copy)
 
     return img_tr
 

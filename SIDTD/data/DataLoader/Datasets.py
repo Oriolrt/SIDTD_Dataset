@@ -273,7 +273,6 @@ class SIDTD(Dataset):
             print("OPTION: do not download trained model files") 
            
                           
-    # TODO test it
     def create_structure_videos(self):
         videos_abs_path = os.path.join(self._abs_path, "videos", "reals")
         
