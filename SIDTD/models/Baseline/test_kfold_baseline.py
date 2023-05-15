@@ -14,6 +14,7 @@ import torch.nn as nn
 
 
 def get_FPR_FNR(actual, pred):
+    """  Returns False Positive Rate and False Negative Rate """
     
     df = pd.DataFrame({ 'actual': np.array(actual),  
                     'predicted': np.asarray(pred)})
@@ -36,6 +37,7 @@ def get_FPR_FNR(actual, pred):
     return FPR, FNR
 
 def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
+    """ Returns inference results on a chosen dataset and a chosen model """
                
     #Evaluation
     model.eval()
@@ -44,6 +46,7 @@ def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
     reals = np.zeros((len(test_loader.dataset)))
     p_preds = []
     
+    # Iterate over the whole test set batch by batch
     for i, (images, labels) in enumerate(test_loader):
      
         images = images.to(device)
@@ -53,15 +56,16 @@ def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
         with torch.no_grad():
             y_preds = model(images)
                       
-        preds[i * BATCH_SIZE: (i+1) * BATCH_SIZE] = y_preds.argmax(1).to('cpu').numpy()
+        preds[i * BATCH_SIZE: (i+1) * BATCH_SIZE] = y_preds.argmax(1).to('cpu').numpy()   # Label predicted by the model 
 
-        p_pred = F.softmax(y_preds, dim=1)
-        p_preds.extend(p_pred[:,1].to('cpu').numpy())
+        p_pred = F.softmax(y_preds, dim=1)   # Probability predicted for each label
+        p_preds.extend(p_pred[:,1].to('cpu').numpy())   # Probability predicted for fake label
 
         
         loss = criterion(y_preds, labels)
         avg_val_loss += loss.item() / len(test_loader)
     
+    # Compute metrics: F1, accuracy, ROC AUC, FPR, FNR
     score = f1_score(reals, preds, average='macro')
     accuracy = accuracy_score(reals, preds)
     try: 
@@ -77,8 +81,11 @@ def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
 
            
 def test_baseline_models(args, LOGGER, iteration=0):
+
+    """ Load dataset, dataloaders and models parameters for inference"""
     
     if args.device=='cuda':
+        # Set all data on GPU
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(torch.cuda.is_available())
         print(device)
@@ -91,6 +98,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
     if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
         os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
     
+    # Load existing csv results file if it exist otherwise, create the results file
     if args.save_results:
         print("Results file: ", args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name))
         if os.path.isfile(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name)):
@@ -103,7 +111,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
             header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score', 'FPR', 'FNR']
             writer_test.writerow(header_test)
 
-    # Adjust BATCH_SIZE and ACCUMULATION_STEPS to values that if multiplied results in 64 !
+    # Parameters for model inference. They can be chosen with the flags
     BATCH_SIZE = args.batch_size
     WORKERS = args.workers
     lr = args.learning_rate
@@ -120,11 +128,15 @@ def test_baseline_models(args, LOGGER, iteration=0):
     print("*****************************************")
 
 
-    # Iterate for the K partitions
+    #load model weights
     model = setup_model(args, N_CLASSES)
     mean, std = get_mean_std(args, model)
     print('fold number :', iteration)
 
+    # Load dataset paths that will be used by the batch generator
+    # You can use static path csv to replicate results or custom/random partitionning
+    # You can use different type of partitionning: train validation test split or kfold cross-validation 
+    # You can use different type of data: templates, clips or cropped clips.
     if args.static == 'no':
         if args.type_split == 'kfold':
             if os.path.exists(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
@@ -178,20 +190,22 @@ def test_baseline_models(args, LOGGER, iteration=0):
                 else:
                     print('ERROR : WRONG PATH')
     
+    # Load image paths and labels
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()
 
-    # Custom datasets following pytorch guidelines
+    # Load Batch Generator function
     test_dataset = TrainDataset(test_paths, test_ids, transform=get_transforms(WIDTH, HEIGHT, mean, std, data='valid'))
     #Dataloaders
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=WORKERS)
     
     
     #Evaluation
-    #inside kfold loop because it has to reset to default before initialising a new training
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     
+    # Load trained models.
+    # Choose model according to model chosen and if you want to choose a custom trained model or perform inference with our models
     if args.pretrained == 'no':
         print('Test with your own trained models.')
         save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
@@ -223,6 +237,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
     
     loss, accuracy, roc_auc_score, FPR, FNR = test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE)
 
+    # write and save inference results on test set in csv
     if args.save_results:
         test_res = [iteration, loss, accuracy, roc_auc_score, FPR, FNR]
         
