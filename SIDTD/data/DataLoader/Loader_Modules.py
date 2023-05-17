@@ -111,7 +111,7 @@ class DataLoader(object):
 
         
         current_path = os.getcwd()
-        self._save_dir = os.path.join(current_path,"explore")
+        self._save_dir = os.path.join(current_path,"data","explore")
         
         self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
@@ -167,7 +167,6 @@ class DataLoader(object):
                     if (flag_1 | flag_2) is False:
                         logging.warning("The model hasnt been found, starting to download")
                         self._dt.download_models(unbalanced = self._unbalanced, cropped = self._cropped,type_models=model)
-                        
                         logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "explore", )))
                     
                     else:logging.info(f"Model found in code examples\' directory or in models\' directory")
@@ -186,8 +185,9 @@ class DataLoader(object):
                     
                     logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "explore", )))
                 
-                else:logging.info(f"Model found in code examples\' directory or in models\' directory")
-
+                else:
+                    logging.info(f"Model found in code examples\' directory or in models\' directory")
+                    print(f"Model found in code examples\' directory or in models\' directory")
         
         else:
             logging.info("No model is set, not searching for")
@@ -252,6 +252,7 @@ class DataLoader(object):
         df['image_path'] = current_path + df['image_path']
         df.to_csv(path, index=False)
 
+
     def set_static_path(self):
         current_path = os.getcwd()
         for d_set in ['train','val','test']:
@@ -261,7 +262,6 @@ class DataLoader(object):
                 path_save_csv = current_path + '/explore/static/split_kfold/' + d_set + '_split_SIDTD_it_' + str(j) + '.csv'
                 self.change_path(path_save_csv)
                 
-
     def _kfold_partition(self, new_df, kind:str= "templates") -> Tuple[List[Image], List[Image], List[Image]]:
 
         # Window to split the dataset in training/validation/testing set for the 10-fold
@@ -413,6 +413,7 @@ class DataLoader(object):
         # Wlaking top-down from the Working directory
         for rt, dir, files in os.walk(os.path.join(os.getcwd(), root)):            
             if (to_search in dir):
+                print(os.path.join(rt, "/".join(dir)))
                 return True, os.path.join(rt, "/".join(dir))
         
         return False, []

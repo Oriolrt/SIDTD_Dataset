@@ -2,6 +2,7 @@ from SIDTD.models.Baseline.training_kfold_baseline import *
 from SIDTD.models.arc_pytorch.train_coAttn import *
 from SIDTD.models.transfg.train_kfold_transfg import *
 
+
 def init_logger(log_file='train.log'):
     from logging import getLogger, DEBUG, FileHandler, Formatter, StreamHandler
         
