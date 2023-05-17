@@ -1,13 +1,14 @@
+# local import
 from .datasets import *
+from ._utils import *
 
+# package import
 import matplotlib
 matplotlib.use('Agg')
 import os
 import cv2
 import time 
-import timm
 import torch 
-import random
 import sklearn.metrics
 import tqdm
 import csv
@@ -17,38 +18,16 @@ import numpy as np
 import pandas as pd 
 import torch.nn as nn 
 import torch.nn.functional as F
-import torchvision.models as models
 
 
 from torch.optim import SGD
 from torch.utils.data import DataLoader, Dataset 
-from contextlib import contextmanager
 from albumentations import Compose, Normalize, Resize 
 from albumentations.pytorch import ToTensorV2 
 from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContrast, RandomResizedCrop
 from torch.optim.lr_scheduler import ReduceLROnPlateau 
 from sklearn.metrics import f1_score, accuracy_score
-from efficientnet_pytorch import EfficientNet
 
-
-
-
-@contextmanager 
-def timer(LOGGER, name):
-    """ Returns time duration """
-    t0 = time.time()
-    LOGGER.info(f'[{name}] start')
-    yield
-    LOGGER.info(f'[{name}] done in {time.time() - t0:.0f} s.')
-
-def seed_torch(seed=777):
-    """ Set torch model seed to fix randomness """
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True 
 
 
 class TrainDataset(Dataset):
@@ -89,7 +68,9 @@ class TrainDataset(Dataset):
 
     
 def get_transforms(WIDTH, HEIGHT, mean, std, data):
+    
     """ Function that returns augmented image based on albumentations functions. Images are also reized and normalized. """
+    
     assert data in ('train', 'valid')
     
     if data == 'train':
@@ -110,73 +91,39 @@ def get_transforms(WIDTH, HEIGHT, mean, std, data):
         Normalize(mean=mean, std=std),
         ToTensorV2(),
         ]) 
-
-
-def setup_model(args, N_CLASSES, pretrained=True):
-    """ Set type of model chosen: Efficientnet-b3, Resnet50 or ViT."""
-    print("MODEL SETUP: ", args.model)
-    if args.model == 'resnet50':
-        model = models.resnet50(pretrained=pretrained)
-        model.avgpool = nn.AdaptiveAvgPool2d(1)
-        model.fc = nn.Linear(model.fc.in_features, N_CLASSES)    # Change last layer to fit the number of class needed
-        
-    elif args.model in ['vit_large_patch16_224', 'vit_small_patch16_224']:
-        model = timm.create_model(args.model, pretrained=pretrained)
-        net_cfg = model.default_cfg
-        last_layer = net_cfg['classifier']
-        num_ftrs = getattr(model, last_layer).in_features
-        setattr(model, last_layer, nn.Linear(num_ftrs, N_CLASSES))    # Change last layer to fit the number of class needed
-        
-    elif args.model == 'efficientnet-b3':
-        model = EfficientNet.from_pretrained(args.model)
-        model._fc = nn.Linear(model._fc.in_features, N_CLASSES)      # Change last layer to fit the number of class needed
-        
-    return model 
-
-
-def get_mean_std(args, model):
-    if args.model in ['resnet50', 'efficientnet-b3']:
-        mean=[0.485, 0.456, 0.406]
-        std=[0.229, 0.224, 0.225]
-        
-    elif args.model in ['vit_large_patch16_224', 'vit_small_patch16_224']:
-        mean = list(model.default_cfg['mean'])
-        std = list(model.default_cfg['std'])    
-    return mean, std
                        
-
-
-def plot_loss(args, training_loss_list, validation_loss_list, validation_acc_list, training_iteration_list, training_iteration):
-
-    """ Returns plot image of loss and accuracy for validation and train set in function of number of epochs """
-
-    if not os.path.exists('plots/{}/{}/'.format(args.model, args.dataset)):
-        os.makedirs('plots/{}/{}/'.format(args.model, args.dataset))
-            
-    plt.figure()
-    plt.title("Loss")
-    plt.plot(training_iteration_list, training_loss_list, label="train")
-    plt.plot(training_iteration_list, validation_loss_list, label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("loss")
-    plt.legend()
-    plt.savefig(args.plot_path + '{}/{}/{}_loss_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
-    plt.close()
-    
-    plt.figure()
-    plt.title("Accuracy")
-    plt.plot(training_iteration_list, validation_acc_list, label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("accuracy")
-    plt.legend()
-    plt.savefig(args.plot_path + '{}/{}/{}_accuracy_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
-    plt.close()
     
     
 def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, criterion, n_epochs, BATCH_SIZE,
             accumulation_steps, train_loader, valid_loader, save_model_path, device):
     
-    """ Trains the model chosen depending on the features chosen previously (epochs, batch size, optimizer etc...) """
+    """
+    Training loop
+
+    Parameters
+    ----------
+    model : Pytorch model
+    training_iteration: number of training partition
+    optimizer
+    scheduler
+    criterion
+    n_epochs : Number of epochs.
+    BATCH_SIZE
+    accumulation_steps : number of steps to update weights
+    train_loader : pytorch dataloader
+    valid_loader : pytorch dataloader
+    save_model_path : pytorch dataloader
+    device : cuda or cpu
+    LOGGER : Logger file to write training info
+    
+    Returns
+    -------
+    losses : Dictionary with the training and validation losses.
+    best_loss
+    best_loss_epoch
+    best_accuracy
+    best_accuracy_epoch
+    """
 
     with timer(LOGGER, 'Train model'):
         
@@ -257,7 +204,7 @@ def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, crite
         
             LOGGER.debug(f' Epoch {epoch+1} - avg_train_loss: {avg_loss:.4f} avg_val_loss: {avg_val_loss:.4f} F1: {score:.6f} Accuracy: {accuracy:.6f} Roc AUC: {roc_auc_score:.6f} time: {elapsed:.0f}s')
 
-            # Save plot of accuracy and loss
+            # Add model performance in list and save image plot of loss and accuracy in function of epoch number
             training_iteration_list = training_iteration_list + [epoch]
             validation_loss_list = validation_loss_list + [avg_val_loss]
             training_loss_list = training_loss_list + [avg_loss]
@@ -271,13 +218,13 @@ def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, crite
                 LOGGER.debug(f' Epoch {epoch+1} - Save Best Accuracy: {best_accuracy:.6f} Model')
                 torch.save(model.state_dict(), save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, training_iteration))
             
-            # Save best roc auc
+            # Save best roc auc in memory
             if roc_auc_score>=best_roc_auc:
                 best_roc_auc = roc_auc_score
                 best_roc_auc_epoch = epoch
                 LOGGER.debug(f' Epoch {epoch+1} - Save Best Roc AUC: {best_roc_auc:.6f} Model')
                 
-            # Save best loss
+            # Save best loss in memory
             if avg_val_loss<best_loss:
                 best_loss = avg_val_loss
                 best_loss_epoch = epoch
@@ -290,7 +237,7 @@ def trainer(args, LOGGER, training_iteration, model, optimizer, scheduler, crite
 
 def train_baseline_models(args, LOGGER, iteration = 0):
     
-    """ Here we set the features of the experiment. For instance we set the dataloaders, csv results files and model training features etc..."""
+    """ Here we set the parameters and features for the training."""
 
     if args.device=='cuda':
         # Set all data on GPU
@@ -312,7 +259,7 @@ def train_baseline_models(args, LOGGER, iteration = 0):
     if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
         os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
     
-    # Load existing csv results file if it exist otherwise, create the results file
+    # Load csv results file if it exist otherwise, create the results file
     if args.save_results:
         print("Results file: ", args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name))
         if os.path.isfile(args.results_path + '{}/{}/{}_val_results.csv'.format(args.model, args.dataset, args.name)):
@@ -352,8 +299,8 @@ def train_baseline_models(args, LOGGER, iteration = 0):
     LOGGER.debug("------------------------------------------------")
     
     # Load dataset paths that will be used by the batch generator
-    # You can use static path csv to replicate results or custom/random partitionning
-    # You can use different type of partitionning: train validation test split or kfold cross-validation 
+    # You can use static path csv to replicate results or choose your own random partitionning
+    # You can use different type of partitionning: train validation split or kfold cross-validation 
     # You can use different type of data: templates, clips or cropped clips.
     if args.static == 'no':
         if args.type_split =='kfold':
@@ -431,7 +378,7 @@ def train_baseline_models(args, LOGGER, iteration = 0):
 
     train_paths = train_metadata_split['image_path'].values.tolist()  # load train image path
 
-    # Load train label. If you choose to perform forgery augmentation, the images path and labels need to be load into a dictionnary.
+    # Load train label. If you choose to perform forgery augmentation, the images path and labels must be loaded in a dictionnary.
     if not args.faker_data_augmentation:
         train_ids = train_metadata_split['label'].values.tolist()
     else:

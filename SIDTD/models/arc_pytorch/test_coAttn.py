@@ -1,81 +1,17 @@
+# Local import
 from .batcher_kfold_binary import Batcher
 from .models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
+from .utils import *
 
-
-from torch.autograd import Variable
+# Import package
 from sklearn.metrics import roc_auc_score, accuracy_score
-
-import sys
 import os
-import random
 import pandas as pd
 import numpy as np
-import imageio.v2 as imageio
-import cv2
 import torch
 import models_binary
 import csv
 
-
-def seed_torch(seed=777):
-    """
-    Seeds the random variables of the different libraries.
-
-    Parameters
-    ----------
-    seed : int, optional
-        Random seed. The default is 777.
-
-    """
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True 
-
-
-def get_pct_accuracy(pred: Variable, target) -> int:
-    hard_pred = (pred > 0.5).int()
-    correct = (hard_pred == target).sum().item()
-    accuracy = float(correct) / target.size()[0]
-    accuracy = int(accuracy * 100)
-    return accuracy
-
-def one_shot_eval(pred, truth): 
-    pred = pred.round()
-    corrects = (pred == truth).sum().item()
-    return corrects 
-
-def read_image(image_path, image_size):
-    image = imageio.imread(image_path)
-    if image.shape[-1]>=4:
-        image = image[...,:-1]
-    image = cv2.resize(image, (image_size,image_size))
-    
-    return np.moveaxis(image, -1, 0) 
-
-def get_FPR_FNR(actual, pred):
-    
-    df = pd.DataFrame({ 'actual': np.array(actual),  
-                    'predicted': np.asarray(pred)})
-
-    TP = df[(df['actual'] == 0) & (df['predicted'] == 0)].shape[0]
-    TN = df[(df['actual'] == 1) & (df['predicted'] == 1)].shape[0]
-    FN = df[(df['actual'] == 0) & (df['predicted'] == 1)].shape[0]
-    FP = df[(df['actual'] == 1) & (df['predicted'] == 0)].shape[0]
-
-    n = len(df['actual'])
-    try:
-        FNR = FN / (TP + FN)
-    except: 
-        FNR = -1
-    try:
-        FPR = FP / (FP + TN)
-    except: 
-        FPR = -1
-
-    return FPR, FNR
 
 def save_results_test(opt):
     """
@@ -112,6 +48,33 @@ def save_results_test(opt):
 
 def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, paths, prob, prediction, y_true):
 
+    """
+    Helper function to perform inference on one batch of images.
+
+    Parameters
+    ----------
+    opt : Arguments
+        opt.cuda : Parameters to decide to load data on GPU or CPU device
+
+    discriminator, resNet, coAtten : pytorch models
+    loader: batch generator
+    labels
+    images: image paths of the current batch
+    paths: list of accumulated image paths. It will be used to generate results csv file image by image.
+    prob: list of accumulated probability. It will be used to generate results csv file image by image and compute metrics over the test set.
+    prediction: list of accumulated label prediction. It will be used to generate results csv file image by image and compute metrics over the test set.
+    y_true: list of accumulated label groundtruth. It will be used to generate results csv file image by image and compute metrics over the test set.
+    
+
+    Returns
+    -------
+    paths_list: list of accumulated image paths. It will be used to generate results csv file image by image.
+    prob_list: list of accumulated probability. It will be used to generate results csv file image by image and compute metrics over the test set.
+    prediction_list: list of accumulated label prediction. It will be used to generate results csv file image by image and compute metrics over the test set.
+    y_true_list: list of accumulated label groundtruth. It will be used to generate results csv file image by image and compute metrics over the test set.
+
+    """
+
     X_test, Y_test = loader.fetch_batch(part = "test", labels = labels, image_paths = images, batch_size = opt.batchSize)
     if opt.device=='cuda':
         X_test = X_test.cuda()
@@ -139,6 +102,7 @@ def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, 
     pred_test = torch.reshape(pred_test, (-1,))
     Y_test = torch.reshape(Y_test, (-1,))
     
+    # Save image paths, probability, prediction and groundtruth label into lists
     paths_list = paths + list(images)
     prob_list = prob + list(pred_test.to('cpu').numpy())
     prediction_list = prediction + list(pred_test.to('cpu').numpy().round())
@@ -169,12 +133,10 @@ def test(opt, save_model_path, iteration):
         coAtten.cuda()
 
 
-    # set up the optimizer.
-    bce = torch.nn.BCELoss()
-    if opt.device=='cuda':
-        bce = bce.cuda()
-
-    # csv path for train and validation
+    # Load dataset paths that will be used by the batch generator
+    # You can use static path csv to replicate results or custom/random partitionning
+    # You can use different type of partitionning: train validation test split or kfold cross-validation 
+    # You can use different type of data: templates, clips or cropped clips.
     if opt.static == 'no':
         if opt.type_split == 'kfold':
             path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
@@ -197,21 +159,24 @@ def test(opt, save_model_path, iteration):
                 path_test = os.getcwd() + "/static/cross_val_cropped_unbalanced/test_split_clip_cropped_SIDTD.csv"
 
 
-    # load the dataset in memory.
+    # preload the dataset in python dictionnary to make the training faster.
     paths_splits = {'test' :{}}
     d_set = 'test'
-    df = pd.read_csv(path_test)
+    df = pd.read_csv(path_test)   # load test set csv file with image paths and labels
     for key in ['reals','fakes']:
-        imgs_path = df[df['label_name']==key].image_path.values
+        imgs_path = df[df['label_name']==key].image_path.values   # save image path from the same label
         array_data = []
+        # Loop over all image from the same label, read and resize image
         for path in imgs_path:
             img = read_image(path, image_size=opt.imageSize)  # read and resize image
             array_data.append(img)
-        paths_splits[d_set][key] = list(array_data)
-    loader = Batcher(paths_splits = paths_splits, batch_size=opt.batchSize, image_size=opt.imageSize)
-    window = opt.batchSize
+        paths_splits[d_set][key] = list(array_data)   # save image array in dictionnary along the corresponding label and data set
+    loader = Batcher(paths_splits = paths_splits, batch_size=opt.batchSize, image_size=opt.imageSize)   # load batch generator
+    
+    window = opt.batchSize   # define batch size for inference
 
-    # Test model
+    # Load trained models.
+    # Choose model depending on if you want to choose a custom trained model or perform inference with our models
     if opt.pretrained == 'no':
         discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
         resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
@@ -220,7 +185,7 @@ def test(opt, save_model_path, iteration):
         resNet.eval()
         coAtten.eval()
     
-    if opt.pretrained == 'yes':
+    elif opt.pretrained == 'yes':
         if opt.type_data in ['clips', 'clips_cropped']:
             discriminator.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_best_accuracy_n{}.pth'.format(iteration)))
             resNet.load_state_dict(torch.load(save_model_path + '/coatten_fcn_model_fcn_best_accuracy_n{}.pth'.format(iteration)))
@@ -233,6 +198,7 @@ def test(opt, save_model_path, iteration):
         resNet.eval()
         coAtten.eval()
     
+    # Start inference...
     path_test = opt.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
     df_test = pd.read_csv(path_test)
     image_paths = df_test.image_path.values
@@ -242,6 +208,7 @@ def test(opt, save_model_path, iteration):
     reals = []
     test_paths = []
     i = 0
+    # Loop over the test set, batch by batch.
     while window*(i+1) < len(df_test):
         labels = label_name[window*i:window*(i+1)]
         images = image_paths[window*i:window*(i+1)]
@@ -254,11 +221,12 @@ def test(opt, save_model_path, iteration):
 
     my_array = np.asarray([ test_paths, reals, preds, p_preds]).T
     df = pd.DataFrame(my_array, columns = ['Path_image','Label_image','Pred_label_image','Proba_label_image'])
-    df.drop_duplicates(subset=['Path_image'], inplace=True, ignore_index=True)
+    df.drop_duplicates(subset=['Path_image'], inplace=True, ignore_index=True)   # remove the prediction duplicate, generated in the overlap of the last step
     df.Label_image = df.Label_image.astype(int)
     df.Proba_label_image = df.Proba_label_image.astype(float)
     df.Pred_label_image = df.Pred_label_image.astype(float).astype(int)
 
+    # Compute metrics: ROC AUC, accuracy, FPR and FNR
     test_auc = roc_auc_score(df['Label_image'],df['Proba_label_image'])
     acc_test = accuracy_score(df['Label_image'], df['Pred_label_image'])
     FPR, FNR = get_FPR_FNR(actual = df['Label_image'].values, pred = df['Pred_label_image'].values)

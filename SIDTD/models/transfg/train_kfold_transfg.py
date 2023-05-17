@@ -22,45 +22,26 @@ import numpy as np
 import matplotlib.pylab as plt
 import torch.nn.functional as F
 
-
-@contextmanager 
-def timer(name, LOGGER):
-    t0 = time.time()
-    LOGGER.info(f'[{name}] start')
-    yield
-    LOGGER.info(f'[{name}] done in {time.time() - t0:.0f} s.')
-
-
-def seed_torch(seed=777):
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    
-    
-class AverageMeter(object):
-    """Computes and stores the average and current value"""
-    def __init__(self):
-        self.reset()
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count 
-
-
-def simple_accuracy(preds, labels):
-    return (preds == labels).mean()
+from .utils import *
 
 
 def save_model(args, LOGGER, model, best_feature, training_iteration):
+
+    """
+    Helper function to save checkpoint model if it achieved best performance on best_feature (can be accuracy for instance).
+
+    Parameters
+    ----------
+    args : Arguments
+        args.dataset, args.name : Parameters to decide the name of the output image file
+    best_feature: type of metric (can be accuracy for instance) used to measure model performance
+    training_iteration: number of dataset partition
+    model: pytorch model
+
+    Returns
+    -------
+    None.
+    """
     
     save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
     if not os.path.exists(save_model_path):
@@ -79,60 +60,24 @@ def save_model(args, LOGGER, model, best_feature, training_iteration):
 
 
 
-def setup(args, LOGGER):
-    # Prepare model
-    config = CONFIGS[args.model_type]
-    config.split = args.split
-    config.slide_step = args.slide_step
-    if args.dataset=='dogs':
-        num_classes = 120
-    elif args.dataset=='DF20M':
-        num_classes = 182
-    else:
-        num_classes = 2
-    #prerapre model
-    model = VisionTransformer(config, args.img_size, zero_head=True, num_classes=num_classes, smoothing_value=args.smoothing_value)
-    #load the trained weights on imagenet
-    model.load_from(np.load(args.pretrained_dir))
-    model.to(args.device)
+def valid(args, LOGGER, model, test_loader):
+
+    """
+    Evaluation loop
+
+    Parameters
+    ----------
+    model : Pytorch model
+    test_loader : pytorch dataloader
+    LOGGER : Logger file to write training info
     
-    num_params = count_parameters(model)
-    LOGGER.info("{}".format(config))
-    LOGGER.info("Training parameters %s", args)
-    LOGGER.info("Total Parameter: \t%2.1fM" % num_params)
-    return args, model, num_classes 
+    Returns
+    -------
+    eval_losses: validation loss
+    val_accuracy: validation accuracy
+    roc_auc_score: validation ROC AUC
+    """
 
-def count_parameters(model):
-    params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    return params/1000000
-
-def plot_loss_acc(args, training_loss_list, validation_loss_list, validation_acc_list, training_iteration_list, training_iteration):
-
-    if not os.path.exists('plots/{}/{}/'.format(args.model, args.dataset)):
-        os.makedirs('plots/{}/{}/'.format(args.model, args.dataset))
-            
-    plt.figure()
-    plt.title("Loss")
-    plt.plot(training_iteration_list, training_loss_list, label="train")
-    plt.plot(training_iteration_list, validation_loss_list, label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("loss")
-    plt.legend()
-    plt.savefig(args.plot_path + '{}/{}/{}_loss_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
-    plt.close()
-    
-    plt.figure()
-    plt.title("Accuracy")
-    plt.plot(training_iteration_list, validation_acc_list, label="validation")
-    plt.xlabel("epoch")
-    plt.ylabel("accuracy")
-    plt.legend()
-    plt.savefig(args.plot_path + '{}/{}/{}_accuracy_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
-    plt.close()
-
-
-
-def valid(args, LOGGER, model, test_loader, num_classes):
     # Validation!
     eval_losses = AverageMeter()
     LOGGER.info("***** Running Validation *****")
@@ -154,7 +99,6 @@ def valid(args, LOGGER, model, test_loader, num_classes):
             preds = torch.argmax(logits, dim=-1)
             #probabilities
             p_pred = F.softmax(logits, dim=-1)
-            #deppending on multiclass or binnary classification add the info to calculate ROC AUC
             p_preds.extend(p_pred[:,1].to('cpu').numpy())
 
             
@@ -162,6 +106,7 @@ def valid(args, LOGGER, model, test_loader, num_classes):
             eval_loss = eval_loss.mean()
             eval_losses.update(eval_loss.item())
             
+        # Add predictions and labels groundtruth to list  
         if len(all_preds) == 0:
             all_preds.append(preds.detach().cpu().numpy())
             all_label.append(y.detach().cpu().numpy())
@@ -173,7 +118,8 @@ def valid(args, LOGGER, model, test_loader, num_classes):
                 all_label[0], y.detach().cpu().numpy(), axis=0
             )
     all_preds, all_label = all_preds[0], all_label[0]
-    #print(all_preds, all_label)
+    
+    # Compute accuracy and ROC AUC
     accuracy = simple_accuracy(all_preds, all_label)
     accuracy = torch.tensor(accuracy).to(args.device)
     val_accuracy = accuracy.detach().cpu().numpy()
@@ -192,14 +138,12 @@ def valid(args, LOGGER, model, test_loader, num_classes):
     return eval_losses, val_accuracy, roc_auc_score
 
 
-
-
 def train(args, LOGGER, model, num_classes, training_iteration, writer_val):
     """ Train the model """
      
     args.train_batch_size_total = args.train_batch_size * args.gradient_accumulation_steps
     
-    #dataloaders according to the iteration split
+    # dataloaders according to the partition split
     train_loader, val_loader = get_loader(args, training_iteration)
     # Prepare optimizer and scheduler
     optimizer = torch.optim.SGD(model.parameters(),
@@ -260,30 +204,36 @@ def train(args, LOGGER, model, num_classes, training_iteration, writer_val):
                 optimizer.zero_grad()
                 scheduler.step()
                 global_step += 1
+        
         #EVALUATION on validation dataset
         with torch.no_grad():
             eval_losses, val_accuracy, roc_auc_score = valid(args, LOGGER, model, val_loader, num_classes)
 
-        
+        # Add model performance in list and save image plot of loss and accuracy according to epoch number
         training_iteration_list = training_iteration_list + [epoch]
         validation_loss_list = validation_loss_list + [eval_losses.avg]
         training_loss_list = training_loss_list + [losses.avg]
         validation_acc_list = validation_acc_list + [val_accuracy]
-        
         plot_loss_acc(args, training_loss_list, validation_loss_list, validation_acc_list, training_iteration_list, training_iteration)
         
         LOGGER.info(f' Epoch {epoch+1} - avg_train_loss: {losses.avg:.4f} avg_val_loss: {eval_losses.avg:.4f} Accuracy: {val_accuracy:.6f} Roc AUC: {roc_auc_score:.6f}')
+        
+        # Save model if higher than previously saved best accuracy
         if best_acc <= val_accuracy:
             best_feature = 'best_accuracy'
             save_model(args, LOGGER, model, best_feature, training_iteration)
             best_acc = val_accuracy
             best_acc_epoch = epoch
             LOGGER.info("best accuracy: %f" % best_acc)
+        
+        # Save best roc auc in memory
         if best_roc_AUC <= roc_auc_score:
             best_feature = 'best_ROC_AUC'
             best_roc_AUC = roc_auc_score
             best_roc_AUC_epoch = epoch
             LOGGER.info("best ROC AUC: %f" % best_roc_AUC)
+        
+        # Save best loss in memory
         if best_loss >= eval_losses.avg:
             best_feature = 'best_loss'
             best_loss = eval_losses.avg
@@ -298,6 +248,7 @@ def train(args, LOGGER, model, num_classes, training_iteration, writer_val):
     end_time = time.time()
     LOGGER.info("Total Training Time: \t%f" % ((end_time - start_time) / 3600))
 
+    # Write and save results in csv
     if args.save_results:
         val_res = [training_iteration, best_loss, best_loss_epoch, best_acc,
                    best_acc_epoch, best_roc_AUC, best_roc_AUC_epoch]
@@ -307,10 +258,15 @@ def train(args, LOGGER, model, num_classes, training_iteration, writer_val):
 
 
 def train_transfg_models(args, LOGGER, iteration = 0):
+
+    """ Here we set the parameters and features for the training."""
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("DEVICE USED: ", device)
     print('path', os.getcwd())
     args.device = device
+    
+    # Load csv results file if it exist otherwise, create the results file
     if args.save_results:
         if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
             os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
@@ -329,7 +285,7 @@ def train_transfg_models(args, LOGGER, iteration = 0):
         
     
     seed_torch(seed=777)
-### start iteration here
+    ### start iteration here
     LOGGER.info("----- STARTING NEW ITERATION -----")
     LOGGER.info("Iteration = {}".format(iteration))
     # Model & Tokenizer Setup; prepare the dataset from scratch with imagenet weights at each iteration

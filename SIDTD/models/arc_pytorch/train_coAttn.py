@@ -1,58 +1,14 @@
 from .batcher_kfold_binary  import Batcher
 from .models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
+from .utils import *
 
-
-from torch.autograd import Variable
-from utils import *
-
-import sys
 import os
-import random
-import numpy as np
 import pandas as pd
-import imageio.v2 as imageio
 import cv2
 import sklearn
 import torch
 import models_binary
 
-def seed_torch(seed=777):
-    """
-    Seeds the random variables of the different libraries.
-
-    Parameters
-    ----------
-    seed : int, optional
-        Random seed. The default is 777.
-
-    """
-    random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True 
-
-
-def get_pct_accuracy(pred: Variable, target) -> int:
-    hard_pred = (pred > 0.5).int()
-    correct = (hard_pred == target).sum().item()
-    accuracy = float(correct) / target.size()[0]
-    accuracy = int(accuracy * 100)
-    return accuracy
-
-def one_shot_eval(pred, truth): 
-    pred = pred.round()
-    corrects = (pred == truth).sum().item()
-    return corrects 
-
-def read_image(image_path, image_size):
-    image = imageio.imread(image_path)
-    if image.shape[-1]>=4:
-        image = image[...,:-1]
-    image = cv2.resize(image, (image_size,image_size))
-    
-    return np.moveaxis(image, -1, 0) 
 
 def train(opt, save_model_path, iteration):
 
@@ -64,13 +20,14 @@ def train(opt, save_model_path, iteration):
     print('Use Co Attention Model')
     coAtten = CoAttn()
              
-    # initialise the model
+    # initialise the ARC (Attentive Recurrent Comparators) model
     discriminator = ArcBinaryClassifier(num_glimpses=opt.numGlimpses,
                                         glimpse_h=opt.glimpseSize,
                                         glimpse_w=opt.glimpseSize,
                                         channels = 1024,
                                         controller_out=opt.numStates)
 
+    # If chosen, use models on GPU device
     if opt.device=='cuda':
         print('Use GPU')
         discriminator.cuda()
@@ -81,7 +38,6 @@ def train(opt, save_model_path, iteration):
     bce = torch.nn.BCELoss()
     if opt.device=='cuda':
         bce = bce.cuda()
-    #ce_loss = torch.nn.CrossEntropyLoss()
 
     optim_params = []
     optim_params.append(list(discriminator.parameters()))
@@ -92,7 +48,10 @@ def train(opt, save_model_path, iteration):
     
     optimizer = torch.optim.Adam(params=flat_params, lr=opt.lr)
 
-    # csv path for train and validation
+    # Load dataset paths that will be used by the batch generator
+    # You can use static path csv to replicate results or choose your own random partitionning
+    # You can use different type of partitionning: train validation split or kfold cross-validation 
+    # You can use different type of data: templates, clips or cropped clips.
     if opt.static == 'no':
         if opt.type_split =='kfold':
             path_train = os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
@@ -122,40 +81,26 @@ def train(opt, save_model_path, iteration):
                 path_train = os.getcwd() + "/static/cross_val_cropped_unbalanced/train_split_clip_cropped_SIDTD.csv"
                 path_val = os.getcwd() + "/static/cross_val_cropped_unbalanced/val_split_clip_cropped_SIDTD.csv"
 
-    # load the dataset in python dictionnary to make the trainingg faster.
+    # preload the dataset in python dictionnary to make the training faster.
     paths_splits = {'train':{'reals':{}, 'fakes':{}}, 'val' :{'reals':{}, 'fakes':{}}}
     for d_set in ['train', 'val']:
         if d_set == 'val':
-            df = pd.read_csv(path_val)
+            df = pd.read_csv(path_val)   # load validation set csv file with image paths and labels
             n_val = len(df)
         else:
-            df = pd.read_csv(path_train)
+            df = pd.read_csv(path_train)   # load validation set csv file with image paths and labels
             path_images = list(df.image_path.values)
         for key in ['reals','fakes']:
-            imgs_path = list(df[df['label_name']==key].image_path.values)
+            imgs_path = list(df[df['label_name']==key].image_path.values)   # save image path from the same label
             array_img = []
+            # Loop over all image from the same label, read image and convert it to RGB image
             for path_image in imgs_path:
                 image = cv2.imread(path_image)
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 array_img.append(image)
-            paths_splits[d_set][key]['img'] = list(array_img)
-            paths_splits[d_set][key]['path'] = list(imgs_path)
-    loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)
-
-    # load the dataset in python dictionnary to make the trainingg faster.
-
-    path_images = list(df.image_path.values)
-    for key in ['reals','fakes']:
-        imgs_path = list(df[df['label_name']==key].image_path.values)
-        array_img = []
-        for path_image in imgs_path:              
-            image = cv2.imread(path_image)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            array_img.append(image)
-        paths_splits[d_set][key]['img'] = list(array_img)
-        paths_splits[d_set][key]['path'] = list(imgs_path)
-        
-    loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)
+            paths_splits[d_set][key]['img'] = list(array_img)    # save image array in dictionnary along the corresponding label and data set
+            paths_splits[d_set][key]['path'] = list(imgs_path)   # save image PATH in dictionnary along the corresponding label and data set
+    loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)   # load batch generator
 
     # ready to train ...
     best_validation_loss = None
@@ -172,10 +117,11 @@ def train(opt, save_model_path, iteration):
     training_acc_list = []
     window = opt.batchSize
     
+    # Start Training...
+    # One epoch = training_iteration = one batch
     for training_iteration in range(0,opt.n_its):
         
         discriminator.train(mode=True)
-        
 
         X, Y = loader.fetch_batch("train", batch_size=opt.batchSize)
         if opt.device=='cuda':
@@ -199,6 +145,7 @@ def train(opt, save_model_path, iteration):
         loss.backward()
         optimizer.step()
         
+        # Evaluation on validation set every 50 epochs
         if training_iteration % 50 == 0:
         
             discriminator.eval()
@@ -209,7 +156,7 @@ def train(opt, save_model_path, iteration):
             acc_val = 0
             loss_val = 0
             auc_val = 0
-            nloop = n_val // window
+            nloop = n_val // window # approximate number of loop to do in order to validate over the whole validation set
             for i in range(nloop):
                 X_val, Y_val = loader.fetch_batch(part = "val", batch_size = opt.batchSize)
                 if opt.device=='cuda':
@@ -235,6 +182,7 @@ def train(opt, save_model_path, iteration):
                 pred_val = torch.reshape(pred_val, (-1,))
                 Y_val = torch.reshape(Y_val, (-1,))
                 
+                # Compute accuracy and ROC AUC metrics
                 acc = one_shot_eval(pred_val.cpu().detach().numpy(), Y_val.cpu().detach().numpy())
                 auc = sklearn.metrics.roc_auc_score(Y_val.cpu().detach().numpy(), pred_val.cpu().detach().numpy())
                 
@@ -242,23 +190,24 @@ def train(opt, save_model_path, iteration):
                 acc_val = acc_val + (acc/window)
                 loss_val = loss_val + bce(pred_val, Y_val.float())
             
+            # store loss, accuracy and ROC AUC of validation set
             acc_val = (acc_val / nloop)*100
             loss_val = loss_val / nloop
             validation_auc = auc_val / nloop
 
+            training_acc = get_pct_accuracy(pred, Y) # accuracy of training set
 
             training_loss = loss.item()
-            validation_loss = loss_val.item()
+            validation_loss = loss_val.item()                      
             
+            # Add model performance in list and save image plot of loss and accuracy in function of epoch number
             training_iteration_list = training_iteration_list + [training_iteration]
             validation_loss_list = validation_loss_list + [validation_loss]
             training_loss_list = training_loss_list + [training_loss]
-                            
-            training_acc = get_pct_accuracy(pred, Y)
-            
             training_acc_list = training_acc_list + [training_acc]
             validation_acc_list = validation_acc_list + [acc_val]
             plot_loss(opt, training_loss_list, training_acc_list, validation_loss_list, validation_acc_list, training_iteration_list, iteration)
+            
             print("kfold number {} Iteration: {} \t Train: Acc={}%, Loss={} \t\t Validation: Acc={}%, Loss={}, ROC AUC={}".format(
                 iteration, training_iteration, training_acc, training_loss, acc_val, validation_loss, validation_auc))
 
@@ -274,18 +223,21 @@ def train(opt, save_model_path, iteration):
             if not os.path.exists(save_model_path):
                 os.makedirs(save_model_path)
 
+            # Save best roc auc in memory
             if (best_validation_auc*saving_threshold) < validation_auc:
                 print("Significantly improved validation ROC AUC from {} --> {}. Saving...".format(
                     best_validation_auc, validation_auc
                 ))
                 best_validation_auc = validation_auc
                 
+            # Save best loss in memory    
             if best_validation_loss > (saving_threshold * validation_loss):
                 print("Significantly improved validation loss from {} --> {}. Saving...".format(
                     best_validation_loss, validation_loss
                 ))
                 best_validation_loss = validation_loss
                 
+            # Save model if higher than previously saved best accuracy
             if acc_val > (saving_threshold * best_validation_acc):
                 print("Significantly improved validation accuracy from {} --> {}. Saving...".format(
                     best_validation_acc, acc_val
@@ -326,6 +278,7 @@ def train_coAttn_models(opt, iteration=0) -> None:
     if not os.path.exists(save_model_path):
         os.makedirs(save_model_path)
         
+    # Start training step and returns loss, accuracy and ROC AUC
     best_validation_loss, best_validation_acc, best_validation_auc = train(opt, save_model_path, iteration)
     
     #save results on the output cvs file

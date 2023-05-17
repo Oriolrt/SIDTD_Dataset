@@ -52,16 +52,16 @@ class TrainDatasets_augmented(Dataset):
             while finished == 0:
                 if (len(image_dict[0]) >= 2*self.samples_per_class):
                     l_clips = []
-                    # Randomly 25% of the batch size of fake documents
+                    # Randomly draw 25% of the batch size of fake documents
                     list_fakes_img = list(np.random.choice(image_dict[1],self.samples_per_class))
                     l_clips = l_clips + [(1, x) for x in list_fakes_img]
                 
-                    # Randomly 50% of the batch size of genuine documents
+                    # Randomly draw 50% of the batch size of genuine documents
                     list_reals_img = list(image_dict[0][:2*self.samples_per_class])
                     l_clips = l_clips + [(0, x) for x in list_reals_img]
                     image_dict[0] = image_dict[0][2*self.samples_per_class:] 
 
-                    # Randomly 25% of the batch size of genuine documents that will be forged on-the-fly. 
+                    # Randomly draw 25% of the batch size of genuine documents that will be forged on-the-fly. 
                     # Label is set at 2 as "to-be-forged". When the document will be forged the label will be set to 1
                     list_forgery_augm_img = list(np.random.choice(list_reals_img,self.samples_per_class))
                     l_clips = l_clips + [(2, x) for x in list_forgery_augm_img]                
@@ -77,13 +77,17 @@ class TrainDatasets_augmented(Dataset):
             while finished == 0:
                 if (len(image_dict[1]) >= self.samples_per_class):
                     l_clips = []
+                    # Randomly draw 50% of the batch size of genuine documents
                     list_reals_img = list(np.random.choice(image_dict[0],2*self.samples_per_class))
                     l_clips = l_clips + [(0, x) for x in list_reals_img]
                 
+                    # Randomly draw 25% of the batch size of fake documents
                     list_fakes_img = list(image_dict[1][:self.samples_per_class])
                     l_clips = l_clips + [(1, x) for x in list_fakes_img]
                     image_dict[1] = image_dict[1][self.samples_per_class:] 
 
+                    # Randomly draw 25% of the batch size of genuine documents that will be forged on-the-fly. 
+                    # Label is set at 2 as "to-be-forged". When the document will be forged the label will be set to 1
                     list_forgery_augm_img = list(np.random.choice(list_reals_img,self.samples_per_class))
                     l_clips = l_clips + [(2, x) for x in list_forgery_augm_img]                
                     batch.append(l_clips)
@@ -102,7 +106,7 @@ class TrainDatasets_augmented(Dataset):
         # so idx==0 indicates the start of a new epoch
         # if foregery augmentation is set, document with label 2 will be forged, drawing randomly one of the forgery techniques available: copy paste, crope & replace and inpainting.
         batch_item = self.dataset[idx]   # image path
-        cls = batch_item[0]    # label
+        cls = batch_item[0]              # label
         image = cv2.imread(batch_item[1])        
         try:
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -112,12 +116,12 @@ class TrainDatasets_augmented(Dataset):
         l_fake_type = ['crop', 'inpainting', 'copy']
         if self.faker_data_augmentation:
             if batch_item[0] == 2:
-                cls = 1   # change label to one as the document will be forged
+                cls = 1   # change label to one as the document is going to be forged
                 fake_type = random.choice(l_fake_type)   # randomly draw one forgery techniques among: copy paste, crope & replace and inpainting
                 id_img = batch_item[1].split('/')[-1]
                 id_country = id_img[:3]    # ID's country
                 path = 'split_kfold/clip_cropped_MIDV2020/annotations/annotation_' + id_country + '.json' 
-                annotations = read_json(path) # read json with document annotations of fields area
+                annotations = read_json(path)   # read json with document annotations of fields area
                     
                 # perform copy pasting
                 if fake_type == 'copy':
@@ -136,9 +140,9 @@ class TrainDatasets_augmented(Dataset):
                         list_image_field = ['image', 'signature']
                         
                     dim_issue = True
+                    # Loop until crop & replace does not create dimension issue
                     while dim_issue:
-                        # choose a document to crop the image or signature
-                        img_path_clips_target = random.choice(self.path_img)
+                        img_path_clips_target = random.choice(self.path_img)    # choose a document to crop the image or signature
                         id_country_target = img_path_clips_target.split('/')[-1][:3]
                         if id_country_target in ['rus', 'grc']:
                             if 'signature' in list_image_field:

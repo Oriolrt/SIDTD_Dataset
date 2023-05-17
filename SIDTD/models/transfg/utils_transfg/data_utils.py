@@ -19,6 +19,9 @@ from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContras
 logger = logging.getLogger(__name__)
 
 def get_transforms(WIDTH, HEIGHT, mean, std, data):
+
+    """ Function that returns augmented image based on albumentations functions. Images are also reized and normalized. """
+
     assert data in ('train', 'valid')
     
     if data == 'train':
@@ -39,11 +42,21 @@ def get_transforms(WIDTH, HEIGHT, mean, std, data):
         ]) 
 
 def get_loader(args, training_iteration):
+
+    """ Load dataset paths that will be used by the batch generator for training Trans FG model.
+        You can use static path csv to replicate results or choose your own random partitionning
+        You can use different type of partitionning: train validation split or kfold cross-validation 
+        You can use different type of data: templates, clips or cropped clips.  """
+
+    # Dimension to resize images to fit model dimension
     WIDTH = args.img_size
     HEIGHT = args.img_size
 
+    # Load Data Augmentation function
     train_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='train')
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
+
+    # function to load csv with image paths and labels groundtruths of train and validation set in memory
     if args.static == 'no':
         if args.type_split == 'kfold':
             train_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
@@ -74,6 +87,7 @@ def get_loader(args, training_iteration):
                 val_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/val_split_clip_cropped_SIDTD.csv")
 
     
+    # Load train label. If you choose to perform forgery augmentation, the images path and labels must be loaded in a dictionnary.
     train_paths = train_metadata_split['image_path'].values.tolist()
     if not args.faker_data_augmentation:
         train_ids = train_metadata_split['label'].values.tolist()
@@ -82,6 +96,7 @@ def get_loader(args, training_iteration):
         for label in [0,1]:
             dataset_dict['train'][label] = train_metadata_split[train_metadata_split['label'] == label]['image_path'].values.tolist()
     
+    # Load image path and label for validation set
     val_paths = val_metadata_split['image_path'].values.tolist()
     val_ids = val_metadata_split['label'].values.tolist()
 
@@ -89,6 +104,7 @@ def get_loader(args, training_iteration):
     print("Training images: ", len(train_paths),'N training classes:', len(list(set(train_ids))))
     print("Validation images: ", len(val_paths), 'N val classes: ', len(list(set(val_ids))))
     
+    # Load Batch Generator function
     if not args.faker_data_augmentation:
         trainset = TrainDataset(train_paths, train_ids, transform=train_transforms)
     else:
@@ -112,13 +128,21 @@ def get_loader(args, training_iteration):
     return train_loader, val_loader
 
 def get_loader_test(args, training_iteration):
+
+    """ Load dataset paths that will be used by the batch generator for inference of trained Trans FG model.
+        You can use static path csv to replicate results or choose your own random partitionning
+        You can use different type of partitionning: train validation split or kfold cross-validation 
+        You can use different type of data: templates, clips or cropped clips.  """
+
+    # Dimension to resize images to fit model dimension
     WIDTH = args.img_size
     HEIGHT = args.img_size
 
+    # Load Data Augmentation function
     test_transforms = get_transforms(WIDTH, HEIGHT, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], data='valid')
     
-    test_metadata_split = pd.read_csv(args.csv_dataset_path + "/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
 
+    # function to load csv with image paths and labels groundtruths of test set in memory
     if args.static == 'no':
         if args.type_split == 'kfold':
             test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
@@ -141,15 +165,14 @@ def get_loader_test(args, training_iteration):
                 test_metadata_split = pd.read_csv(os.getcwd() + "/static/cross_val_cropped_unbalanced/test_split_clip_cropped_SIDTD.csv")
 
     
+    # Load image path and label for validation set
     test_paths = test_metadata_split['image_path'].values.tolist()
     test_ids = test_metadata_split['label'].values.tolist()
     
     print("Test images: ", len(test_paths), 'N test classes: ', len(list(set(test_ids))))
     
-    testset = TrainDataset(test_paths, test_ids, transform=test_transforms)
-
-
-    
+    # Load Batch Generator function
+    testset = TrainDataset(test_paths, test_ids, transform=test_transforms)   
     test_loader = DataLoader(testset,
                              shuffle=True,
                              batch_size=args.eval_batch_size,

@@ -98,10 +98,10 @@ class Batcher(Binary):
         batch_size = self.batch_size
 
         if part == 'test':
-            X, Y = self._fetch_eval(part, labels, image_paths, batch_size)
+            X, Y = self._fetch_eval(part, labels, image_paths, batch_size)   # batch generator for test set
         else:
-            X, Y = self._fetch_batch(part, batch_size)
-        X = Variable(torch.from_numpy(X))#.view(2*batch_size, self.image_size, self.image_size)
+            X, Y = self._fetch_batch(part, batch_size)                       # batch generator for train and validation set
+        X = Variable(torch.from_numpy(X))
 
         X1 = X[:batch_size]  # (B, c, h, w)
         X2 = X[batch_size:]  # (B, c, h, w)
@@ -114,6 +114,17 @@ class Batcher(Binary):
 
     def _fetch_batch(self, part, batch_size: int = None):
 
+        ''' 
+            To load a batch of data into the model. 
+            Every image in support set is composed of genuine document.
+            Labels depend on the labels of images in query set. 
+            Hence, the model compare a genuine document with a fake or genuine document, so the model must find out the label of the images in the query set.
+            
+            Query Set     Support Set     Labels
+            Img 1      |  True image 1    1 if Img fake, else 0
+
+            Img n      |  True image n    1 if Img fake, else 0
+        '''
 
         paths_splits = self.paths_splits[part]
         
@@ -142,42 +153,48 @@ class Batcher(Binary):
                 y[i] = 1
             
             else:
-                # choose one real image
+                # choose one fake image
                 if not self.faker_data_augmentation:
                     idx2 = choice(np.arange(len(paths_splits['fakes']['img'])))
                     img_fake = paths_splits['fakes']['img'][idx2]
-
+                
                 else:
+                    # choose one fake image
                     if part == 'val':
                         idx2 = choice(np.arange(len(paths_splits['fakes']['img'])))
                         img_fake = paths_splits['fakes']['img'][idx2]
-
+                    # PERFORM FORGERY AUGMENTATION ON GENUINE DOCUMENT
                     else:
-                        idx2 = choice(np.arange(len(paths_splits['reals']['img'])))
+                        idx2 = choice(np.arange(len(paths_splits['reals']['img'])))   # choose one genuine image to falsify on-the-fly
                         img_real = paths_splits['reals']['img'][idx2]
                         path_img_real = paths_splits['reals']['path'][idx2]
                         
-                        id_country = path_img_real.split('/')[-1][:3]
+                        id_country = path_img_real.split('/')[-1][:3]    # ID's country
                         path = 'split_kfold/clip_cropped_MIDV2020/annotations/annotation_' + id_country + '.json' 
-                        annotations = read_json(path)
+                        annotations = read_json(path)   # read json with document annotations of fields area
                         
                         l_fake_type = ['crop', 'inpainting', 'copy']
-                        fake_type = choice(l_fake_type)
+                        fake_type = choice(l_fake_type)   # randomly draw one forgery techniques among: copy paste, crope & replace and inpainting
+                        # perform copy pasting
                         if fake_type == 'copy':
                             img_fake = CopyPaste(img_real, annotations, self.shift_copy)
 
+                        # perform inpainting
                         elif fake_type == 'inpainting':
                             img_fake = Inpainting(img_real, annotations, id_country)
 
+                        # perform crop & replace
                         elif fake_type == 'crop':
 
                             if id_country in ['rus', 'grc']:
-                                list_image_field = ['image']
+                                list_image_field = ['image']    # Russian and greek ID doesn't have signature on ID
                             else:
                                 list_image_field = ['image', 'signature']
                         
                             dim_issue = True
+                            # Loop until crop & replace does not create dimension issue
                             while dim_issue:
+                                # choose a document to crop the image or signature
                                 img_path_template_target = choice(self.path_img)
                                 image_target = cv2.imread(img_path_template_target)
 
@@ -193,13 +210,13 @@ class Batcher(Binary):
                         
 
                 
-                X[i + batch_size] = self.reshape_img(img_fake, image_size)
+                X[i + batch_size] = self.reshape_img(img_fake, image_size)   # reshape image to fix image size
                 y[i] = 1
 
         if part == 'train':
-            X = self.augmentor.augment_batch(X)
+            X = self.augmentor.augment_batch(X)   # perform classic data augmentation
         if part == 'val':
-            X = X / 255.0
+            X = X / 255.0   # normalize
         X = X.astype("float32")
 
         return X, y
@@ -210,11 +227,9 @@ class Batcher(Binary):
             can be conducted, match each test image with every image in support set:
             
             Test     Support Set     Labels
-            Img1  |  True image 1    1 if Img fake, else 0
+            Img 1  |  True image 1    1 if Img fake, else 0
 
-            Img n |  True image n    1 if Img fake, else 0
-            The test and support sets are outputted from  _fetch_eval() 
-            in a single column, then matched horizontally in fetch_batch() (like above  ) 
+            Img n  |  True image n    1 if Img fake, else 0
         '''
 
         paths_splits = self.paths_splits[part][dataset]
@@ -243,7 +258,6 @@ class Batcher(Binary):
         return X, y
     
     def reshape_img(self, image, image_size):
-        #image = imageio.imread(image_path)
         if image.shape[-1]>=4:
             image = image[...,:-1]
         image = cv2.resize(image, (image_size,image_size))

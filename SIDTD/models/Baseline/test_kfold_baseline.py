@@ -11,31 +11,6 @@ from ._utils import *
 
 import torch.nn as nn
 
-
-
-def get_FPR_FNR(actual, pred):
-    """  Returns False Positive Rate and False Negative Rate """
-    
-    df = pd.DataFrame({ 'actual': np.array(actual),  
-                    'predicted': np.asarray(pred)})
-
-    TP = df[(df['actual'] == 0) & (df['predicted'] == 0)].shape[0]
-    TN = df[(df['actual'] == 1) & (df['predicted'] == 1)].shape[0]
-    FN = df[(df['actual'] == 0) & (df['predicted'] == 1)].shape[0]
-    FP = df[(df['actual'] == 1) & (df['predicted'] == 0)].shape[0]
-
-    n = len(df['actual'])
-    try:
-        FNR = FN / (TP + FN)
-    except: 
-        FNR = -1
-    try:
-        FPR = FP / (FP + TN)
-    except: 
-        FPR = -1
-
-    return FPR, FNR
-
 def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
     """ Returns inference results on a chosen dataset and a chosen model """
                
@@ -78,6 +53,7 @@ def test(LOGGER, model, device, criterion, test_loader, N_CLASSES, BATCH_SIZE):
     LOGGER.debug(f'TESTING: avg_test_loss: {avg_val_loss:.4f} F1: {score:.6f}  Accuracy: {accuracy:.6f} roc_auc_score: {roc_auc_score:.6f}') 
 
     return avg_val_loss, accuracy, roc_auc_score, FPR, FNR
+
 
            
 def test_baseline_models(args, LOGGER, iteration=0):
@@ -205,7 +181,7 @@ def test_baseline_models(args, LOGGER, iteration=0):
     model.to(device)
     
     # Load trained models.
-    # Choose model according to model chosen and if you want to choose a custom trained model or perform inference with our models
+    # Choose model depending on if you want to choose a custom trained model or perform inference with our models
     if args.pretrained == 'no':
         print('Test with your own trained models.')
         save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
