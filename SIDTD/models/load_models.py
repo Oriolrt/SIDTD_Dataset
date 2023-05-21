@@ -27,7 +27,7 @@ class load_models(ABC):
 
 
     def download(self, server_path:Path, local_path:Path):
-        os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(local_path,server_path))
+        os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=2 -nH -P {} {}'".format(local_path,server_path))
         zip_filename = server_path.split("/")[-1]
         with zipfile.ZipFile(os.path.join(local_path, zip_filename), 'r') as zip_ref:
             zip_ref.extractall(local_path)
@@ -160,4 +160,4 @@ class coatten_fcn_model(load_models):
 
 
 if __name__ == "__main__":
-    trans_fg(weights="clips_cropped").download()
+    resnet50(weights="templates").download()
