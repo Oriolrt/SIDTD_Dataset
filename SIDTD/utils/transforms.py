@@ -6,6 +6,9 @@ from PIL import ImageFont, ImageDraw, Image
 import random
 import copy
 import cv2
+import names
+from faker import Faker
+import glob
 
 
 import numpy as np

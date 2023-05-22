@@ -389,10 +389,6 @@ def train_baseline_models(args, LOGGER, iteration = 0):
     # Load image path and label for validation set
     val_paths = val_metadata_split['image_path'].values.tolist()
     val_ids = val_metadata_split['label'].values.tolist()
-
-    
-    print("Training images: ", len(list(set(train_ids))))
-    print("Validation images: ", len(list(set(val_ids))))
     
     # Load Batch Generator function
     if not args.faker_data_augmentation:

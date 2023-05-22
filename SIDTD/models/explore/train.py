@@ -2,6 +2,8 @@ from SIDTD.models.Baseline.training_kfold_baseline import *
 from SIDTD.models.arc_pytorch.train_coAttn import *
 from SIDTD.models.transfg.train_kfold_transfg import *
 
+import argparse
+
 
 def init_logger(log_file='train.log'):
     from logging import getLogger, DEBUG, FileHandler, Formatter, StreamHandler
@@ -77,6 +79,9 @@ if __name__ == "__main__":
     parser.add_argument("-td","--type_data",default="templates",nargs="?", choices=["templates", "clips", "clips_cropped"], help="Diferent kind of data to train the models.")
     parser.add_argument("--static",default="no",nargs="?", choices=["yes", "no"], help="If 'yes', use static csv. If 'no', use your custom csv partition.")
     parser.add_argument("--pretrained",default="no",nargs="?", choices=["yes", "no"], help="If 'yes', use our trained network. If 'no', use your custom trained network.")
+    parser.add_argument('--faker_data_augmentation', action='store_true', help='Apply data augmentation with generation of new fakes on-the-fly')
+    parser.add_argument("--shift_crop", "-scr", type=int, default=10, help= "shifting constant for crop and replace")
+    parser.add_argument("--shift_copy", "-sco", type=int, default=10, help= "shifting constant for copy paste")
     
     # flag for baseline code
     parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')
@@ -93,7 +98,8 @@ if __name__ == "__main__":
                                                  "ViT-L_32", "ViT-H_14"],
                         default="ViT-L_16", help="Which variant to use.")
     
-    parser.add_argument("--pretrained_dir", type=str, default= complete_path + "/transfg_pretrained/imagenet21k+imagenet2012_ViT-L_16.npz",
+    complete_path = os.path.join(os.getcwd(), '..', 'transfg', 'transfg_pretrained', 'imagenet21k+imagenet2012_ViT-L_16.npz')
+    parser.add_argument("--pretrained_dir", type=str, default= complete_path,
                         help="Where to search for pretrained ViT models.")
     
     parser.add_argument("--img_size", default=299, type=int,

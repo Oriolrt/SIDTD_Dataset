@@ -101,9 +101,6 @@ def get_loader(args, training_iteration):
     val_ids = val_metadata_split['label'].values.tolist()
 
     
-    print("Training images: ", len(train_paths),'N training classes:', len(list(set(train_ids))))
-    print("Validation images: ", len(val_paths), 'N val classes: ', len(list(set(val_ids))))
-    
     # Load Batch Generator function
     if not args.faker_data_augmentation:
         trainset = TrainDataset(train_paths, train_ids, transform=train_transforms)
