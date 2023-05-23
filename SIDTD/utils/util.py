@@ -129,18 +129,6 @@ def store(img_loader: list, path_store: str = None):
 
     print("Data Successfuly stored")
 
-
-# TODO check if in any moment this functions is being used
-def get_class(document_folder: str, gt: list):
-    info = document_folder.split("_")[1:]
-    for pc in info:
-        if pc in gt:
-            return pc
-        else:
-            continue
-    return -1
-
-
 def bbox_to_coord(x, y, w, h):
     """This function convert the kin of the shape from bbox rectangle x0,y0 + heigh and weight to the polygon coordenades.
 
@@ -182,7 +170,7 @@ def bbox_info(info) -> Tuple[int,...]:
     return x0, y0, w, h
 
 
-def replace_info_documents(im0:np.ndarray, im1:np.ndarray, data0:dict, data1:dict, delta1:np.ndarray[float, ...], delta2:np.ndarray[float, ...]):
+def replace_info_documents(im0:np.ndarray, im1:np.ndarray, data0:dict, data1:dict, delta1:np.ndarray, delta2:np.ndarray):
 
     """
     This function replaces a rectangular region of interest (ROI) in one image with a homography-transformed ROI from another image.

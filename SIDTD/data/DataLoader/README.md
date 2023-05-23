@@ -1,7 +1,7 @@
 
 # Data Loader
 
-Here you have the font code to download and work with different benchmarks and our own benchmark
+Here you have the font code to download and work with our own different benchmarks.
 for the real/fake binary classification approach.
 
 There exist 5 different type of benchmarks whose behaviour has been changed in order to fit with our task.
@@ -10,15 +10,11 @@ There exist 5 different type of benchmarks whose behaviour has been changed in o
 
 And the structure is decripted as follows:
 ```
-Loader
+DataLoader
 │   Datasets.py
 │   Loader_Modules.py
 |   __init__.py    
 ```
-
-
-Mainly we have to .py scripts [__Loader_Modules.py__ & __Datasets.py__].
-
 
 ## __Datasets.py__
 
@@ -26,149 +22,181 @@ This file is the core of the differents datasets that we have work with
 
 The different datasets tho chose are [ SIDTD (Default), Banknotes, Findit, Fungus, Dogs]
 
-All this benchamarks have been changed in order to fit our task and they will be available to download with our changes. To get the original datasets all the classes have the flag *conditioned* which must be True to get the original dataset.
+All this benchamarks have been changed in order to fit our task and they will be available to download with our changes. To get the original datasets all the classes have the flag *download_original* which must be True to get the original dataset.
 
 ## Run Example 
 
-**TODO change code example and list the different possibilities to download the dataset (partially or entirely)**
 To download the datasets we have the following code examples:
 
 ```python
-        #load the videos depending of the nationality and also replicate the structure of the original benchmark (about 50G)
-        data = SIDTD(type_download="videos", conditioned=True, download_original=True)
-```
-```python
-        #load the templates depending of the nationality and also replicate the structure of the original benchmark (about 1.2G)
-        data = SIDTD(type_download="templates", conditioned=True, download_original=True)
+        data = SIDTD(download_original=False).download_dataset("templates")  #["you  can choose among templates, clips, clips_cropped and "all" of them]
 ```
 
-```python
-        #load the frames of the videos depending of the nationality and also replicate the structure of the original benchmark (about 12G)
-        data = SIDTD(type_download="clips", conditioned=True, download_original=True)
-```
-
-```python
-        #load all the information #not implemented condition and original download
-        data = SIDTD(type_download="all")
-```
 Once you have installed the package as described in the main **Readme** you can call the different functionalities as follows:
 
 If you just want to get the benchmark you only need to go to the datasets and choice among [SIDTD, Dogs, Fungus, Findit, Banknotes]:
 
 ```python
-    import Loader.Datasets as ld
-
-    ld.SIDTD(conditioned=True, download_original=True)
-```
-
-To download pretrained models on SIDTD and reproduce results you can download all the models at once (type_download_models="all_trained_models") or download only the pretrain model you need (type_download_models="effnet" or "resnet" or "vit" or "transfg" or "arc"). However, if you want to download all the trained models at once, keep in mind that you need enough space as the size of all models is 28,1GB. The pretrained models will be stored in code_examples, in the folder pretrained_models. By default, only the pretrained Trans FG on ImageNet is downloaded. If you do not choose "all_trained_models" or "transfg", the pretrained Trans FG on ImageNet will not downloaded.
-
-```python
-    import Loader.Datasets as ld
+    from SIDTD.data.DataLoader.Datasets import *
     
-    # load all trained models including pretrained transfg on ImageNet
-    ld.SIDTD(type_download_models="all_trained_models", conditioned=True, download_original=True)
-
-    # load trained EfficientNet models
-    ld.SIDTD(type_download_models="effnet", conditioned=True, download_original=True)
-
-    # load trained TransFG models including pretrained transfg on ImageNet
-    ld.SIDTD(type_download_models="transfg", conditioned=True, download_original=True)
+    SIDTD(download_original=...)
 ```
 
 
 ## __Loader_Modules.py__
 
-Inside this file you will see the DataLoader class who takes 7 different inputs (for now)
 
-    dataset -->    Define what kind of the different datasets do you want to download [Midv, Dogs, Fungus, Findit, Banknotes].
+Our Data Loader allows you to download and prepare datasets for training models. It provides options for different types of data splits and preprocessing.
+
+## Usage
+
+```bash
+python data_loader.py [--dataset DATASET] [--kind KIND] [--download_static] [--type_split TYPE_SPLIT] [--unbalanced] [-c|--cropped]
+```
+
+## Arguments
+        --dataset: Specify the dataset to download. Available options: "SIDTD", "Dogs", "Fungus", "Findit", "Banknotes". (default: "SIDTD")
+
+        --kind: Specify the type of benchmark data to download. Available options: "templates", "clips", "clips_cropped", "no". If "no" is selected, the dataset will not be downloaded. (default: "templates")
+
+        --download_static: Set this flag if you want to download the static CSV for reproducibility of the models.
+
+        --type_split: Specify the type of data split to train the models. Available options: "hold_out", "kfold", "few_shot". (default: "hold_out")
+
+        --unbalanced: Flag to prepare the unbalanced partition.
+
+        -c|--cropped: Flag to use the cropped version of clips.
+
+## Split Types
+### Hold-out Split
+
+*   If --type_split hold_out is selected, the following argument is required:
+
+        --hold_out_split: Define the split ratios for hold-out validation.
+                            This argument should be a list containing three elements that sum up to 1.  
+                            For example, --hold_out_split 0.8 0.1 0.1 will result in a split of 80% training, 10% validation, and 10% testing.Few-shot Split
+
+
+*    If --type_split few_shot is selected, the following arguments are required:
+
+    --few_shot_split: Define the split behavior for few-shot learning. 
+                      The first value must be either "random" or "ranked", and the following values specify the proportions.
+                      For example, --few_shot_split random 0.75 0.25 will perform a random few-shot split with 75% metatrain and 25% metatest.
     
-                    The datasets have been changed in order to the different approach we are working on
-    
-    kind --> in case of benchmark SIDTD define ("templates", "clips", "videos), else set to None
-    
-    Type_split --> Diferent kind of split for train the models. The diferents splits are [kfold, normal or few_shot]
+    --metaclasses: Define the second level to group the metatrain and the metatest. This argument should be a list of metacategories. 
+                   For example, --metaclasses id passport will group the metatrain and metatest based on the "id" and "passport" metacategories.
 
-    batch_size --> define the batch of the training set
+### K-fold Split
 
-    kfold_, normal, few_shot_ (split) --> define the behaviour of the split based on what kind of split did you put
+* If --type_split kfold is selected, the following argument is required:
 
-    metaclasses --> in case the type of the split is few shot learning is the way to define the groups to generate the metatraing and the metatest
-
-    conditioned --> flag to define if you want to train with the metaclasses inside the dataset thath downloaded 
-
-    balanced --> boolean tho define the kin of partition to generate. if set to true the csv to generate is imbalanced by fakes [80% reals, 20% fakes]
-
-
-The class will search if the dataset that you want to work with is downloaded in your computer, if not it will create the folder dataset with it inside
-
-
-Depend of the partition you define, besides getting the train, val, test arrays with the data atacched in memory, you will get the CSV of the partition for more flexible train.
-
-The code will also provide the batch based on the amount of batches did you define (default=1).
-
-Below you have some examples for the different kin of partitions:
+        --kfold_split: Define the number of folds for k-fold validation.
+                       For example, --kfold_split 10 will perform 10-fold validation.
 
 ## Run Example
 
-To load dataset and make the few shot partition
+Templates
 ```python   
     #templates
-    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind templates
-
-    #clips
-    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind clips
-
-    #cropped clips
-    python3 Loader/Loader_Modules.py -ts few_shot --few_shot_split random 0.6 0.4 --kind clips_cropped
-```
-
-To load dataset and make the kfold partition
-```python   
-    #templates
-    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind templates
-
-    #clips
-    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind clips
-
-    #cropped clips
-    python3 Loader/Loader_Modules.py -ts kfold --kfold_split 10 --kind clips_cropped
-```
-
-To load dataset and make the cross val partition
-```python   
-    #templates
-    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1--kind templates
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split hold_out --hold_out_split 0.8 0.1 0.1
     
     #clips
-    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --kind clips
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split kfold --kfold_split 10
     
     #cropped clips
-    python3 Loader/Loader_Modules.py -ts cross --cross_split 0.8 0.1 0.1 --kind clips_cropped
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport
 ```
 
-To load all pretrained models on SIDTD at once without downloading datasets
+Clips
 ```python   
     #templates
-    python3 Loader/Loader_Modules.py --kind_models all_trained_models --kind no
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split hold_out --hold_out_split 0.8 0.1 0.1 --unbalanced
 
-    #clips with background
-    python3 Loader/Loader_Modules.py --kind_models all_trained_models --kind no --unbalanced
+    #clips
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split kfold --kfold_split 10 --unbalanced
 
     #cropped clips
-    python3 Loader/Loader_Modules.py --kind_models all_trained_models --kind no --unbalanced --cropped
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport -c
 ```
 
-To load dataset and static csv on kfold partition to reproduce results
+Clips Cropped
 ```python   
     #templates
-    python3 Loader/Loader_Modules.py -ts kfold --kind templates --download_static
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split hold_out --hold_out_split 0.8 0.1 0.1
 
-    #clips with background
-    python3 Loader/Loader_Modules.py -ts kfold --kind clips --download_static
+    #clips
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split kfold --kfold_split 10
 
     #cropped clips
-    python3 Loader/Loader_Modules.py -ts kfold --kind clips_cropped --download_static
+    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport -c
 ```
 
 
+Statics
+
+
+```python   
+    #templates
+    python data/DataLoader/Loader_Modules.py -ts kfold --kind templates --download_static
+
+    #clips with background
+    python data/DataLoader/Loader_Modules.py -ts kfold --kind clips --download_static
+
+    #cropped clips
+    python data/DataLoader/Loader_Modules.py -ts kfold --kind clips_cropped --download_static
+```
+
+to download the other statics, follow the same structure as depicted above
+
+
+## Further explanation
+
+Here's an explanation of the functionalities provided by the `DataLoader` class:
+
+1. The `_Data` class:
+   - This is a nested class within `DataLoader` that represents a single data instance. It has four attributes: `_sample`, `_gt`, `_class`, and `_metaclass`, which correspond to the sample data, ground truth data, class label, and metaclass label, respectively.
+   - It provides properties (`sample`, `gt`, `clas`, `metaclass`) to access the attributes.
+   - It also implements the `__getitem__` method, but its implementation is not provided in the code.
+
+3. `change_path` method:
+   - It takes a `path` parameter and reads the CSV file at the specified path using pandas.
+   - It updates the "image_path" column in the DataFrame by appending the current working directory to the image paths.
+   - It saves the updated DataFrame back to the CSV file.
+
+4. `set_static_path` method:
+   - It sets the paths of static CSV files by calling the `change_path` method for each CSV file in the "split_normal" and "split_kfold" directories.
+
+5. `_kfold_partition` method:
+   - It performs k-fold partitioning of the dataset.
+   - It creates a directory for the k-fold split.
+   - It splits the dataset into training, validation, and testing sets for each fold.
+   - It saves the split CSV files in the corresponding directories.
+
+6. `_shot_partition` method:
+   - It performs few-shot partitioning of the dataset.
+   - It creates a directory for the few-shot split.
+   - It divides the dataset into meta_train and meta_test sets based on the specified proportion and metaclasses.
+   - It saves the split CSV files in the corresponding directory.
+
+7. `_ranking_shot_partition` method:
+   - This method is not implemented and raises a NotImplementedError.
+
+8. `_hold_out_partition` method:
+   - It performs hold-out partitioning of the dataset.
+   - It creates a directory for the hold-out split.
+   - It splits the dataset into training, validation, and testing sets based on
+
+9. `load_dataset` method:
+    - This method is used to load the dataset from a CSV file into a list of `DataLoader._Data` instances.
+    - It takes a `path` parameter that specifies the path to the CSV file.
+    - It reads the CSV file using pandas and retrieves the label, image path, and class information from the DataFrame.
+    - It creates a list of `DataLoader._Data` instances, populating each instance with the retrieved information.
+    - It returns the list of `DataLoader._Data` instances.
+
+10. `make_batches` method:
+    - This static method is used to create batches from a list of `DataLoader._Data` instances.
+    - It takes two parameters: `structure` (a list of `DataLoader._Data` instances) and `batch_size` (the desired size of each batch).
+    - If the length of `structure` is 1, it calculates the number of batches required and creates a list of tuples, where each tuple represents the start and end indices of a batch.
+    - If the length of `structure` is greater than 1 (indicating multiple folds), it creates a nested list of batches for each fold.
+    - Each batch is represented by a tuple of start and end indices.
+    - It returns the list of batches.

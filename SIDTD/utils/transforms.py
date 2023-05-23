@@ -13,7 +13,7 @@ from faker import Faker
 import numpy as np
 
 
-def inpaint_image(img: np.ndarray, coord:np.ndarray[int, ...], mask: np.ndarray, text_str: str):
+def inpaint_image(img: np.ndarray, coord:np.ndarray, mask: np.ndarray, text_str: str):
     """
     Inpaints the masked region in the input image using the TELEA algorithm and adds text to it.
 
@@ -43,7 +43,7 @@ def inpaint_image(img: np.ndarray, coord:np.ndarray[int, ...], mask: np.ndarray,
     return fake_text_image
 
 
-def crop_replace(im_a:np.ndarray, im_b:np.ndarray, coord_a:np.ndarray[int,...], H:np.matrix, dx1:int, dy1:int, dx2:int, dy2:int):
+def crop_replace(im_a:np.ndarray, im_b:np.ndarray, coord_a:np.ndarray, H:np.matrix, dx1:int, dy1:int, dx2:int, dy2:int):
 
     """
     Crop and replace a region from one image onto another using a homography matrix.
@@ -90,7 +90,7 @@ def crop_replace(im_a:np.ndarray, im_b:np.ndarray, coord_a:np.ndarray[int,...], 
 
 
 # Functions for forgery on-the-fly
-def copy_paste(image:np.ndarray, coord_a:List[int, ...], coord_b:List[int, ...], shift_copy:int) -> Tuple[np.ndarray, bool]:
+def copy_paste(image:np.ndarray, coord_a:List[int], coord_b:List[int], shift_copy:int) -> Tuple[np.ndarray, bool]:
     """
     This function performs a deep copy of an input image and pastes a region of interest (ROI) at a specific position in the output image.
 
@@ -122,7 +122,7 @@ def copy_paste(image:np.ndarray, coord_a:List[int, ...], coord_b:List[int, ...],
 
 #### AIXÒ ho he de discutir amb en maxime
 #TODO Aquesta funció no s'utilitza en ningun lloc
-def copy_paste_on_two_documents(image_a:np.ndarray, image_b:np.ndarray, coord_a:List[int, ...], coord_b:List[int, ...], shift_crop:int) -> Tuple[np.ndarray, bool]:
+def copy_paste_on_two_documents(image_a:np.ndarray, image_b:np.ndarray, coord_a:List[int], coord_b:List[int], shift_crop:int) -> Tuple[np.ndarray, bool]:
     im_rep = copy.deepcopy(image_a)
     r_noise = random.randint(10, shift_crop)
 

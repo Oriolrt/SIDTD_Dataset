@@ -165,7 +165,7 @@ class Template_Generator(Midv):
 
 
     def store_generated_dataset(self):
-        store(self._fake_img_loader, path_store=self.absoulute_path+"/Fake_Benchmark_Generated")
+        store(self._fake_img_loader, path_store=self.absoulute_path+"/SIDTD")
 
 
 if __name__ == "__main__":

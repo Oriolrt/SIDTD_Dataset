@@ -1,6 +1,9 @@
+from SIDTD.utils.util import *
+
+
 from abc import ABC,abstractmethod
 from collections import Counter
-from path import Path
+from pathlib import Path
 
 
 import numpy as np
@@ -12,8 +15,6 @@ try:
     import imageio.v2 as imageio
 except:
     import imageio
-import json
-import cv2
 
 
 
@@ -96,7 +97,8 @@ class SIDTD(Dataset):
         #path to download
         self._path_to_download = os.path.join(os.getcwd(), "datasets")
         self._abs_path = os.path.join(self._path_to_download,os.path.basename(self._uri)) # cwd/datasets/SIDTD/...
-        self.abs_path_code_ex_csv = os.path.join(os.getcwd(), "explore", "static")
+
+        self.abs_path_code_ex_csv = os.path.join(os.getcwd(), "data", "explore", "static")
 
   
     def _define_paths(self) ->None:        
@@ -114,14 +116,14 @@ class SIDTD(Dataset):
         self._original_clips_imgs_path = os.path.join(self._original_clips_path, "images")
         self._original_clips_ann_path  = os.path.join(self._original_clips_path, "annotations")
         
-    def download_static_csv(self, partition_kind:str="cross", type_download:str = "templates"):
+    def download_static_csv(self, partition_kind:str="hold_out", type_download:str = "templates"):
 
         if partition_kind == "kfold":
             if type_download=="templates":                    
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_templates))
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
-            elif type_download=="clip":
+            elif type_download=="clips":
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_clips))
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
@@ -130,7 +132,7 @@ class SIDTD(Dataset):
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_cropped_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
-        elif partition_kind == "cross":
+        elif partition_kind == "hold_out":
             if type_download=="templates": 
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal_templates))
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_normal.zip", 'r') as zip_ref:
@@ -152,8 +154,8 @@ class SIDTD(Dataset):
 
 
     def download_dataset(self, type_download:str = "templates"):
-        
-        if type_download == "all_dataset":    
+
+        if type_download == "all_dataset":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
             if self._download_original:raise NotImplementedError
 
@@ -322,36 +324,10 @@ class SIDTD(Dataset):
     def map_metaclass(self, l:list):
         # from path get the first word of the name of the file that is the metaclass
         return [i.split("/")[-1].split("_")[0] for i in l ]
-    
-    @staticmethod
-    def read_json(path: str):
-        with open(path) as f:
-            return json.load(f)    
-    @staticmethod      
-    def read_img(path: str):
-        
-        #os.path.dirname(os.path.dirname(__file__))+"/"+
-        img = np.array(imageio.imread(path))
 
-        if img.shape[-1] == 4:
-            return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-        else:
-            return img
-    
-    @staticmethod   
-    def write_json(data:dict, path:str, name:str=None):
-        if name is None:
-            with open(path, "w", encoding="utf-8") as file:
-                json.dump(data, file, ensure_ascii=False, indent=4)
-        else:
-            path_to_save = os.path.join(path,name+".json")
-            with open(path_to_save, "w", encoding="utf-8") as file:
-                json.dump(data, file, ensure_ascii=False, indent=4)
-                
     def __name__(self):
         return "SIDTD"
 
 
 if __name__ == "__main__":
     data = SIDTD()
-    data.download_models(type_models="all_trained_models") 

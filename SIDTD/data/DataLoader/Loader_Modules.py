@@ -1,7 +1,6 @@
 from SIDTD.data.DataLoader.Datasets  import *
+from SIDTD.utils.util import read_img
 
-
-from ast import arg, parse
 from typing import *
 from PIL.Image import Image
 from sklearn.utils import shuffle
@@ -11,11 +10,9 @@ import pandas as pd
 import time
 import os
 import os.path
-import cv2
 import sys
 import argparse
 import glob
-import imageio
 import random
 import logging
 logging.basicConfig(format='%(asctime)s %(message)s',filename='runtime.log', level=logging.DEBUG)
@@ -56,43 +53,35 @@ class DataLoader(object):
 
 
 
-    def __init__(self, dataset:str="SIDTD",kind:str="templates", kind_models:str="transfg_img_net", download_static:bool= False,type_split:str = "cross", batch_size: int = 1,kfold_split:int=10, cross_split:list=[0.8,0.1,0.1]
+    def __init__(self, dataset:str="SIDTD",kind:str="templates", download_static:bool= False,type_split:str = "hold_out", kfold_split:int=10, hold_out_split:list=[0.8,0.1,0.1]
 , few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, unbalanced:bool= False, cropped:bool= False):
+
+        """
+        Initialize the class.
+
+        Parameters:
+        - dataset (str): Define the type of dataset you want to download [SIDTD, Dogs, Fungus, Findit, Banknotes].
+                         These datasets have been modified to fit our working approach.
+        - kind (str): Type of split for training the models. Available options are: [kfold, hold_out, or few_shot].
+        - download_static (bool): Indicates whether to download the static files.
+        - type_split (str): Type of split for training the models. Available options: "kfold", "hold_out", or "few_shot".
+        - kfold_split (int): Number of folds in case of using k-fold.
+        - hold_out_split (list): List that defines the split ratio in case of using hold-out.
+                                 The list should sum up to 1 and contain 3 elements [train_ratio, val_ratio, test_ratio].
+        - few_shot_split (Optional[str]): Few-shot split option. Currently, only "random" is supported.
+        - metaclasses (Optional[list]): List of metaclasses for the few-shot partition.
+        - unbalanced (bool): Indicates whether the dataset is unbalanced.
+        - cropped (bool): Indicates whether the clips are cropped.
+        """
+
         if kind == "clips_cropped": kind = "cropped"
-        """
-            Input of the class:         dataset --> Define what kind of the different datasets do you want to download [SIDTD, Dogs, Fungus, Findit, Banknotes]
-                                                    This datasets have been changed in order to the different approach we are working on
-                                        Type_split --> Diferent kind of split for train the models. The diferents splits are [kfold, normal or few_shot]
-
-                                        batch_size --> define the batch of the training set
-
-                                        kfold_, normal, few_shot_ (split) --> define the behaviour of the split based on what kind of split did you put
-
-                                        conditioned --> flag to define if you want to train with the metaclasses inside the dataset thath downloaded 
-        
-        """
-        #["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"]
-        models = {
-            "effnet":"efficientnet-b3_trained_models",
-            "resnet": "resnet50_trained_models",
-            "vit": "vit_large_patch16_224_trained_models",
-            "transfg": "trans_fg_trained_models",
-            "transfg_img_net": "transfg_pretrained",
-            "arc": "coatten_fcn_model_trained_models",
-            "no": "no",
-            "all_trained_models":"all_trained_models"
-        }
-        
-        
 
         ### ASSERTS AND ERROR CONTROL ###
-        cross_split = list(float(x) for x in cross_split)
-        if type_split == "cross": assert (type(cross_split) == list and int(np.sum(cross_split)) == 1)
+        hold_out_split = list(float(x) for x in hold_out_split)
+        if type_split == "hold_out": assert (type(hold_out_split) == list and int(np.sum(hold_out_split)) == 1)
         elif type_split == "kfold": assert (kfold_split > 0 and type(kfold_split) == int)
-        elif type_split == "shot": assert (isinstance(cross_split, list) and len(cross_split) == 3 and isinstance(cross_split[0], str)
-                                           and isinstance(cross_split[1], float) and isinstance(cross_split[2], float)), "Some parameter have been badly declared"
-
-        assert (batch_size > 0 and type(batch_size) == int)
+        elif type_split == "shot": assert (isinstance(hold_out_split, list) and len(hold_out_split) == 3 and isinstance(hold_out_split[0], str)
+                                           and isinstance(hold_out_split[1], float) and isinstance(hold_out_split[2], float)), "Some parameter have been badly declared"
 
         assert dataset in ["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"]
 
@@ -101,13 +90,10 @@ class DataLoader(object):
         self._dataset_type = kind
         self._unbalanced = unbalanced
         self._cropped = cropped
-        self._model_folder_name = models[kind_models]
-        self._model_name = kind_models
         self._type_split = type_split
-        self._batch_size = batch_size
         self._kfold_split = kfold_split
         self._few_shot_split = few_shot_split
-        self._normal_split = cross_split
+        self._hold_out_split = hold_out_split
 
         
         current_path = os.getcwd()
@@ -121,128 +107,63 @@ class DataLoader(object):
         ### DOWNLOADING THE DATASET TO MAKE THE EXPERIMENTS ###
         
         logging.info("Searching for the dataset in the current working directory")
-        if kind != "no":
 
-            flag, self._dataset_path = self.control_download(to_search=dataset,search="dataset", root="datasets")
+        flag, self._dataset_path = self.control_download(to_search=dataset, root="datasets")
 
-            if flag is False:
-                logging.warning("The dataset hasnt been found, starting to download")
-                time.sleep(1)
-                if self._dataset == "SIDTD":
-                    self._dt.download_dataset(type_download=kind)
-                else:
-                    self._dt.download_dataset()
-                
-                logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "explore")))
+        if flag is False:
+            logging.warning("The dataset hasnt been found, starting to download")
+            time.sleep(1)
+            if self._dataset == "SIDTD":
+                self._dt.download_dataset(type_download=kind)
             else:
-                kinds = os.listdir(self._dataset_path)
-                if kind not in kinds:
-                    self._dt.download_dataset(type_download=kind)
+                self._dt.download_dataset()
 
-                else:   
-                    empty = (len(glob.glob(os.path.join(self._dataset_path, kind, "Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, kind, "Images", "reals", "*"))) == 0)
-                    if empty:
-                        os.rmdir(os.path.join(self._dataset_path, kind))
-                        self._dt.download_dataset(type_download=kind)
-                    else:
-                        logging.info(f"Dataset found in {self._dataset_path}, check if it is empty")
-    
-        else:logging.info("No dataset is set to download, not searching for")
-
-
-        #### MODELS
-            
-        if kind_models != "no":
-
-            if kind_models == "all_trained_models":
-
-                for model in list(models.keys())[:6]:
-                    model_folder_name = models[model]
-
-                    logging.warning("Searching for the model in the current working directory")
-                    # search:str="dataset", root:str="datasets"
-                    flag_1, _ = self.control_download(to_search=model_folder_name, search="models", root="explore")
-                    flag_2, _ = self.control_download(to_search=model_folder_name, search="models", root="models")
-
-                    if (flag_1 | flag_2) is False:
-                        logging.warning("The model hasnt been found, starting to download")
-                        self._dt.download_models(unbalanced = self._unbalanced, cropped = self._cropped,type_models=model)
-                        logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "explore", )))
-                    
-                    else:logging.info(f"Model found in code examples\' directory or in models\' directory")
-
-            
-            else:
-
-                logging.warning("Searching for the model in the current working directory")
-                # search:str="dataset", root:str="datasets"
-                flag_1, _ = self.control_download(to_search=self._model_folder_name, search="models", root="explore")
-                flag_2, _ = self.control_download(to_search=self._model_folder_name, search="models", root="models")
-
-                if (flag_1 | flag_2) is False:
-                    logging.warning("The model hasnt been found, starting to download")
-                    self._dt.download_models(unbalanced = self._unbalanced,type_models=kind_models)
-                    
-                    logging.info("Model Download in {}".format(os.path.join(self._dt._uri.split("/")[-1], "explore", )))
-                
-                else:
-                    logging.info(f"Model found in code examples\' directory or in models\' directory")
-                    print(f"Model found in code examples\' directory or in models\' directory")
-        
+            logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "explore")))
         else:
-            logging.info("No model is set, not searching for")
+            kinds = os.listdir(self._dataset_path)
+            if kind not in kinds:
+                self._dt.download_dataset(type_download=kind)
+
+            else:
+                empty = (len(glob.glob(os.path.join(self._dataset_path, kind, "Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(self._dataset_path, kind, "Images", "reals", "*"))) == 0)
+                if empty:
+                    os.rmdir(os.path.join(self._dataset_path, kind))
+                    self._dt.download_dataset(type_download=kind)
+                else:
+                    logging.info(f"Dataset found in {self._dataset_path}, check if it is empty")
+
 
         ###### CSV DOWNLOAD PART
             
         if download_static == True:
+            time.sleep(1)
+            self._dt.download_static_csv(partition_kind=type_split, type_download=kind)
+            logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "data", "explore", "static")))
 
-            if not os.path.exists(self._dt.abs_path_code_ex_csv):
-                os.makedirs(self._dt.abs_path_code_ex_csv)
-            to_search = type_split
-            #flag_csv = self.control_download(to_search=to_search, search="static", root="explore")
-            flag_csv = False
-
-            if flag_csv is False:
-                logging.warning("Static csv hasnt been downloaded, starting to download")
-                time.sleep(1)
-                self._dt.download_static_csv(partition_kind=type_split, type_download=kind)
-
-                logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "explore", "static")))
-            else:
-                logging.info("Static CSV had been downloaded, avoiding to download them")
-        
         else:
-            if kind == "no":
-                flag, self._dataset_path = self.control_download(to_search=dataset, search="dataset", root="datasets")
+            logging.info(f"Preparing partitions for the {type_split} partition behaviour")
+            new_df =  self._prepare_csv(kind=kind)
 
-                if flag == False:
-                    logging.warning("No dataset to make the partitions, pls download it before to create your own partitions or download our partitions!!")
-                    sys.exit()
+            ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
+            #self.set_static_path()
+            ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
+
+            if len(new_df)  == 0:
+                logging.error("Some error occurred and the data couldnt been downloaded")
+                sys.exit()
+
+            if type_split == "kfold":
+                self._kfold_partition(new_df, kind=kind)
+
+            elif type_split == "few_shot":
+                if few_shot_split[0] != "random":
+                    raise NotImplementedError
+
+                self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses, kind=kind)
 
             else:
-                logging.info(f"Preparing partitions for the {type_split} partition behaviour")
-                new_df =  self._prepare_csv(kind=kind)
+                self._hold_out_partition(new_df, kind=kind)
 
-                ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
-                #self.set_static_path()
-                ######### UNCOMMENT THIS LINE WHEN CODE IS FINISHED #########
-
-                if len(new_df)  == 0:
-                    logging.error("Some error occurred and the data couldnt been downloaded")
-                    sys.exit()
-
-                if type_split == "kfold":
-                    self._kfold_partition(new_df, kind=kind)
-
-                elif type_split == "few_shot":
-                    if few_shot_split[0] != "random":
-                        raise NotImplementedError
-                    
-                    self._shot_partition(new_df, proportion=few_shot_split[1:],metaclasses=metaclasses, kind=kind)
-
-                else:
-                    self._train_val_test_split(new_df, kind=kind)
-                
 
 
 
@@ -256,10 +177,10 @@ class DataLoader(object):
     def set_static_path(self):
         current_path = os.getcwd()
         for d_set in ['train','val','test']:
-            path_save_csv = current_path + '/explore/static/split_normal/' + d_set + '_split_SIDTD.csv'
+            path_save_csv = current_path + '/data/explore/static/split_normal/' + d_set + '_split_SIDTD.csv'
             self.change_path(path_save_csv)
             for j in range(10):
-                path_save_csv = current_path + '/explore/static/split_kfold/' + d_set + '_split_SIDTD_it_' + str(j) + '.csv'
+                path_save_csv = current_path + '/data/explore/static/split_kfold/' + d_set + '_split_SIDTD_it_' + str(j) + '.csv'
                 self.change_path(path_save_csv)
                 
     def _kfold_partition(self, new_df, kind:str= "templates") -> Tuple[List[Image], List[Image], List[Image]]:
@@ -353,18 +274,18 @@ class DataLoader(object):
     def _ranking_shot_partition(self, new_df, proportion, metaclasses:list = ["dni", "passport"]):
         raise NotImplementedError
 
-    def _train_val_test_split(self, new_df, kind:str="templates") -> Tuple[List[Image], List[Image], List[Image]]:
+    def _hold_out_partition(self, new_df, kind:str="templates") -> Tuple[List[Image], List[Image], List[Image]]:
 
         # Window to split the dataset in training/validation/testing set for the 10-fold
-        split_dir = os.path.join(self._save_dir,'cross_val', kind, self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'cross_val_unbalanced', kind, self._dataset)
+        split_dir = os.path.join(self._save_dir,'hold_out', kind, self._dataset) if self._unbalanced == False else os.path.join(self._save_dir,'hold_out_unbalanced', kind, self._dataset)
 
         if not os.path.exists(split_dir):
             os.makedirs(split_dir)
 
-        print('Splitting dataset into {}-standard cross val partition with train/validation/test sets...'.format(self._normal_split))
+        print('Splitting dataset into {}-standard hold out val partition with train/validation/test sets...'.format(self._hold_out_split))
         shuffled_df = shuffle(new_df)
-        train_sec = int(len(shuffled_df) * self._normal_split[0])
-        val_sec =  int(len(shuffled_df) * self._normal_split[1])
+        train_sec = int(len(shuffled_df) * self._hold_out_split[0])
+        val_sec =  int(len(shuffled_df) * self._hold_out_split[1])
         test_sec = len(shuffled_df) - (train_sec+val_sec)
         ### TEST ####
         df_test = shuffled_df[:test_sec]
@@ -377,7 +298,7 @@ class DataLoader(object):
         df_train = df_val_train.drop(df_val_train.index[:val_sec])
         df_train.to_csv(split_dir+'/train_split_' + self._dataset + '.csv', index=False)
 
-        print(f'Directory cross_val {kind} created.')
+        print(f'Directory hold out {kind} created.')
 
 
 
@@ -409,7 +330,7 @@ class DataLoader(object):
         return new_df
 
     
-    def control_download(self, to_search:str, search:str="dataset", root:str="datasets"):
+    def control_download(self, to_search:str, root:str="datasets"):
         # Wlaking top-down from the Working directory
         for rt, dir, files in os.walk(os.path.join(os.getcwd(), root)):            
             if (to_search in dir):
@@ -425,72 +346,100 @@ class DataLoader(object):
         df = pd.read_csv(path, delimiter=",")
         information = zip(df['label'].to_numpy(), df['image_path'].to_numpy(), df['class'].to_numpy())
         for label, path, clas in information:
-            structure.append(self._Data(label, self.read_img(path), clas))
+            structure.append(self._Data(label, read_img(path), clas))
         
         return structure
     
 
-    def make_batches(self, structure: List[Type[_Data]]) -> List[List[range]]:
+    @staticmethod
+    def make_batches(structure: List[Type[_Data]], batch_size:int) -> List[List[range]]:
         """
         :param structure: list with the images or nested list with the images for every fold
         :return: a list with tuples in case basic split or a nested list with the fold len with tuples inside
-         this tuples are the index of the batch size defined by the parameter self._batch_size
+         this tuples are the index of the batch size defined by the parameter batch_size
         """
         if len(structure) == 1:
             size = len(structure[0])
-            nb_batch = int(np.ceil(size / float(self._batch_size)))
-            res = [(i * self._batch_size, min(size, (i + 1) * self._batch_size)) for i in range(0, nb_batch)]
+            nb_batch = int(np.ceil(size / float(batch_size)))
+            res = [(i * batch_size, min(size, (i + 1) * batch_size)) for i in range(0, nb_batch)]
 
         else:
             res = []
             for fold in structure:
                 size = len(fold)
-                nb_batch = int(np.ceil(size / float(self._batch_size)))
-                tmp = [(i * self._batch_size, min(size, (i + 1) * self._batch_size)) for i in range(0, nb_batch)]
+                nb_batch = int(np.ceil(size / float(batch_size)))
+                tmp = [(i * batch_size, min(size, (i + 1) * batch_size)) for i in range(0, nb_batch)]
 
-                res.append(fold)
+                res.append(tmp)
         
         return res
 
-    @staticmethod
-    def read_img(path: str) -> Image:
-
-        img = np.array(imageio.imread(path))
-        if img.shape[-1] == 4:
-            return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-        else:
-            return img
-
 if __name__ == "__main__":
 
-    ## TODO add the flag to get templates videos or clips
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset",default="SIDTD",nargs="?", type=str, choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],help="Define what kind of the different datasets do you want to download")
-    parser.add_argument("--kind",default="templates",nargs="?", type=str, choices=["templates", "clips", "clips_cropped", "videos","no"],help="Define what kind of the info from the benchmark do you want to download to use. If no is selected, then the dataset will not be download.")
-    parser.add_argument("--download_static", action="store_true", help="set to 1 if you want to download the static csv for reproducibility of the models" )
-    parser.add_argument("--kind_models",default="transfg_img_net",nargs="?", type=str, choices=["all_trained_models", "effnet", "resnet", "vit", "transfg", "arc", "transfg_img_net","no"],help="Define what kind of the trained model from the benchmark you want to download in order to reproduce results. Choose transfg_img_net, if you want to train the trans fg model (default mode). Choose no if you do not want to download any model.")
-    parser.add_argument("--batch_size", default=1, type=int, nargs="?", help="Define the batch of the training set")
-    parser.add_argument("-ts","--type_split",default="cross",nargs="?", choices=["cross", "kfold", "few_shot"], help="Diferent kind of split to train the models.")
-    parser.add_argument("--unbalanced", action="store_true", help="flag to prepare the unbalance partition")
-    parser.add_argument("-c","--cropped", action="store_true", help="flag to use the cropped version of clips.")
-    opts, rem_args = parser.parse_known_args()
+    # Define arguments
+    parser.add_argument("--dataset", default="SIDTD", type=str,
+                        choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],
+                        help="Specify the dataset to download")
+    parser.add_argument("--kind", default="templates", type=str, choices=["templates", "clips", "clips_cropped", "no"],
+                        help="Specify the type of benchmark data to download. If 'no' is selected, the dataset will not be downloaded.")
+    parser.add_argument("--download_static", action="store_true",
+                        help="Set this flag to download the static CSV for reproducibility of the models")
+    parser.add_argument("-ts","--type_split", default="hold_out", type=str, choices=["hold_out", "kfold", "few_shot"],
+                        help="Specify the type of data split to train the models")
+    parser.add_argument("--unbalanced", action="store_true", help="Flag to prepare the unbalanced partition")
+    parser.add_argument("-c", "--cropped", action="store_true", help="Flag to use the cropped version of clips")
 
-    if opts.type_split != "kfold" and opts.type_split != "few_shot":
-        parser.add_argument("--cross_split", default=[0.8,0.1,0.1], nargs="+",help="define the behaviour of the split" )
-        op = parser.parse_args()
+    # Parse arguments
+    args, _ = parser.parse_known_args()
 
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models,batch_size=op.batch_size,type_split=op.type_split, cross_split=op.cross_split, unbalanced=opts.unbalanced, cropped=opts.cropped)
+    # Handle different split types
+    if args.type_split == "hold_out":
+        parser.add_argument("--hold_out_split", default=[0.8, 0.1, 0.1], nargs="+",
+                            help="Define the split ratios for hold-out validation")
+        options = parser.parse_args()
 
-    elif opts.type_split != "kfold" and opts.type_split != "cross":
-        parser.add_argument("--few_shot_split", nargs="+",default=["random", 0.75, 0.25], help="define the behaviour of the split, the first value must be between [random, ranked] and the other values must be the proportion example(0.75,0.25)")
-        parser.add_argument("--metaclasses", nargs="+",default=["id", "passport"], help="define the secopnd level to group the metatrain and the metatest")
+        t = DataLoader(
+            dataset=options.dataset,
+            kind=options.kind,
+            download_static=options.download_static,
+            type_split=options.type_split,
+            hold_out_split=options.hold_out_split,
+            unbalanced=args.unbalanced,
+            cropped=args.cropped
+        )
 
-        op = parser.parse_args()
-        print(op.few_shot_split)
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models,batch_size=op.batch_size,type_split=op.type_split, few_shot_split=op.few_shot_split, metaclasses=op.metaclasses, unbalanced=opts.unbalanced, cropped=opts.cropped)
+    elif args.type_split == "few_shot":
+        parser.add_argument("--few_shot_split", nargs="+", default=["random", 0.75, 0.25],
+                            help="Define the split behavior for few-shot learning. The first value must be either 'random' or 'ranked', and the other values must specify the proportions.")
+        parser.add_argument("--metaclasses", nargs="+", default=["id", "passport"],
+                            help="Define the second level to group the metatrain and the metatest")
 
-    else:
-        parser.add_argument("--kfold_split", default=10, type=int, nargs="?",help="define the number of folds")
-        op = parser.parse_args()
-        t = DataLoader(dataset=op.dataset,kind=op.kind, download_static=op.download_static, kind_models=op.kind_models,batch_size=op.batch_size,type_split=op.type_split, kfold_split=op.kfold_split, unbalanced=opts.unbalanced, cropped=opts.cropped)
+        options = parser.parse_args()
+        print(options.few_shot_split)
+        t = DataLoader(
+            dataset=options.dataset,
+            kind=options.kind,
+            download_static=options.download_static,
+            type_split=options.type_split,
+            few_shot_split=options.few_shot_split,
+            metaclasses=options.metaclasses,
+            unbalanced=args.unbalanced,
+            cropped=args.cropped
+        )
+
+    elif args.type_split == "kfold":
+        parser.add_argument("--kfold_split", default=10, type=int, nargs="?",
+                            help="Specify the number of folds for k-fold validation")
+        options = parser.parse_args()
+
+        t = DataLoader(
+            dataset=options.dataset,
+            kind=options.kind,
+            download_static=options.download_static,
+            type_split=options.type_split,
+            kfold_split=options.kfold_split,
+            unbalanced=args.unbalanced,
+            cropped=args.cropped
+        )
