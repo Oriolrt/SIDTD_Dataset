@@ -1,0 +1,2 @@
+# Train EfficientNet model
+CUDA_VISIBLE_DEVICES=0 python train.py --name='EfficientNet' --dataset='clip_background_MIDV2020' --model='efficientnet-b3' --type_split kfold --epochs 30 --nsplits 3  #--faker_data_augmentation
