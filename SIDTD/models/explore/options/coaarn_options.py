@@ -13,8 +13,6 @@ def CoAARNOptions(parser):
     parser.add_argument('--numGlimpses', type=int, default=6, help='the number glimpses of each image in pair seen by ARC')
     parser.add_argument('--lr', type=float, default=0.0002, help='learning rate, default=0.0002')
     parser.add_argument('--n_its', type=int, default=5000, help='number of iterations for training')
-    parser.add_argument('--apply_fcn', type=bool, default=True, help='apply a resnet to input prior to ARC')
-    parser.add_argument('--use_coAttn', type=bool, default=True, help='apply the coattention mechanism before discrimination')
     parser.add_argument('--cuda', default='True', help='enables cuda')
     
     args = parser.parse_args()

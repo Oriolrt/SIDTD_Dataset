@@ -10,6 +10,7 @@ def BaseOptions():
     parser = argparse.ArgumentParser()
     # flag for defining training or testing parameters
     parser.add_argument("--nsplits", default = 10, type=int, help="Number of k-fold partition")
+    parser.add_argument("--device", default = 'cuda', type=str, help='Use CPU or CUDA')
     parser.add_argument("--nclasses", default = 2, type=int, help="Number of class in the dataset")
     parser.add_argument("--model", choices = ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coatten_fcn_model'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
     parser.add_argument("--dataset", default = 'dataset_raw', type=str, help='Name of the dataset to use. Must be the exact same name as the dataset directory name')

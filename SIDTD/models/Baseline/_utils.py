@@ -22,12 +22,15 @@ import torchvision.models as models
 from sklearn.metrics import f1_score, accuracy_score 
 
 from efficientnet_pytorch import EfficientNet
+from albumentations import Compose, Normalize, Resize 
+from albumentations.pytorch import ToTensorV2 
+from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContrast, RandomResizedCrop
 
 import csv 
 
 
 @contextmanager 
-def timer(name, LOGGER):
+def timer(LOGGER, name):
     """
     Timer for the log file
 
@@ -235,6 +238,32 @@ def plot_loss(args, training_loss_list, validation_loss_list, validation_acc_lis
     plt.legend()
     plt.savefig(args.plot_path + '{}/{}/{}_accuracy_n{}.jpg'.format(args.model, args.dataset, args.name, training_iteration))
     plt.close()
+
+
+def get_transforms(WIDTH, HEIGHT, mean, std, data):
+    
+    """ Function that returns augmented image based on albumentations functions. Images are also reized and normalized. """
+    
+    assert data in ('train', 'valid')
+    
+    if data == 'train':
+        # Data Augmentation performed on train set
+        return Compose([
+        RandomResizedCrop(WIDTH, HEIGHT, scale=(0.8, 1.0)),
+        HorizontalFlip(p=0.5),
+        VerticalFlip(p=0.5),
+        RandomBrightnessContrast(p=0.2),
+        Normalize(mean=mean, std=std),
+        ToTensorV2(),
+        ])
+    
+    elif data == 'valid':
+        # Data Augmentation performed on validation and test set
+        return Compose([
+        Resize(WIDTH, HEIGHT),
+        Normalize(mean=mean, std=std),
+        ToTensorV2(),
+        ]) 
 
 
         

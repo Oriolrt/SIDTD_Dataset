@@ -65,17 +65,17 @@ def main(args):
 
 if __name__ == "__main__":
 
-    parser = BaseOptions()
-    args = parser.parse_args()
+    parent_parser = BaseOptions()
+    base_args, rem_args = parent_parser.parse_known_args()
 
-    if args.model in ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50']:
-        args = BaselineOptions(parser)
+    if base_args.model in ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50']:
+        args = BaselineOptions(parent_parser)
 
-    elif args.model == 'trans_fg':
-        args = TransFGOptions(parser)
+    elif base_args.model == 'trans_fg':
+        args = TransFGOptions(parent_parser)
 
-    elif args.model == 'coatten_fcn_model':
-        args = CoAARNOptions(parser)
+    elif base_args.model == 'coatten_fcn_model':
+        args = CoAARNOptions(parent_parser)
     
     
     #global

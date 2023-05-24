@@ -59,6 +59,9 @@ def TransFGOptions(parser):
     parser.add_argument('--slide_step', type=int, default=12,
                         help="Slide step for overlap split")
     
+    #Only for training
+    parser.add_argument("--epochs", default = 100, type=int)
+    
     args = parser.parse_args()
 
     return args

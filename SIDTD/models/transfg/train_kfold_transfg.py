@@ -1,9 +1,6 @@
 # coding=utf-8
 from __future__ import absolute_import, division, print_function 
 from contextlib import contextmanager
-from models.modeling import VisionTransformer, CONFIGS
-from utils_transfg.scheduler import WarmupLinearSchedule, WarmupCosineSchedule
-from utils_transfg.data_utils import get_loader
 from tqdm import tqdm
 
 
@@ -23,6 +20,9 @@ import matplotlib.pylab as plt
 import torch.nn.functional as F
 
 from .utils import *
+from .models.modeling import VisionTransformer, CONFIGS
+from .utils_transfg.scheduler import WarmupLinearSchedule, WarmupCosineSchedule
+from .utils_transfg.data_utils import get_loader
 
 
 def save_model(args, LOGGER, model, best_feature, training_iteration):

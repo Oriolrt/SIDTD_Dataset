@@ -10,21 +10,16 @@ import random
 import sklearn.metrics 
 import matplotlib.pyplot as plt 
 from contextlib import contextmanager 
-
 import numpy as np 
 import pandas as pd 
 import torch.nn as nn 
 import torch.nn.functional as F 
-
-
 import torchvision.models as models 
-
 from sklearn.metrics import f1_score, accuracy_score 
-
 from efficientnet_pytorch import EfficientNet
-
 import csv 
-from models.modeling import VisionTransformer, CONFIGS
+
+from .models.modeling import VisionTransformer, CONFIGS
 
 
 

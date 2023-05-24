@@ -7,13 +7,10 @@ import os
 
 from torch.utils.data import DataLoader
 
-from .dataset import TrainDataset, TrainDatasets_augmented
-
-
 from albumentations import Compose, Normalize, Resize 
 from albumentations.pytorch import ToTensorV2 
 from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContrast, RandomResizedCrop
-
+from SIDTD.utils.batch_generator import *
 
 
 logger = logging.getLogger(__name__)

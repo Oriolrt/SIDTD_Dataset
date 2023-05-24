@@ -1,6 +1,6 @@
 # Local import
 from .batcher_kfold_binary import Batcher
-from .models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
+from .models_binary import *
 from .utils import *
 
 # Import package
@@ -9,7 +9,6 @@ import os
 import pandas as pd
 import numpy as np
 import torch
-import models_binary
 import csv
 
 

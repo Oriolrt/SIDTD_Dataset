@@ -1,13 +1,14 @@
 from .batcher_kfold_binary  import Batcher
-from .models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
+from .models_binary import *
 from .utils import *
+import SIDTD.models.arc_pytorch.models_binary as models_binary
+
 
 import os
 import pandas as pd
 import cv2
 import sklearn
 import torch
-import models_binary
 
 
 def train(opt, save_model_path, iteration):

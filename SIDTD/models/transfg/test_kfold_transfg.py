@@ -2,8 +2,7 @@
 from __future__ import absolute_import, division, print_function 
 from contextlib import contextmanager
 from tqdm import tqdm
-from models.modeling import VisionTransformer, CONFIGS
-from utils_transfg.data_utils import get_loader_test
+
 
 import matplotlib 
 matplotlib.use('Agg')
@@ -14,11 +13,13 @@ import csv
 import os.path
 import torch
 import sklearn.metrics
-
 import numpy as np
 import pandas as pd
 import torch.nn.functional as F
+
 from .utils import *
+from .models.modeling import VisionTransformer, CONFIGS
+from .utils_transfg.data_utils import get_loader_test
 
 def test(args, LOGGER, model, test_loader):
 

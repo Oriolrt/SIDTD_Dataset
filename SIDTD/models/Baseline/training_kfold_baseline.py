@@ -1,6 +1,7 @@
 # local import
 from .datasets import *
 from ._utils import *
+from SIDTD.utils.batch_generator import *
 
 # package import
 import matplotlib
@@ -22,75 +23,8 @@ import torch.nn.functional as F
 
 from torch.optim import SGD
 from torch.utils.data import DataLoader, Dataset 
-from albumentations import Compose, Normalize, Resize 
-from albumentations.pytorch import ToTensorV2 
-from albumentations import HorizontalFlip, VerticalFlip, RandomBrightnessContrast, RandomResizedCrop
 from torch.optim.lr_scheduler import ReduceLROnPlateau 
 from sklearn.metrics import f1_score, accuracy_score
-
-
-
-class TrainDataset(Dataset):
-    """ Classic Batch Data Generator. 
-    Input:  Image path in csv
-    Output: image in array format + label
-    You can choose to perform data augmentation by setting a function with the transform argument.
-    """
-    def __init__(self, paths, ids, transform=None, dataset_crop=False):
-        self.paths = paths
-        self.ids = ids
-        self.transform = transform
-        self.dataset_crop = dataset_crop
-    
-    def __len__(self):
-        return len(self.paths)
-    
-    def __getitem__(self, idx):
-        file_path = self.paths[idx]
-        label = self.ids[idx]
-        image = cv2.imread(file_path)   # read img path
-    
-        try:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # read image as RGB
-        except:
-            print(file_path)
-        if self.dataset_crop:
-            sx, sy, _ = image.shape
-            sx2 = int(sx/2)
-            sy2 = int(sy/2)
-            image = image[sx2-250:sx2+250, sy2-250:sy2+250, :]   # Crop image
-            
-        if self.transform:
-            augmented = self.transform(image=image)   # perform data augmentation
-            image = augmented['image']
-    
-        return image, label
-
-    
-def get_transforms(WIDTH, HEIGHT, mean, std, data):
-    
-    """ Function that returns augmented image based on albumentations functions. Images are also reized and normalized. """
-    
-    assert data in ('train', 'valid')
-    
-    if data == 'train':
-        # Data Augmentation performed on train set
-        return Compose([
-        RandomResizedCrop(WIDTH, HEIGHT, scale=(0.8, 1.0)),
-        HorizontalFlip(p=0.5),
-        VerticalFlip(p=0.5),
-        RandomBrightnessContrast(p=0.2),
-        Normalize(mean=mean, std=std),
-        ToTensorV2(),
-        ])
-    
-    elif data == 'valid':
-        # Data Augmentation performed on validation and test set
-        return Compose([
-        Resize(WIDTH, HEIGHT),
-        Normalize(mean=mean, std=std),
-        ToTensorV2(),
-        ]) 
                        
     
     
