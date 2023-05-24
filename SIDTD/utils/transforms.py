@@ -119,29 +119,49 @@ def copy_paste(image:np.ndarray, coord_a:List[int], coord_b:List[int], shift_cop
 
     return im_rep, dim_issue
 
+def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
 
-#### AIXÒ ho he de discutir amb en maxime
-#TODO Aquesta funció no s'utilitza en ningun lloc
-def copy_paste_on_two_documents(image_a:np.ndarray, image_b:np.ndarray, coord_a:List[int], coord_b:List[int], shift_crop:int) -> Tuple[np.ndarray, bool]:
-    im_rep = copy.deepcopy(image_a)
-    r_noise = random.randint(10, shift_crop)
+    im_rep = copy.deepcopy(im_a)
+    r_noise = random.randint(10,shift_copy)
+    
+    x1, y1, w1, h1 = bbox_info(coord_a)
+    source = im_a[y1:y1+h1, x1:x1+w1]
+    
+    x2, y2, w2, h2 = bbox_info(coord_b)
+    
+    try:
+        im_rep[y2 + r_noise:y2 + r_noise + h1, x2 + r_noise:x2 + r_noise + w1] = source
+        dim_issue = False
+    except:
+        dim_issue = True
+        print('COPY PASTE ERROR')
 
+    
+    return im_rep, dim_issue
+
+
+
+def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
+
+    im_rep = copy.deepcopy(im_a)
+    r_noise = random.randint(10,shift_crop)
+    
     x1, y1, w1, h1 = bbox_info(coord_b)
-    source = image_b[y1:y1 + h1, x1:x1 + w1]
-
+    source = im_b[y1:y1+h1, x1:x1+w1]
+    
     x2, y2, w2, h2 = bbox_info(coord_a)
-    source = cv2.resize(source, (w2, h2))
-
+    source = cv2.resize(source, (w2,h2))
+    
     try:
         im_rep[y2 + r_noise:y2 + r_noise + h2, x2 + r_noise:x2 + r_noise + w2] = source
         dim_issue = False
     except:
         dim_issue = True
 
+    
     return im_rep, dim_issue
 
-
-def copy_paste_on_document(image:np.ndarray, annotations:dict, shift_copy):
+def CopyPaste(images, annotations, shift_copy):
     """Copy a text randomly chosen among the field available and Paste in a random text field area.
 
     Args:
@@ -157,25 +177,40 @@ def copy_paste_on_document(image:np.ndarray, annotations:dict, shift_copy):
         list_text_field.remove('signature')
     if 'face' in list_text_field:
         list_text_field.remove('face')
-
+    
     dim_issue = True
     while dim_issue:
         source_field_to_change_txt = random.choice(list_text_field)
         target_field_to_change_txt = random.choice(list_text_field)
         source_info_txt = annotations[source_field_to_change_txt]
         target_info_txt = annotations[target_field_to_change_txt]
-        img_tr, dim_issue = copy_paste(image, source_info_txt, target_info_txt, shift_copy)
-
+        img_tr, dim_issue = copy_paste_on_document(images, source_info_txt, target_info_txt, shift_copy)
+    
     return img_tr
+
+
+def CropReplace(image, annotations, image_target, annotations_target, list_image_field, shift_crop):
+    """Copy a text randomly chosen among the field available and Paste in a random text field area.
+
+    Args:
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
+    """
+
+
+    field_to_change = random.choice(list_image_field)
+    info_source = annotations[field_to_change]
+    if field_to_change == 'photo':
+        field_to_change = 'image'
+    info_target = annotations_target[field_to_change]
+    img_tr, dim_issue = copy_paste_on_two_documents(image, info_source, image_target, info_target, shift_crop)
+    return img_tr, dim_issue
 
 
 def Inpainting(image, annotations, id_country):
     """Copy a text randomly chosen among the field available and Paste in a random text field area.
 
     Args:
-        image: array of the document chosen to perform inpainting on.
-        annotations: annotations field of the chosen document.
-        id_country: first three letters corresponding on type of the chosen document. 
+        prob (float): probability to perform CopyPaste. Must be between 0 and 1.
     """
     list_text_field = list(annotations.keys())
     if 'image' in list_text_field:
@@ -224,65 +259,12 @@ def Inpainting(image, annotations, id_country):
         text_str = t.strftime('%d %m %Y')
     
     swap_info = annotations[field_to_change]
-    mask, _ = mask_from_info(image, swap_info)
+    mask, _ = mask_from_info(image, swap_info["quad"])
     coord = bbox_info(swap_info)
-    img_tr = inpaint_image(img = image, coord=coord, mask=mask, text_str=text_str)
+    img_tr = inpaint_image(img = image, coord = coord, mask = mask, text_str = text_str)
     return img_tr
 
-
-def CropReplace(image, annotations, image_target, annotations_target, list_image_field):
-    """Crop an image (photo or signature) in a document randomly chosen and Paste in a random text field area.
-
-    Args:
-        image: array of the document chosen to paste signature or a photo.
-        annotations: annotations field of chosen document (image argument).
-        image_target: array of the document chosen to crop a signature or a photo and then paste it on image argument.
-        annotations_target: annotations field of the target document (image_target argument).
-        list_image_field: list of field to crop. 
-    """
-
-
-    field_to_change = random.choice(list_image_field)
-    info_source = annotations[field_to_change]
-    if field_to_change == 'photo':
-        field_to_change = 'image'
-    info_target = annotations_target[field_to_change]
-    img_tr, dim_issue = copy_paste_on_two_documents(image, info_source, image_target, info_target)
-    return img_tr, dim_issue
-
-
-
-def CopyPaste(images, annotations, shift_copy):
-    """Copy a text randomly chosen among the field available and Paste in a random text field area on the same document.
-
-    Args:
-        image: document chosen to perform copy paste on.
-        annotations: annotations field of the chosen document.
-        shift_copy: shift perform on pasting in order to not create a perfect forgery. 
-    """
-
-    list_text_field = list(annotations.keys())
-    if 'image' in list_text_field:
-        list_text_field.remove('image')
-    if 'photo' in list_text_field:
-        list_text_field.remove('photo')
-    if 'signature' in list_text_field:
-        list_text_field.remove('signature')
-    if 'face' in list_text_field:
-        list_text_field.remove('face')
-    
-    dim_issue = True
-    while dim_issue:
-        source_field_to_change_txt = random.choice(list_text_field)
-        target_field_to_change_txt = random.choice(list_text_field)
-        source_info_txt = annotations[source_field_to_change_txt]
-        target_info_txt = annotations[target_field_to_change_txt]
-        img_tr, dim_issue = copy_paste_on_document(images, source_info_txt, target_info_txt, shift_copy)
-    
-    return img_tr
-
-
-def forgery_augmentation(dataset_name, list_path_img, path_img: str, shift_copy: int):
+def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shift_copy: int):
 
     """Perform randomly a forgery among the available list of falsification: copy-paste, crop & replace and inpainting .
 
@@ -297,7 +279,7 @@ def forgery_augmentation(dataset_name, list_path_img, path_img: str, shift_copy:
     image = Image.open(path_img).convert("RGB")
     id_img = path_img.split('/')[-1] 
     id_country = id_img[:3]   # ID's type to choose annotations
-    path_json = os.getcwd() +  'split_kfold/{}/annotations/annotation_' + id_country + '.json'.format(dataset_name)    
+    path_json = os.getcwd() +  '/split_kfold/{}/annotations/annotation_{}.json'.format(dataset_name, id_country)    
     annotations = read_json(path_json)   # read json with document annotations of fields area
         
     # perform copy pasting
@@ -327,7 +309,7 @@ def forgery_augmentation(dataset_name, list_path_img, path_img: str, shift_copy:
                     list_image_field.remove('signature')
             
             image_target = Image.open(img_path_clips_target).convert("RGB")   # read document where a signature or a photo will be cropped to be paste on current document
-            path = os.getcwd() +  'split_kfold/{}/annotations/annotation_' + id_country_target + '.json'.format(dataset_name)  
+            path = os.getcwd() +  '/split_kfold/{}/annotations/annotation_{}.json'.format(dataset_name, id_country_target)  
             annotations_target = read_json(path)
             image, dim_issue = CropReplace(np.asarray(image), annotations, np.asarray(image_target), annotations_target, list_image_field, shift_copy)
         

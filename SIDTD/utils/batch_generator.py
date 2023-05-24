@@ -56,8 +56,11 @@ class TrainDatasets_augmented(Dataset):
                         image paths having the same super-label and class label
         """
         self.image_dict = image_dict
-        self.dataset = args.dataset
-        self.batch_size = args.batch_size
+        self.dataset_name = args.dataset
+        if args.model in ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50']:
+            self.batch_size = args.batch_size
+        else:
+            self.batch_size = args.train_batch_size
         self.faker_data_augmentation = args.faker_data_augmentation
         self.shift_crop = args.shift_crop
         self.shift_copy = args.shift_copy
@@ -142,11 +145,13 @@ class TrainDatasets_augmented(Dataset):
         # if foregery augmentation is set, document with label 2 will be forged, drawing randomly one of the forgery techniques available: copy paste, crope & replace and inpainting.
         batch_item = self.dataset[idx]   # image path + label
         cls = batch_item[0]              # label
+        image = cv2.imread(batch_item[1])        # image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         if self.faker_data_augmentation:
             if batch_item[0] == 2:
                 cls = 1   # change label to one as the document is going to be forged
-                forgery_augmentation(self.dataset, self.path_img, batch_item[1], self.shift_copy)
+                image = forgery_augmentation(self.dataset_name, image, self.path_img, batch_item[1], self.shift_copy)
 
         # perform classic data augmentation on every document
         augmented = self.transform(image=image)

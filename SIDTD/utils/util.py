@@ -43,14 +43,12 @@ def get_optimal_font_scale(text, width):
     return font
 
 
-def get_font_scale(inner_path: str = os.getcwd() + "/TTF"):
+def get_font_scale(inner_path: str = os.path.join(os.getcwd(), "..", "..", "utils", "Test_Samples", "Fonts", "TTF")):
     deja = [i for i in os.listdir(inner_path) if "DejaVu" in i]
 
     selected = random.choice(deja)
 
     return os.path.join(inner_path, selected)
-
-
 
 
 def mask_from_info(img:np.ndarray, shape:np.ndarray):

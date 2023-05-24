@@ -221,7 +221,7 @@ class Batcher(Binary):
 
         return X, y
 
-    def _fetch_eval(self, part, dataset, labels, image_paths, batch_size):
+    def _fetch_eval(self, part, labels, image_paths, batch_size):
         ''' 
             To load a batch of test data into the model so that 2-way one-shot classification 
             can be conducted, match each test image with every image in support set:
@@ -232,7 +232,7 @@ class Batcher(Binary):
             Img n  |  True image n    1 if Img fake, else 0
         '''
 
-        paths_splits = self.paths_splits[part][dataset]
+        paths_splits = self.paths_splits[part]
         
         image_size = self.image_size
 

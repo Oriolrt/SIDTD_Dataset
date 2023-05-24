@@ -2,6 +2,7 @@
 from .batcher_kfold_binary import Batcher
 from .models_binary import *
 from .utils import *
+import SIDTD.models.arc_pytorch.models_binary as models_binary
 
 # Import package
 from sklearn.metrics import roc_auc_score, accuracy_score
@@ -74,7 +75,7 @@ def test_one_batch(opt, discriminator, resNet, coAtten, loader, labels, images, 
 
     """
 
-    X_test, Y_test = loader.fetch_batch(part = "test", labels = labels, image_paths = images, batch_size = opt.batchSize)
+    X_test, Y_test = loader.fetch_batch(part = "test", labels = labels, image_paths = images)
     if opt.device=='cuda':
         X_test = X_test.cuda()
         Y_test = Y_test.cuda()
@@ -162,6 +163,7 @@ def test(opt, save_model_path, iteration):
     paths_splits = {'test' :{}}
     d_set = 'test'
     df = pd.read_csv(path_test)   # load test set csv file with image paths and labels
+    path_images = list(df.image_path.values)
     for key in ['reals','fakes']:
         imgs_path = df[df['label_name']==key].image_path.values   # save image path from the same label
         array_data = []
@@ -170,7 +172,7 @@ def test(opt, save_model_path, iteration):
             img = read_image(path, image_size=opt.imageSize)  # read and resize image
             array_data.append(img)
         paths_splits[d_set][key] = list(array_data)   # save image array in dictionnary along the corresponding label and data set
-    loader = Batcher(paths_splits = paths_splits, batch_size=opt.batchSize, image_size=opt.imageSize)   # load batch generator
+    loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)   # load batch generator
     
     window = opt.batchSize   # define batch size for inference
 

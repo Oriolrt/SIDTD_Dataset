@@ -124,7 +124,7 @@ def train(opt, save_model_path, iteration):
         
         discriminator.train(mode=True)
 
-        X, Y = loader.fetch_batch("train", batch_size=opt.batchSize)
+        X, Y = loader.fetch_batch("train")
         if opt.device=='cuda':
             X = X.cuda()
             Y = Y.cuda()
@@ -159,7 +159,7 @@ def train(opt, save_model_path, iteration):
             auc_val = 0
             nloop = n_val // window # approximate number of loop to do in order to validate over the whole validation set
             for i in range(nloop):
-                X_val, Y_val = loader.fetch_batch(part = "val", batch_size = opt.batchSize)
+                X_val, Y_val = loader.fetch_batch(part = "val")
                 if opt.device=='cuda':
                     X_val = X_val.cuda()
                     Y_val = Y_val.cuda()

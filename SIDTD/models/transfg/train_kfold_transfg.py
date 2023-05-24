@@ -207,7 +207,7 @@ def train(args, LOGGER, model, num_classes, training_iteration, writer_val):
         
         #EVALUATION on validation dataset
         with torch.no_grad():
-            eval_losses, val_accuracy, roc_auc_score = valid(args, LOGGER, model, val_loader, num_classes)
+            eval_losses, val_accuracy, roc_auc_score = valid(args, LOGGER, model, val_loader)
 
         # Add model performance in list and save image plot of loss and accuracy according to epoch number
         training_iteration_list = training_iteration_list + [epoch]
