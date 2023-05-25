@@ -160,18 +160,21 @@ def test(opt, save_model_path, iteration):
 
 
     # preload the dataset in python dictionnary to make the training faster.
-    paths_splits = {'test' :{}}
+    paths_splits = {'test':{'reals':{}, 'fakes':{}}}
     d_set = 'test'
-    df = pd.read_csv(path_test)   # load test set csv file with image paths and labels
+    df = pd.read_csv(path_test)   # load validation set csv file with image paths and labels
     path_images = list(df.image_path.values)
     for key in ['reals','fakes']:
-        imgs_path = df[df['label_name']==key].image_path.values   # save image path from the same label
-        array_data = []
-        # Loop over all image from the same label, read and resize image
-        for path in imgs_path:
-            img = read_image(path, image_size=opt.imageSize)  # read and resize image
-            array_data.append(img)
-        paths_splits[d_set][key] = list(array_data)   # save image array in dictionnary along the corresponding label and data set
+        imgs_path = list(df[df['label_name']==key].image_path.values)   # save image path from the same label
+        array_img = []
+        # Loop over all image from the same label, read image and convert it to RGB image
+        for path_image in imgs_path:
+            image = cv2.imread(path_image)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            array_img.append(image)
+
+        paths_splits[d_set][key]['img'] = list(array_img)    # save image array in dictionnary along the corresponding label and data set
+        paths_splits[d_set][key]['path'] = list(imgs_path)   # save image PATH in dictionnary along the corresponding label and data set
     loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)   # load batch generator
     
     window = opt.batchSize   # define batch size for inference

@@ -241,7 +241,7 @@ class Batcher(Binary):
         y = np.zeros((batch_size, 1), dtype='int32')
         i = 0 
         for lbl, img in zip(labels, image_paths):
-            idx = choice(len(paths_splits['reals']['img']))
+            idx = choice(np.arange(len(paths_splits['reals']['img'])))
             img_real = paths_splits['reals']['img'][idx]
             X[i] = self.reshape_img(img_real, image_size)
             X[i + batch_size] = self.read_image(img, image_size)
