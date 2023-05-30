@@ -1,14 +1,11 @@
 
 # Data Loader
 
-Here you have the font code to download and work with our own different benchmarks.
-for the real/fake binary classification approach.
-
-There exist 5 different type of benchmarks whose behaviour has been changed in order to fit with our task.
+Here you have the source code to download different datasets and work with our own benchmark models in a real/fake binary classification approach.
 
 ## Documentation
 
-And the structure is decripted as follows:
+The structure is organized as follows:
 ```
 DataLoader
 │   Datasets.py
@@ -18,9 +15,9 @@ DataLoader
 
 ## __Datasets.py__
 
-This file is the core of the differents datasets that we have work with
+This file is the core of the differents datasets that we have worked with.
 
-The different datasets tho chose are [ SIDTD (Default), Banknotes, Findit, Fungus, Dogs]
+The different datasets availables are [ SIDTD (Default), Banknotes, Findit, Fungus, Dogs]
 
 All this benchamarks have been changed in order to fit our task and they will be available to download with our changes. To get the original datasets all the classes have the flag *download_original* which must be True to get the original dataset.
 

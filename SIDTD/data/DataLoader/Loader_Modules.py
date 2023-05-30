@@ -97,7 +97,7 @@ class DataLoader(object):
 
         
         current_path = os.getcwd()
-        self._save_dir = os.path.join(current_path,"data","explore")
+        self._save_dir = os.path.join(current_path,"models","explore")
         
         self._datasets = [SIDTD, Dogs, Fungus, Findit, Banknotes]
 
