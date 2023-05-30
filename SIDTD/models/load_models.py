@@ -4,6 +4,7 @@ from path import Path
 
 import os
 import zipfile
+import argparse
 try:
     import imageio.v2 as imageio
 except:
@@ -160,4 +161,25 @@ class coatten_fcn_model(load_models):
 
 
 if __name__ == "__main__":
-    resnet50(weights="templates").download()
+    parser = argparse.ArgumentParser(description="Model Downloader")
+    parser.add_argument("--model", choices=["efficientnet", "resnet50", "vit", "transfg", "coatten"], required=True, help="Model to download")
+    parser.add_argument("--weights", choices=["templates", "clips", "clips_cropped"], default="clips", help="Type of weights to download")
+    parser.add_argument("--path", default=None, help="Path to save the downloaded model (default: current directory)")
+
+    args = parser.parse_args()
+
+    # Determine the model class based on the selected model
+    if args.model == "efficientnet":
+        model_class = efficientnet_b3
+    elif args.model == "resnet50":
+        model_class = resnet50
+    elif args.model == "vit":
+        model_class = vit_large_patch16_224
+    elif args.model == "transfg":
+        model_class = trans_fg
+    elif args.model == "coatten":
+        model_class = coatten_fcn_model
+
+    # Create an instance of the selected model and download the weights
+    model = model_class(path=args.path, weights=args.weights)
+    model.download()
