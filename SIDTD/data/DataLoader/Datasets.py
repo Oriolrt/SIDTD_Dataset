@@ -98,7 +98,7 @@ class SIDTD(Dataset):
         self._path_to_download = os.path.join(os.getcwd(), "datasets")
         self._abs_path = os.path.join(self._path_to_download,os.path.basename(self._uri)) # cwd/datasets/SIDTD/...
 
-        self.abs_path_code_ex_csv = os.path.join(os.getcwd(), "data", "explore", "static")
+        self.abs_path_code_ex_csv = os.path.join(os.getcwd(), "data", "static")
 
   
     def _define_paths(self) ->None:        

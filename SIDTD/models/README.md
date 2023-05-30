@@ -58,3 +58,58 @@ We load the data as array files in the "omniglot" folder and then load the data 
 ### Acknowledgement
 
 The code is adapted from [Attentive Recurrent Comparators](https://arxiv.org/abs/1703.00767). Many thanks to Shyam et al. for the PyTorch implementation
+
+
+
+## Pretrained Models
+
+The models have trained in different ways based on our benchmark variants:
+
+### Usage Examples
+
+To utilize the provided models and download them from the server, you can follow the example code snippets below.
+
+
+```python
+from path import Path
+from SIDTD.models.load_models import efficientnet_b3, resnet50, vit_large_patch16_224, trans_fg, coatten_fcn_model
+
+# Define the path where the models will be downloaded
+model_path = Path("path/to/save/models")
+```
+
+#### Create an instance of the EfficientNet-B3 model and set the path
+```python
+efficientnet_model = efficientnet_b3(path=model_path, weights="clips")
+efficientnet_model.download()
+```
+####  Create an instance of the ResNet-50 model and set the path
+```python
+resnet_model = resnet50(path=model_path, weights="clips")  
+resnet_model.download()
+```
+#### Create an instance of the ViT Large Patch16 224 model and set the path
+```python
+vit_model = vit_large_patch16_224(path=model_path, weights="clips")
+vit_model.download()
+```
+#### Create an instance of the TransFG model and set the path
+```python
+transfg_model = trans_fg(path=model_path, weights="clips")
+transfg_model.download()
+```
+#### Create an instance of the CoAtten-FCN model and set the path
+```python
+coatten_model = coatten_fcn_model(path=model_path, weights="clips")
+coatten_model.download()
+```
+
+
+Weights options:
+
+* **templates**: Corresponds to a model trained on balanced templates.
+* **clips**: Corresponds to a model trained on unbalanced clip backgrounds.
+* **clips_cropped**: Corresponds to a model trained on unbalanced cropped clips.
+
+Please note that you can modify the **model_path** variable to specify the desired path where the models should be saved.
+

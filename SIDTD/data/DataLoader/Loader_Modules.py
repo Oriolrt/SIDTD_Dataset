@@ -138,7 +138,7 @@ class DataLoader(object):
         if download_static == True:
             time.sleep(1)
             self._dt.download_static_csv(partition_kind=type_split, type_download=kind)
-            logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "data", "explore", "static")))
+            logging.info("CSV Download in {}".format(os.path.join(os.getcwd(), "data", "static")))
 
         else:
             logging.info(f"Preparing partitions for the {type_split} partition behaviour")
