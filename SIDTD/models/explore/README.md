@@ -35,7 +35,8 @@ This operation should take only a few seconds. The 'split_kfold' directory is cr
 
 #### b. Train, validation and test split
 
-You must create three different files splitted as you wish. For each three CSVs, the image paths are stored in a column named 'image_path'. The labels are stored in the column 'label_name', 'reals' stands for the real documents and 'fakes' stands for the falsified documents. Another column must be created called 'label', where 0 corresponds to 'reals' and 1 corresponds to 'fakes'.
+You must create three different files splitted as you wish with the following names: 'train_split_{DATASET_NAME}.csv', 'val_split_{DATASET_NAME}.csv' and 'test_split_{DATASET_NAME}.csv'. For each three CSVs, the image paths are stored in a column named 'image_path'. The labels are stored in the column 'label_name', 'reals' stands for the real documents and 'fakes' stands for the falsified documents. Another column must be created called 'label', where 0 corresponds to 'reals' and 1 corresponds to 'fakes'.
+The files should be saved in the following path: 'SIDTD/models/explore/split_normal/{DATASET_NAME}/'.
 
 ### 3. Model training
 
