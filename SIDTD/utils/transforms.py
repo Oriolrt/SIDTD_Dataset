@@ -124,10 +124,10 @@ def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
     im_rep = copy.deepcopy(im_a)
     r_noise = random.randint(10,shift_copy)
     
-    x1, y1, w1, h1 = bbox_info(coord_a)
+    x1, y1, w1, h1 = coord_a['x'], coord_a['y'], coord_a['width'], coord_a['height']
     source = im_a[y1:y1+h1, x1:x1+w1]
     
-    x2, y2, w2, h2 = bbox_info(coord_b)
+    x2, y2, w2, h2 = coord_b['x'], coord_b['y'], coord_b['width'], coord_b['height']
     
     try:
         im_rep[y2 + r_noise:y2 + r_noise + h1, x2 + r_noise:x2 + r_noise + w1] = source
@@ -146,10 +146,12 @@ def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
     im_rep = copy.deepcopy(im_a)
     r_noise = random.randint(10,shift_crop)
     
-    x1, y1, w1, h1 = bbox_info(coord_b)
+    x1, y1, w1, h1 = coord_b['x'], coord_b['y'], coord_b['width'], coord_b['height']
+    #x1, y1, w1, h1 = bbox_info(coord_b)
     source = im_b[y1:y1+h1, x1:x1+w1]
     
-    x2, y2, w2, h2 = bbox_info(coord_a)
+    x2, y2, w2, h2 = coord_a['x'], coord_a['y'], coord_a['width'], coord_a['height']
+    #x2, y2, w2, h2 = bbox_info(coord_a)
     source = cv2.resize(source, (w2,h2))
     
     try:
@@ -199,68 +201,38 @@ def CropReplace(image, annotations, image_target, annotations_target, list_image
 
     field_to_change = random.choice(list_image_field)
     info_source = annotations[field_to_change]
-    if field_to_change == 'photo':
-        field_to_change = 'image'
     info_target = annotations_target[field_to_change]
     img_tr, dim_issue = copy_paste_on_two_documents(image, info_source, image_target, info_target, shift_crop)
     return img_tr, dim_issue
 
 
-def Inpainting(image, annotations, id_country):
+def Inpainting(image, annotations):
     """Copy a text randomly chosen among the field available and Paste in a random text field area.
 
     Args:
         prob (float): probability to perform CopyPaste. Must be between 0 and 1.
     """
-    list_text_field = list(annotations.keys())
-    if 'image' in list_text_field:
-        list_text_field.remove('image')
-    if 'photo' in list_text_field:
-        list_text_field.remove('photo')
-    if 'signature' in list_text_field:
-        list_text_field.remove('signature')
-    if 'face' in list_text_field:
-        list_text_field.remove('face')
-    field_to_change = random.choice(list_text_field)
 
-    if field_to_change == 'name':
+    
+    list_iso_eur = ['GER', 'AUT', 'BEL', 'BGR', 'CYP', 'HRV', 'DAN', 'ESP', 'EST', 'FIN', 'FRA', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'CZE', 'ROU', 'SVK', 'SVN', 'SWE']
+    field_to_change = random.choice(['firstNames', 'lastNames', 'birthDate', 'gender', 'nationality'])
+    if field_to_change == 'firstNames':
         text_str = names.get_first_name()
-    elif field_to_change == 'surname':
+    elif field_to_change == 'lastNames':
         text_str = names.get_last_name()
-    elif field_to_change == 'sex':
-        if id_country in ['esp', 'alb', 'fin', 'grc', 'svk']:
-            text_str = random.choice(['F','M'])
-        else:
-            text_str = random.choice(['K/M','N/F'])
+    elif field_to_change == 'gender':
+        text_str = random.choice(['F','M'])
     elif field_to_change == 'nationality':
-        if id_country == 'esp':
-            text_str = 'ESP'
-        elif id_country == 'alb':
-            text_str = 'Shqiptare/Albanian'
-        elif id_country == 'aze':
-            text_str = 'AZORBAYCA/AZERBAIJAN'
-        elif id_country == 'est':
-            text_str = 'EST'
-        elif id_country == 'fin':
-            text_str = 'FIN'
-        elif id_country == 'grc':
-            text_str = 'EAAHNIKH/HELLENIC'
-        elif id_country == 'lva':
-            text_str = 'LVA'
-        elif id_country == 'rus':
-            text_str = 'AOMNHNKA'
-        elif id_country == 'srb':
-            text_str = 'SRPSKO'
-        elif id_country == 'svk':
-            text_str = 'SVK'
-    elif field_to_change == 'birthdate':
+        text_str = random.choice(list_iso_eur)
+    elif field_to_change == 'birthDate':
         fake = Faker()
-        t = fake.date_time_between(start_date='-60y', end_date='-18y')
+        t = fake.date_time_between(start_date='-70y', end_date='-18y')
         text_str = t.strftime('%d %m %Y')
     
     swap_info = annotations[field_to_change]
-    mask, _ = mask_from_info(image, swap_info["quad"])
-    coord = bbox_info(swap_info)
+    coord = swap_info['x'], swap_info['y'], swap_info['width'], swap_info['height']
+    shape_quad = bbox_to_coord(coord[0], coord[1], coord[2], coord[3])
+    mask, _ = mask_from_info(image, shape_quad)
     img_tr = inpaint_image(img = image, coord = coord, mask = mask, text_str = text_str)
     return img_tr
 
@@ -277,10 +249,10 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
         
     fake_type = random.choice(['crop', 'inpainting', 'copy'])   # randomly draw one forgery techniques among: copy paste, crope & replace and inpainting
     image = Image.open(path_img).convert("RGB")
-    id_img = path_img.split('/')[-1] 
-    id_country = id_img[:3]   # ID's type to choose annotations
-    path_json = os.getcwd() +  '/split_kfold/{}/annotations/annotation_{}.json'.format(dataset_name, id_country)    
+    id_img = path_img.split('/')[-1][:-4]
+    path_json = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img)    
     annotations = read_json(path_json)   # read json with document annotations of fields area
+    list_fields = list(annotations.keys())
         
     # perform copy pasting
     if fake_type == 'copy':
@@ -288,29 +260,25 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
 
     # perform inpainting
     if fake_type == 'inpainting':
-        image = Inpainting(np.asarray(image), annotations, id_country)
+        image = Inpainting(np.asarray(image), annotations)
 
     # perform crop & replace
     if fake_type == 'crop':
 
-        if id_country in ['rus', 'grc']:   # Russian and greek ID doesn't have signature on ID
-            list_image_field = ['image']
-        else:
-            list_image_field = ['image', 'signature']
+        list_image_field = ['photo', 'signature']
                         
         # Loop until crop & replace does not create dimension issue
         dim_issue = True
         while dim_issue:
             img_path_clips_target = random.choice(list_path_img)    # choose a document to crop the signature or a photo
-            
-            id_country_target = img_path_clips_target.split('/')[-1][:3]
-            if id_country_target in ['rus', 'grc']:    # Russian and greek ID doesn't have signature on ID
-                if 'signature' in list_image_field:
-                    list_image_field.remove('signature')
-            
+            id_img_target = img_path_clips_target.split('/')[-1][:-4]
             image_target = Image.open(img_path_clips_target).convert("RGB")   # read document where a signature or a photo will be cropped to be paste on current document
-            path = os.getcwd() +  '/split_kfold/{}/annotations/annotation_{}.json'.format(dataset_name, id_country_target)  
+            path = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img_target)  
             annotations_target = read_json(path)
+            list_fields_target = list(annotations_target.keys())
+            if ('signature' not in list_fields) or ('signature' not in list_fields_target):
+                list_image_field.remove('signature')
+
             image, dim_issue = CropReplace(np.asarray(image), annotations, np.asarray(image_target), annotations_target, list_image_field, shift_copy)
         
     return image
