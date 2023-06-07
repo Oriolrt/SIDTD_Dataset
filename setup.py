@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import codecs
 import os
-print(find_packages())
+#print(find_packages(include=['SIDTD', 'SIDTD.*', '*']))
 here = os.path.abspath(os.path.dirname(__file__))
 
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
@@ -20,7 +20,8 @@ setup(
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=long_description,
-    packages=find_packages(),
+    package_dir={},
+    packages=find_packages(exclude='SIDTD/models'),
     install_requires=[line.strip() for line in open("requirements.txt").readlines()],
     keywords=['python', 'benchmarks', "documents","classification", "binary", "fakes", "reals"],
     classifiers=[

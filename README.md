@@ -1,53 +1,61 @@
 # About the project
 
-The purpose of this project is to generate a new data partition to recognize DNI without the need to use completely real data. To achieve this, different databases have been modified. In addition to these modifications, a database of its own has been created as a result of varying and changing the structure of the images that are in it.
+The purpose of this project is to generate a new synthetic identity document dataset with forged ID based on MIDV2020 dataset. This is constructed in order to build models that will classify genuine and forged identity document without the need to use real-world identity document.
 
 ## Structure
 
-The structure of the project is decripted as follows:
+The structure of the project is organized as follows:
 ```
 SIDTD
-│   LICENSE
-│   setup.py
-|   requirements.txt   
 │
-└───Fake_Generator
+└───data
 |   |
-│   └───Fake_Loader 
+│   └───DataGenerator 
 │   |
+|   └───DataLoader 
 |   |
-|   |___Test_Examples
+|   └───explore
 |       
-└───Loader
+└───models
+|   |
+│   └───arc_pytorch 
+│   |
+|   └───Baseline 
+|   |
+│   └───explore 
+│   |
+|   └───transfg
 |
-|___code_examples
-|
-|___models
+|___utils
 ```
 
 
-All the names in this structure are folders. Every folder have his own Readme to make clearer all the structure.
+All the names in this structure are folders. Every folder have his own Readme to make clearer all the structure, except folders *models/arc_pytorch*, *models/transfg*, *models/Baseline* and *utils*, as it is only piece of code used in other folders.
 
-In the *Fake_Generator* folder are the scripts to create your own dataset with different variability
+In the *data/DataGenerator* folder are the scripts to create your own dataset with different variability.
+In the *data/DataLoader* you can download the whole SIDTD or only one type of SIDTD data: templates, clips, cropped clips.
+In the *data/explore* folder are the scripts to generate new forged identity document and then explore the different forgeries our script can do.
 
-In the *Loader* folder are the main functionalities to download the benchmark  that we used to train the models. Furthermore you can download the different datasets that we used to train and pretrain the models.
+In the *models* folder are the main functionalities to download the benchmark models (EfficientNet, ResNet, ViT, TransFG and Co-Attention ARC) that we used to train on SIDTD. 
+In the *models/explore* folder are the main functionalities to train or test the benchmark models on SIDTD or a custom dataset. Hence, it can be used to reproduce the results. Depending on your needs, you should first download data in *data/DataLoader* and/or download models in *models*.
+The folder *models/arc_pytorch* give more information about the Co-Attention ARC model's implementation.
+The folder *models/transfg* give more information about the TransFG model's implementation.
+The folder *models/Baseline* give more information about the EfficientNet, ResNet and ViT models' implementation.
 
-In the *code examples* folder are 4 different scripts that reproduce some functionalities that we have done in order to create the dataset and, train and/or test with different models. You should run the scripts locally.
-
-Finally in the *models*' folder store the models' code. This is the folder to go if you want more information about the models' implementation. The models are seperate in 3 different folders *arc_pytorch* for Co-Attention ARC, *transfg* for Trans FG model and, *Baseline* for EfficientNet, ResNet and Visition Transformer models.
+In *utils* folder you will find the code that is used to perform document forgeries and batch generator function for model training and test.
 
 
 ## Installation
 
 To get the Dataloader package you will need to:
 
-```bash
-    pip install git+https://github.com/Oriolrt/SIDTD_Dataset.git
+```
+python setup.py install --user
 ```
 
 Enter to any python terminal and now you can
 ```bash
-  import Loader
+  import SIDTD.data.DataLoader
 ```
 It shouldnt exist any type of error
 
