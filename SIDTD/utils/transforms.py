@@ -104,7 +104,7 @@ def copy_paste(image:np.ndarray, coord_a:List[int], coord_b:List[int], shift_cop
         Tuple[np.ndarray, bool]: Returns a tuple containing the resulting image after pasting the ROI and a boolean indicator specifying if there was a dimension issue or not.
     """
     im_rep = copy.deepcopy(image)
-    r_noise = random.randint(10, shift_copy)
+    r_noise = random.randint(5, shift_copy)
 
     x1, y1, w1, h1 = coord_a
     source = image[y1:y1 + h1, x1:x1 + w1]
@@ -122,7 +122,7 @@ def copy_paste(image:np.ndarray, coord_a:List[int], coord_b:List[int], shift_cop
 def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
 
     im_rep = copy.deepcopy(im_a)
-    r_noise = random.randint(10,shift_copy)
+    r_noise = random.randint(5,shift_copy)
     
     x1, y1, w1, h1 = coord_a['x'], coord_a['y'], coord_a['width'], coord_a['height']
     source = im_a[y1:y1+h1, x1:x1+w1]
@@ -144,7 +144,7 @@ def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
 def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
 
     im_rep = copy.deepcopy(im_a)
-    r_noise = random.randint(10,shift_crop)
+    r_noise = random.randint(5,shift_crop)
     
     x1, y1, w1, h1 = coord_b['x'], coord_b['y'], coord_b['width'], coord_b['height']
     #x1, y1, w1, h1 = bbox_info(coord_b)
