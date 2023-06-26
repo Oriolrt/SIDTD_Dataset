@@ -8,7 +8,7 @@ To create more information you will have some functionalities that you can play 
 The structure of this section is depicted as follows:
 
 ```
-Fake_Generator
+DataGenerator
 |   __init__.py    
 │   Midv.py (where this class is the core class of the generator)
 │   utils.py
@@ -29,9 +29,11 @@ Once the structure of this section is explained lets show some example to use it
 To generate more new fake data 
 ```python
 
-    from Fake_Generator.Fake_Loader.Midv2020 import Template_Generator
+    import os
+    from SIDTD.data.DataGenerator.Midv2020 import Template_Generator
 
-    gen = Template_Generator.Template_Generator(path=(path_to_parent Midv2020 folder ["/home/cboned/MIDV2020/dataset"]))
+    path_dataset = os.path.expanduser('~') + '/Datasets/Mid2020'
+    gen = Template_Generator.Template_Generator(path=path_dataset)
 
 
 ```
