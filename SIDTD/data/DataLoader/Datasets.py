@@ -76,7 +76,7 @@ class SIDTD(Dataset):
         self._images_path = os.path.join(self._uri,"templates.zip")
         self._clips_path = os.path.join(self._uri,"clips.zip")
         self._clips_cropped_path = os.path.join(self._uri,"clips_cropped.zip")
-        self._uri_videos = os.path.join(self._uri,"videos.zip")
+        self._videos_path = os.path.join(self._uri,"videos.zip")
 
         ## static Csv
 

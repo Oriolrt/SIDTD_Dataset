@@ -382,7 +382,7 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", default="SIDTD", type=str,
                         choices=["SIDTD", "Dogs", "Fungus", "Findit", "Banknotes"],
                         help="Specify the dataset to download")
-    parser.add_argument("--kind", default="templates", type=str, choices=["templates", "clips", "clips_cropped", "no"],
+    parser.add_argument("--kind", default="templates", type=str, choices=["templates", "clips", "clips_cropped", "videos", "no"],
                         help="Specify the type of benchmark data to download. If 'no' is selected, the dataset will not be downloaded.")
     parser.add_argument("--download_static", action="store_true",
                         help="Set this flag to download the static CSV for reproducibility of the models")
