@@ -159,7 +159,7 @@ class SIDTD(Dataset):
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
             if self._download_original:raise NotImplementedError
 
-        elif type_download == "clips_cropped":
+        elif type_download == "cropped":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_cropped_path))
             try:
                 with zipfile.ZipFile(self._abs_path+"/clips_cropped.zip", 'r') as zip_ref:
