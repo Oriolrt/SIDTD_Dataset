@@ -229,6 +229,9 @@ def Inpainting(image, annotations):
         t = fake.date_time_between(start_date='-70y', end_date='-18y')
         text_str = t.strftime('%d %m %Y')
     
+    list_fields = list(annotations.keys())
+    if field_to_change not in list_fields:
+        field_to_change = random.choice(list_fields)
     swap_info = annotations[field_to_change]
     coord = swap_info['x'], swap_info['y'], swap_info['width'], swap_info['height']
     shape_quad = bbox_to_coord(coord[0], coord[1], coord[2], coord[3])
