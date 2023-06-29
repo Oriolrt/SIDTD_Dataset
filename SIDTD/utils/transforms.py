@@ -247,12 +247,21 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
         shift_copy: shift perform on pasting in order to not create a perfect forgery. 
     """
         
-    fake_type = random.choice(['crop', 'inpainting', 'copy'])   # randomly draw one forgery techniques among: copy paste, crope & replace and inpainting
+    l_fake_type = ['crop', 'inpainting', 'copy']
     image = Image.open(path_img).convert("RGB")
     id_img = path_img.split('/')[-1][:-4]
     path_json = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img)    
     annotations = read_json(path_json)   # read json with document annotations of fields area
     list_fields = list(annotations.keys())
+    list_image_field = ['photo', 'signature']
+    if "photo" not in list_fields:
+        list_image_field.remove('photo')
+    if "signature" not in list_fields:
+        list_image_field.remove('signature')
+    if len(list_image_field) == 0:
+        l_fake_type.remove('crop')
+
+    fake_type = random.choice(l_fake_type)   # randomly draw one forgery techniques among: copy paste, crope & replace and inpainting
         
     # perform copy pasting
     if fake_type == 'copy':
@@ -264,8 +273,6 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
 
     # perform crop & replace
     if fake_type == 'crop':
-
-        list_image_field = ['photo', 'signature']
                         
         # Loop until crop & replace does not create dimension issue
         dim_issue = True
@@ -276,9 +283,14 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
             path = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img_target)  
             annotations_target = read_json(path)
             list_fields_target = list(annotations_target.keys())
-            if ('signature' not in list_fields) or ('signature' not in list_fields_target):
+            if ('signature' in list_image_field) and ('signature' not in list_fields_target):
                 list_image_field.remove('signature')
-
-            image, dim_issue = CropReplace(np.asarray(image), annotations, np.asarray(image_target), annotations_target, list_image_field, shift_copy)
+            if ('photo' in list_image_field) and ('photo' not in list_fields_target):
+                list_image_field.remove('photo')
+            
+            if len(list_image_field) == 0:
+                dim_issue = True
+            else:
+                image, dim_issue = CropReplace(np.asarray(image), annotations, np.asarray(image_target), annotations_target, list_image_field, shift_copy)
         
     return image
