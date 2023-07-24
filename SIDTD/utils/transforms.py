@@ -179,6 +179,8 @@ def CopyPaste(images, annotations, shift_copy):
         list_text_field.remove('signature')
     if 'face' in list_text_field:
         list_text_field.remove('face')
+    if 'page' in list_text_field:
+        list_text_field.remove('page')
     
     dim_issue = True
     while dim_issue:
@@ -231,6 +233,14 @@ def Inpainting(image, annotations):
     
     list_fields = list(annotations.keys())
     if field_to_change not in list_fields:
+        if 'image' in list_fields:
+            list_fields.remove('image')
+        if 'photo' in list_fields:
+            list_fields.remove('photo')
+        if 'signature' in list_fields:
+            list_fields.remove('signature')
+        if 'page' in list_fields:
+            list_fields.remove('page')
         field_to_change = random.choice(list_fields)
     swap_info = annotations[field_to_change]
     coord = swap_info['x'], swap_info['y'], swap_info['width'], swap_info['height']
@@ -251,7 +261,7 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
     """
         
     l_fake_type = ['crop', 'inpainting', 'copy']
-    image = Image.open(path_img).convert("RGB")
+    image = cv2.imread(path_img)
     id_img = path_img.split('/')[-1][:-4]
     path_json = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img)    
     annotations = read_json(path_json)   # read json with document annotations of fields area
@@ -282,7 +292,7 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
         while dim_issue:
             img_path_clips_target = random.choice(list_path_img)    # choose a document to crop the signature or a photo
             id_img_target = img_path_clips_target.split('/')[-1][:-4]
-            image_target = Image.open(img_path_clips_target).convert("RGB")   # read document where a signature or a photo will be cropped to be paste on current document
+            image_target = cv2.imread(path_img)   # read document where a signature or a photo will be cropped to be paste on current document
             path = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img_target)  
             annotations_target = read_json(path)
             list_fields_target = list(annotations_target.keys())
