@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from SIDTD.data.DataGenerator.Midv  import Midv
 from SIDTD.utils.util  import *
 
@@ -14,7 +16,7 @@ class Template_Generator(Midv):
 
     #__slots__ = ["_img_loader", "_classes", "_fake_template", "_transformations","_fake_img_loader","_annotations_path","_imgs_path","_delta_boundary","_static_path", "_flag"]
 
-    def __init__(self, absolute_path:str ,fake_template:dict = None, delta_boundary:int=10):
+    def __init__(self, absolute_path:str, fake_template:dict = None, delta_boundary:int=10):
 
 
         """
@@ -35,8 +37,8 @@ class Template_Generator(Midv):
         path_template = super().get_template_path()
         path_annotatons = super().get_img_annotations_path()
         self._delta_boundary = delta_boundary
-        self._annotations_path = os.path.join(path_annotatons,"Reals")
-        self._imgs_path = os.path.join(path_template, "Reals")
+        self._annotations_path = os.path.join(path_annotatons,"reals")
+        self._imgs_path = os.path.join(path_template, "reals")
 
         self._img_loader = self.create_and_map_classes_imgs() 
 
@@ -63,27 +65,27 @@ class Template_Generator(Midv):
             
     def create_loader(self) -> List[object]:
         map_annotations = self.create_and_map_classes_annotations()
-        #for classes, annotations in map_annotations.items():
-        #    class_template = read_json(annotations)
-
 
         for im in os.listdir(self._imgs_path):
-            clas, original = im.split("_")
+            clas, original, id = im.split("_")
             name_img = im
-            src_img = os.path.join(self._static_path_images, clas,original)
+            src_img = os.path.join(self._static_path_images, clas,original, id)
             img = read_img(os.path.join(self._imgs_path, im))
+
             class_template = read_json(map_annotations[clas])
             self._img_loader[clas].append(super(Template_Generator, self).Img(img,class_template,name_img,src_img))
 
-    def fit(self,sample) -> List[Image.Image]:
+    def create(self,sample) -> List[Image.Image]:
         
         for counter, (key,img_bucket) in enumerate(self._img_loader.items()):
             for idx in range(len(img_bucket)):
 
                 img = random.choice(img_bucket)
+
                 img_id = int(img._relative_path.split("/")[-1].split(".")[0])
                 fake_img, field =  super().Inpaint_and_Rewrite(img=img._img,img_id=img_id,info=img._meta)
                 name_fake_generated =  img._name.split(".")[0] + "_fake_" + str(counter) + "_" + str(idx)
+
 
                 #Creating the dict with the metadata
                 fake_meta = vars(self._fake_template(src=img._relative_path, type_transformation="Inpaint_and_Rewrite",field=field,loader="Midv2020",name=name_fake_generated))
@@ -164,13 +166,22 @@ class Template_Generator(Midv):
                     self._fake_img_loader.append(generated_img2)
 
 
-    def store_generated_dataset(self):
-        store(self._fake_img_loader, path_store=self.absoulute_path+"/SIDTD")
+    def store_generated_dataset(self, path_store: Optional[str] = None):
+
+        if path_store is None:
+            path = self.absoulute_path+"/SIDTD_Generated"
+        else:
+            path = path_store
+
+        print(f"Data beeing stored in the path: {path}")
+        store(self._fake_img_loader, path_store=path)
+
+
 
 
 if __name__ == "__main__":
-    gen = Template_Generator("/home/cboned/MIDV2020/dataset/SIDTD")
+    gen = Template_Generator("/home/cboned/Midv2020/dataset/SIDTD")
     
-    gen.fit(1000)
+    gen.create(5)
     
-    #gen.store_generated_dataset()
+    gen.store_generated_dataset()

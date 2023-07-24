@@ -1,11 +1,26 @@
 
 # Generating the Benchmark
 
-In this we add the functions to create more fake data. To use this scripts you must have the midv2020 or midv500 dataset downloaded.
+Within this folder, you will find the functionalities necessary to generate more images with some falsifications.
 
-To create more information you will have some functionalities that you can play with to create more variety of information.
+To create more information you will have some other functionalities that you can play with to create more variety of information.
 
-The structure of this section is depicted as follows:
+To generate information you need to follow certain structure: 
+
+```
+Folder_path
+|   Images
+|   | reals ( There are inside the list of the different images)
+|   | fakes 
+|   
+|   Annotations
+|   | reals ( There are inside the list of the different annotations)
+|   | fakes     
+```
+
+This structure follows the Midv2020 structure. It can be generalized to each kind of image paths
+
+### The structure of this section is depicted as follows:
 
 ```
 DataGenerator
@@ -26,15 +41,28 @@ Once the structure of this section is explained lets show some example to use it
 
 ## Re-generate the Benchmark
 
-To generate more new fake data 
+To generate more new fake data you need to have the structure that is depicted above and call this different functions:
+
+A test example with our downloading function is...
 ```python
 
-    import os
-    from SIDTD.data.DataGenerator.Midv2020 import Template_Generator
+    from Fake_Generator.Fake_Loader.Midv2020 import Template_Generator
+    from SIDTD.data.DataLoader.Datasets import *
 
-    path_dataset = os.path.expanduser('~') + '/Datasets/Mid2020'
-    gen = Template_Generator.Template_Generator(path=path_dataset)
+    ## Downloadign our data just as an example
+    data = SIDTD(download_original=False).download_dataset("templates")
 
+    # get the abosulte path where the data is stored following the structure depicted above
+    
+    # you need to go where the data is 
+    path_dataset = "~/SIDTD_Dataset/datasets/SIDTD/templates/"
+    
+    # generating the data
+    gen = Template_Generator.Template_Generator(absolute_path=path_dataset))
+
+    gen.create(sample=10)
+    
+    gen.store_generated_dataset(path_store=None) #[None for dedault]
 
 ```
 

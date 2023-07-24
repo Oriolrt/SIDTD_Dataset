@@ -7,6 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) # This is your Project Root
 VERSION = '0.0.1'
 DESCRIPTION = 'Download Dataloader for fake/real benchmarks approach with our own Benchmark'
 LONG_DESCRIPTION = 'This package allows to download 5 different benchmarks included our own for the fake/real classification task.'

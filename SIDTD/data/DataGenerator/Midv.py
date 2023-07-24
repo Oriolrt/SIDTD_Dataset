@@ -32,12 +32,17 @@ class Midv():
     
     
     def get_template_path(self):
+        assert os.path.exists(os.path.join(self.absoulute_path, "Images")), "There's not any image folder in this directory"
         return os.path.join(self.absoulute_path, "Images")
 
     def get_video_path(self):
+        assert os.path.exists(os.path.join(self.absoulute_path, "Images")), "There's not any image folder in this directory"
+
         return os.path.join(self.absoulute_path, "clips")
 
     def get_img_annotations_path(self):
+        assert os.path.exists(os.path.join(self.absoulute_path, "Annotations")), "There's not any metadata (.json) folder in this directory"
+
         return os.path.join(self._absolute_path, "Annotations")
         
 
@@ -97,7 +102,7 @@ class Midv():
                         while(swap_info_1 == swap_info_2):
                             swap_info_2, field_to_return1 = self.get_field_info(info=additional_info, img_id1=img_id2)
     
-            fake_document1, fake_document2 = replace_info_documents(img1, img2, swap_info_1, swap_info_2, delta1=delta1, delta2=delta2, flag=self._flag, mixed=False)            
+            fake_document1, fake_document2 = replace_info_documents(img1, img2, swap_info_1, swap_info_2, delta1=delta1, delta2=delta2)
         
             return fake_document1, fake_document2 , field_to_return1, field_to_return2           
         

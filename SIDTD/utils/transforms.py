@@ -9,7 +9,7 @@ import cv2
 import names
 from faker import Faker
 
-
+import SIDTD.utils.util as ut
 import numpy as np
 
 
@@ -33,7 +33,7 @@ def inpaint_image(img: np.ndarray, coord:np.ndarray, mask: np.ndarray, text_str:
     x0, y0, w, h = coord
 
     color = (0, 0, 0)
-    font = get_optimal_font_scale(text_str, w)
+    font = ut.get_optimal_font_scale(text_str, w)
 
     img_pil = Image.fromarray(fake_text_image)
     draw = ImageDraw.Draw(img_pil)
