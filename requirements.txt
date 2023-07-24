@@ -17,3 +17,5 @@ python-math
 opencv-python
 tqdm
 wget
+names
+faker

@@ -4,6 +4,8 @@ from importlib.resources import path
 from typing import *
 from PIL import ImageFont, ImageDraw, Image
 
+import SIDTD.utils.Test_Samples.Fonts.TTF as t
+
 import json
 import random
 import cv2
@@ -11,6 +13,7 @@ import os
 import imageio
 
 import numpy as np
+import SIDTD.utils.transforms as t
 
 # TODO This function need to be refactored (generalize the fonts)
 def get_optimal_font_scale(text, width):
@@ -43,8 +46,20 @@ def get_optimal_font_scale(text, width):
     return font
 
 
-def get_font_scale(inner_path: str = os.path.join(os.getcwd(), "..", "..", "utils", "Test_Samples", "Fonts", "TTF")):
-    deja = [i for i in os.listdir(inner_path) if "DejaVu" in i]
+def get_font_scale(inner_path: str = os.path.join(os.getcwd(), "SIDTD", "utils", "Test_Samples", "Fonts", "TTF")):
+
+    ## TODO solve
+    try:
+        deja = [i for i in os.listdir(inner_path) if "DejaVu" in i]
+
+    except FileNotFoundError:
+        for root, dirs, files in os.walk(os.getcwd()):
+            for name in dirs:
+                if "TTF" == name:
+                    inner_path = os.path.join(root, name)
+                    break
+
+        deja = [i for i in os.listdir(inner_path) if "DejaVu" in i]
 
     selected = random.choice(deja)
 
@@ -80,7 +95,8 @@ def mask_from_info(img:np.ndarray, shape:np.ndarray):
 
 
 def read_img(path: str):
-    img = np.array(imageio.imread(path))
+    img = np.array(imageio.imread(path, pilmode="RGB"))
+
 
     if img.shape[-1] == 4:
         return cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
@@ -196,7 +212,7 @@ def replace_info_documents(im0:np.ndarray, im1:np.ndarray, data0:dict, data1:dic
     dx1,dy1 = delta1
     dx2,dy2 = delta2
 
-    im_rep, dim_issue = crop_replace(im1, im0, coord1, H, dx1,dy1,dx2,dy2)
+    im_rep, dim_issue = t.crop_replace(im1, im0, coord1, H, dx1,dy1,dx2,dy2)
 
     return im_rep, dim_issue
 
