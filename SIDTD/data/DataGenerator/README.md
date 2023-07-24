@@ -23,7 +23,7 @@ This structure follows the Midv2020 structure. It can be generalized to each kin
 ### The structure of this section is depicted as follows:
 
 ```
-Fake_Generator
+DataGenerator
 |   __init__.py    
 │   Midv.py (where this class is the core class of the generator)
 │   utils.py
@@ -63,7 +63,6 @@ A test example with our downloading function is...
     gen.create(sample=10)
     
     gen.store_generated_dataset(path_store=None) #[None for dedault]
-
 
 ```
 

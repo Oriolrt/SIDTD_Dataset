@@ -1,3 +1,4 @@
+pip
 random2
 numpy
 pandas
@@ -5,7 +6,7 @@ python-abc
 os.path2
 argparse
 glob2
-sklearn
+scikit-learn
 shutils
 pytest-shutil
 imageio

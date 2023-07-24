@@ -104,7 +104,7 @@ def copy_paste(image:np.ndarray, coord_a:List[int], coord_b:List[int], shift_cop
         Tuple[np.ndarray, bool]: Returns a tuple containing the resulting image after pasting the ROI and a boolean indicator specifying if there was a dimension issue or not.
     """
     im_rep = copy.deepcopy(image)
-    r_noise = random.randint(10, shift_copy)
+    r_noise = random.randint(5, shift_copy)
 
     x1, y1, w1, h1 = coord_a
     source = image[y1:y1 + h1, x1:x1 + w1]
@@ -122,7 +122,7 @@ def copy_paste(image:np.ndarray, coord_a:List[int], coord_b:List[int], shift_cop
 def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
 
     im_rep = copy.deepcopy(im_a)
-    r_noise = random.randint(10,shift_copy)
+    r_noise = random.randint(5,shift_copy)
     
     x1, y1, w1, h1 = coord_a['x'], coord_a['y'], coord_a['width'], coord_a['height']
     source = im_a[y1:y1+h1, x1:x1+w1]
@@ -144,7 +144,7 @@ def copy_paste_on_document(im_a, coord_a, coord_b, shift_copy):
 def copy_paste_on_two_documents(im_a, coord_a, im_b, coord_b, shift_crop):
 
     im_rep = copy.deepcopy(im_a)
-    r_noise = random.randint(10,shift_crop)
+    r_noise = random.randint(5,shift_crop)
     
     x1, y1, w1, h1 = coord_b['x'], coord_b['y'], coord_b['width'], coord_b['height']
     #x1, y1, w1, h1 = bbox_info(coord_b)
@@ -179,6 +179,8 @@ def CopyPaste(images, annotations, shift_copy):
         list_text_field.remove('signature')
     if 'face' in list_text_field:
         list_text_field.remove('face')
+    if 'page' in list_text_field:
+        list_text_field.remove('page')
     
     dim_issue = True
     while dim_issue:
@@ -229,6 +231,17 @@ def Inpainting(image, annotations):
         t = fake.date_time_between(start_date='-70y', end_date='-18y')
         text_str = t.strftime('%d %m %Y')
     
+    list_fields = list(annotations.keys())
+    if field_to_change not in list_fields:
+        if 'image' in list_fields:
+            list_fields.remove('image')
+        if 'photo' in list_fields:
+            list_fields.remove('photo')
+        if 'signature' in list_fields:
+            list_fields.remove('signature')
+        if 'page' in list_fields:
+            list_fields.remove('page')
+        field_to_change = random.choice(list_fields)
     swap_info = annotations[field_to_change]
     coord = swap_info['x'], swap_info['y'], swap_info['width'], swap_info['height']
     shape_quad = bbox_to_coord(coord[0], coord[1], coord[2], coord[3])
@@ -247,12 +260,21 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
         shift_copy: shift perform on pasting in order to not create a perfect forgery. 
     """
         
-    fake_type = random.choice(['crop', 'inpainting', 'copy'])   # randomly draw one forgery techniques among: copy paste, crope & replace and inpainting
-    image = Image.open(path_img).convert("RGB")
+    l_fake_type = ['crop', 'inpainting', 'copy']
+    image = cv2.imread(path_img)
     id_img = path_img.split('/')[-1][:-4]
     path_json = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img)    
     annotations = read_json(path_json)   # read json with document annotations of fields area
     list_fields = list(annotations.keys())
+    list_image_field = ['photo', 'signature']
+    if "photo" not in list_fields:
+        list_image_field.remove('photo')
+    if "signature" not in list_fields:
+        list_image_field.remove('signature')
+    if len(list_image_field) == 0:
+        l_fake_type.remove('crop')
+
+    fake_type = random.choice(l_fake_type)   # randomly draw one forgery techniques among: copy paste, crope & replace and inpainting
         
     # perform copy pasting
     if fake_type == 'copy':
@@ -264,21 +286,24 @@ def forgery_augmentation(dataset_name, image, list_path_img, path_img: str, shif
 
     # perform crop & replace
     if fake_type == 'crop':
-
-        list_image_field = ['photo', 'signature']
                         
         # Loop until crop & replace does not create dimension issue
         dim_issue = True
         while dim_issue:
             img_path_clips_target = random.choice(list_path_img)    # choose a document to crop the signature or a photo
             id_img_target = img_path_clips_target.split('/')[-1][:-4]
-            image_target = Image.open(img_path_clips_target).convert("RGB")   # read document where a signature or a photo will be cropped to be paste on current document
+            image_target = cv2.imread(path_img)   # read document where a signature or a photo will be cropped to be paste on current document
             path = os.getcwd() +  '/split_kfold/{}/annotations/annotations_{}.json'.format(dataset_name, id_img_target)  
             annotations_target = read_json(path)
             list_fields_target = list(annotations_target.keys())
-            if ('signature' not in list_fields) or ('signature' not in list_fields_target):
+            if ('signature' in list_image_field) and ('signature' not in list_fields_target):
                 list_image_field.remove('signature')
-
-            image, dim_issue = CropReplace(np.asarray(image), annotations, np.asarray(image_target), annotations_target, list_image_field, shift_copy)
+            if ('photo' in list_image_field) and ('photo' not in list_fields_target):
+                list_image_field.remove('photo')
+            
+            if len(list_image_field) == 0:
+                dim_issue = True
+            else:
+                image, dim_issue = CropReplace(np.asarray(image), annotations, np.asarray(image_target), annotations_target, list_image_field, shift_copy)
         
     return image

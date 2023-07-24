@@ -76,7 +76,7 @@ class SIDTD(Dataset):
         self._images_path = os.path.join(self._uri,"templates.zip")
         self._clips_path = os.path.join(self._uri,"clips.zip")
         self._clips_cropped_path = os.path.join(self._uri,"clips_cropped.zip")
-        self._uri_videos = os.path.join(self._uri,"videos.zip")
+        self._videos_path = os.path.join(self._uri,"videos.zip")
 
         ## static Csv
 
@@ -159,7 +159,7 @@ class SIDTD(Dataset):
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
             if self._download_original:raise NotImplementedError
 
-        elif type_download == "clips_cropped":
+        elif type_download == "cropped":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_cropped_path))
             try:
                 with zipfile.ZipFile(self._abs_path+"/clips_cropped.zip", 'r') as zip_ref:
