@@ -4,8 +4,6 @@ from importlib.resources import path
 from typing import *
 from PIL import ImageFont, ImageDraw, Image
 
-import SIDTD.utils.Test_Samples.Fonts.TTF as t
-
 import json
 import random
 import cv2

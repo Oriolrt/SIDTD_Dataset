@@ -54,7 +54,7 @@ class DataLoader(object):
 
 
     def __init__(self, dataset:str="SIDTD",kind:str="templates", download_static:bool= False,type_split:str = "hold_out", kfold_split:int=10, hold_out_split:list=[0.8,0.1,0.1]
-, few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, unbalanced:bool= False, cropped:bool= False):
+, few_shot_split:Optional[str]=None, metaclasses:Optional[list] = None, unbalanced:bool= False):
 
         """
         Initialize the class.
@@ -71,10 +71,7 @@ class DataLoader(object):
         - few_shot_split (Optional[str]): Few-shot split option. Currently, only "random" is supported.
         - metaclasses (Optional[list]): List of metaclasses for the few-shot partition.
         - unbalanced (bool): Indicates whether the dataset is unbalanced.
-        - cropped (bool): Indicates whether the clips are cropped.
         """
-
-        if kind == "clips_cropped": kind = "cropped"
 
         ### ASSERTS AND ERROR CONTROL ###
         hold_out_split = list(float(x) for x in hold_out_split)
@@ -89,7 +86,6 @@ class DataLoader(object):
         self._dataset = dataset
         self._dataset_type = kind
         self._unbalanced = unbalanced
-        self._cropped = cropped
         self._type_split = type_split
         self._kfold_split = kfold_split
         self._few_shot_split = few_shot_split
@@ -108,8 +104,8 @@ class DataLoader(object):
         
         logging.info("Searching for the dataset in the current working directory")
 
-        flag, self._dataset_path = self.control_download(to_search=dataset, root="datasets")
-
+        flag, self._dataset_path = self.control_download(to_search=dataset)
+        print(flag)
         if flag is False:
             logging.warning("The dataset hasnt been found, starting to download")
             time.sleep(1)
@@ -120,6 +116,7 @@ class DataLoader(object):
 
             logging.info("Dataset Download in {}".format(os.path.join(self._dt._uri.split("/")[-2], "explore")))
         else:
+            print(self._dataset_path)
             kinds = os.listdir(self._dataset_path)
             if kind not in kinds:
                 self._dt.download_dataset(type_download=kind)
@@ -306,8 +303,7 @@ class DataLoader(object):
         l_label = []
         l_img = []
         l_conditioned = []
-        if kind=='clips_cropped':
-            kind = 'cropped'
+
         for file in glob.glob('{}/*/*'.format(os.path.join(os.getcwd(), "datasets",self._dataset, kind, "Images"))):
             path = file.replace('\\', '/')
             path_decompose = path.split('/')
@@ -330,12 +326,20 @@ class DataLoader(object):
         return new_df
 
     
-    def control_download(self, to_search:str, root:str="datasets"):
+    def control_download(self, to_search:str, root:str=None):
+        if root is None:
+            actual_path = os.getcwd()
+        else:
+            actual_path = os.path.join(os.getcwd(), root)
         # Wlaking top-down from the Working directory
-        for rt, dir, files in os.walk(os.path.join(os.getcwd(), root)):            
+        for rt, dir, files in os.walk(actual_path):
             if (to_search in dir):
-                print(os.path.join(rt, "/".join(dir)))
-                return True, os.path.join(rt, "/".join(dir))
+                path = os.path.join(rt, to_search)
+                empty = (len(glob.glob(os.path.join(path, self._dataset_type ,"Images","fakes", "*"))) == 0) and (len(glob.glob(os.path.join(path, self._dataset_type ,"Images", "reals", "*"))) == 0)
+                if  empty:
+                    continue
+                else:
+                    return True, os.path.join(rt, to_search)
         
         return False, []
 
@@ -389,7 +393,6 @@ if __name__ == "__main__":
     parser.add_argument("-ts","--type_split", default="hold_out", type=str, choices=["hold_out", "kfold", "few_shot"],
                         help="Specify the type of data split to train the models")
     parser.add_argument("--unbalanced", action="store_true", help="Flag to prepare the unbalanced partition")
-    parser.add_argument("-c", "--cropped", action="store_true", help="Flag to use the cropped version of clips")
 
     # Parse arguments
     args, _ = parser.parse_known_args()
@@ -407,7 +410,6 @@ if __name__ == "__main__":
             type_split=options.type_split,
             hold_out_split=options.hold_out_split,
             unbalanced=args.unbalanced,
-            cropped=args.cropped
         )
 
     elif args.type_split == "few_shot":
@@ -426,7 +428,6 @@ if __name__ == "__main__":
             few_shot_split=options.few_shot_split,
             metaclasses=options.metaclasses,
             unbalanced=args.unbalanced,
-            cropped=args.cropped
         )
 
     elif args.type_split == "kfold":
@@ -441,5 +442,4 @@ if __name__ == "__main__":
             type_split=options.type_split,
             kfold_split=options.kfold_split,
             unbalanced=args.unbalanced,
-            cropped=args.cropped
         )

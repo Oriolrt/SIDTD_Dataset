@@ -26,18 +26,14 @@ All this benchamarks have been changed in order to fit our task and they will be
 To download the datasets we have the following code examples:
 
 ```python
-        data = SIDTD(download_original=False).download_dataset("templates")  #["you  can choose among templates, clips, clips_cropped and "all" of them]
+from SIDTD.data.DataLoader.Datasets import *
+
+data = SIDTD(download_original=False, custom_path_to_download=None).download_dataset("templates")  #["you  can choose among templates, clips, clips_cropped and "all" of them]
 ```
 
 Once you have installed the package as described in the main **Readme** you can call the different functionalities as follows:
 
 If you just want to get the benchmark you only need to go to the datasets and choice among [SIDTD, Dogs, Fungus, Findit, Banknotes]:
-
-```python
-    from SIDTD.data.DataLoader.Datasets import *
-    
-    SIDTD(download_original=...)
-```
 
 
 ## __Loader_Modules.py__
@@ -62,7 +58,7 @@ python data_loader.py [--dataset DATASET] [--kind KIND] [--download_static] [--t
 
         --unbalanced: Flag to prepare the unbalanced partition.
 
-        -c|--cropped: Flag to use the cropped version of clips.
+        -c|--clips_cropped: Flag to use the cropped version of clips.
 
 ## Split Types
 ### Hold-out Split
@@ -94,38 +90,36 @@ python data_loader.py [--dataset DATASET] [--kind KIND] [--download_static] [--t
 
 Templates
 ```python   
-    #templates
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split hold_out --hold_out_split 0.8 0.1 0.1
+#templates
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split hold_out --hold_out_split 0.8 0.1 0.1
     
-    #clips
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split kfold --kfold_split 10
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split kfold --kfold_split 10
     
-    #cropped clips
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport
+
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind templates --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport
 ```
 
 Clips
 ```python   
-    #templates
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split hold_out --hold_out_split 0.8 0.1 0.1 --unbalanced
 
-    #clips
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split kfold --kfold_split 10 --unbalanced
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split hold_out --hold_out_split 0.8 0.1 0.1 --unbalanced
 
-    #cropped clips
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport -c
+
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split kfold --kfold_split 10 --unbalanced
+
+
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport -c
 ```
 
 Clips Cropped
 ```python   
-    #templates
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split hold_out --hold_out_split 0.8 0.1 0.1
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split hold_out --hold_out_split 0.8 0.1 0.1
 
-    #clips
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split kfold --kfold_split 10
 
-    #cropped clips
-    python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport -c
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split kfold --kfold_split 10
+
+
+python data/DataLoader/Loader_Modules.py --dataset SIDTD --kind clips_cropped --type_split few_shot --few_shot_split random 0.75 0.25 --metaclasses id passport -c
 ```
 
 
@@ -133,14 +127,14 @@ Statics
 
 
 ```python   
-    #templates
-    python data/DataLoader/Loader_Modules.py -ts kfold --kind templates --download_static
 
-    #clips with background
-    python data/DataLoader/Loader_Modules.py -ts kfold --kind clips --download_static
+python data/DataLoader/Loader_Modules.py -ts kfold --kind templates --download_static
 
-    #cropped clips
-    python data/DataLoader/Loader_Modules.py -ts kfold --kind clips_cropped --download_static
+
+python data/DataLoader/Loader_Modules.py -ts kfold --kind clips --download_static
+
+
+python data/DataLoader/Loader_Modules.py -ts kfold --kind clips_cropped --download_static
 ```
 
 to download the other statics, follow the same structure as depicted above

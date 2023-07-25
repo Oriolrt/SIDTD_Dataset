@@ -1,3 +1,5 @@
+import logging
+
 from SIDTD.utils.util import *
 
 
@@ -11,6 +13,8 @@ import os
 import glob
 import zipfile
 import shutil
+import tqdm
+
 try:
     import imageio.v2 as imageio
 except:
@@ -63,7 +67,7 @@ class Banknotes(Dataset):
 
 class SIDTD(Dataset):
 
-    def __init__(self,download_original:bool =False) -> None:
+    def __init__(self,download_original:bool =False, custom_path_to_download:Optional[str]=None) -> None:
         
         super().__init__()
         
@@ -95,7 +99,13 @@ class SIDTD(Dataset):
         
         
         #path to download
-        self._path_to_download = os.path.join(os.getcwd(), "datasets")
+        if custom_path_to_download is None:
+            self._path_to_download = os.getcwd()
+        else:
+            self._path_to_download = custom_path_to_download
+
+
+
         self._abs_path = os.path.join(self._path_to_download,os.path.basename(self._uri)) # cwd/datasets/SIDTD/...
 
         self.abs_path_code_ex_csv = os.path.join(os.getcwd(), "models", "explore", "static")
@@ -152,45 +162,83 @@ class SIDTD(Dataset):
                 with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_shot_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
-
-    def download_dataset(self, type_download:str = "templates"):
+    def download_dataset(self, type_download: str = "templates"):
 
         if type_download == "all_dataset":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._uri))
-            if self._download_original:raise NotImplementedError
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._uri))
+            if self._download_original: raise NotImplementedError
 
-        elif type_download == "cropped":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_cropped_path))
-            try:
-                with zipfile.ZipFile(self._abs_path+"/clips_cropped.zip", 'r') as zip_ref:
-                    zip_ref.extractall(self._abs_path)
-            except:
-                print("Some Error Ocurred downloading the zip file, check if there is a corrupted zip inb the folder where you are trying to download ") 
-            if self._download_original:raise NotImplementedError
-        
+        elif type_download == "clips_cropped":
+            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,
+                                                                                           self._clips_cropped_path))
+
+
+            with zipfile.ZipFile(self._abs_path + "/clips_cropped.zip", 'r') as zip_ref:
+                print(
+                    "Starting to decompress the data you actually downloaded, It may spend a lot of time")
+
+                for member in tqdm.tqdm(zip_ref.infolist(), desc='Extracting '):
+                    try:
+                        zip_ref.extract(member, self._abs_path)
+                    except zipfile.error as e:
+                        pass
+
+            os.remove(self._abs_path + "/clips_cropped.zip")
+
+            if self._download_original: raise NotImplementedError
+
         elif type_download == "clips":
-                os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._clips_path))
-                try:
-                    with zipfile.ZipFile(self._abs_path+"/clips.zip", 'r') as zip_ref:
-                        zip_ref.extractall(self._abs_path)
-                except:
-                    print("Some Error Ocurred downloading the zip file, check if there is a corrupted zip inb the folder where you are trying to download ") 
-                if self._download_original:raise NotImplementedError
-        
+            os.system(
+                "bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._clips_path))
+            with zipfile.ZipFile(self._abs_path + "/clips.zip", 'r') as zip_ref:
+                print(
+                    "Starting to decompress the data you actually downloaded, It may spend a lot of time")
+
+                for member in tqdm.tqdm(zip_ref.infolist(), desc='Extracting '):
+                    try:
+                        zip_ref.extract(member, self._abs_path)
+                    except zipfile.error as e:
+                        pass
+
+            os.remove(self._abs_path + "/clips.zip")
+
+            if self._download_original: raise NotImplementedError
+
         elif type_download == "videos":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._videos_path))
-            with zipfile.ZipFile(self._abs_path+"/videos.zip", 'r') as zip_ref:
-                zip_ref.extractall(self._abs_path)
-            if self._download_original:raise NotImplementedError
+            os.system(
+                "bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._videos_path))
+            with zipfile.ZipFile(self._abs_path + "/videos.zip", 'r') as zip_ref:
+                print(
+                    "Starting to decompress the data you actually downloaded, It may spend a lot of time")
+
+                for member in tqdm.tqdm(zip_ref.infolist(), desc='Extracting '):
+                    try:
+                        zip_ref.extract(member, self._abs_path)
+                    except zipfile.error as e:
+                        pass
+
+            os.remove(self._abs_path + "/videos.zip")
+
+            if self._download_original: raise NotImplementedError
 
         elif type_download == "templates":
-            os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path,self._images_path))
-            with zipfile.ZipFile(self._abs_path+"/templates.zip", 'r') as zip_ref:
-                zip_ref.extractall(self._abs_path)
-            if self._download_original:self.create_structure_images()
-            
+            os.system(
+                "bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._images_path))
+            with zipfile.ZipFile(self._abs_path + "/templates.zip", 'r') as zip_ref:
+                logging.warning("Starting to decompress the data you actually downloaded, It may spend a lot of time")
+
+                for member in tqdm.tqdm(zip_ref.infolist(), desc='Extracting '):
+                    try:
+                        zip_ref.extract(member, self._abs_path)
+                    except zipfile.error as e:
+                        pass
+
+            os.remove(self._abs_path + "/templates.zip")
+
+            if self._download_original: self.create_structure_images()
+
         else:
-            print("OPTION: do not download dataset files") 
+            print("OPTION: do not download dataset files")
 
     def create_structure_videos(self):
         videos_abs_path = os.path.join(self._abs_path, "videos", "reals")
