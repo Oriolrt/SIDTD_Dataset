@@ -78,7 +78,7 @@ class Template_Generator(Midv):
     def create(self,sample) -> List[Image.Image]:
         
         for counter, (key,img_bucket) in enumerate(self._img_loader.items()):
-            for idx in range(len(img_bucket)):
+            for idx in tqdm.tqdm(range(len(img_bucket))): # First, make a transformation for any kind of document
 
                 img = random.choice(img_bucket)
 

@@ -1,14 +1,15 @@
 ## Usage examples
-This folder contains code examples to use the functions used to generate fake id documents. It also contains the scripts used to generate the SIDTD dataset.
+This folder contains code examples to use the functions used to generate fake id documents.
 
 
 # Generate fake Id images
 
 This file is divided in 4 different functions:
 
- The first two are the reproduction of the calls that we are doing inside all the core of the main script to create the two different variations (Inpaint and Crop and Replace) (__make_inpaint__ and __make_crop_and_replace__). These two functions are being called in the same way than the main code so the parameters are the same. To use the fucntion you must pass the information needed to access to the images and their metadata.
 
-There are two more functions called __custom_crop_and_replace__ and __custom_inpaint_and_rewrite__  that are the main operation to create the two transformations. They are impleemented if you want to generate some crop and replace or some inpaint with your own data. 
+Two functions called __custom_crop_and_replace__ and __custom_inpaint_and_rewrite__  that are the main operation to create the two transformations. They are impleemented if you want to generate some crop and replace or some inpaint with your own data. 
+
+Two functions to plot the results obtained.
 
 To be sure about how to use the functions you can check the descriptions inside them or by calling 
 
