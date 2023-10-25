@@ -195,13 +195,16 @@ def save_results_test(opt):
     if not os.path.exists(opt.results_path + '{}/{}/'.format(opt.model, opt.dataset)):
         os.makedirs(opt.results_path + '{}/{}/'.format(opt.model, opt.dataset))
         
+    if opt.inf_domain_change=='yes':
+        results_path = opt.results_path + '{}/{}/trained_{}_{}_test_results.csv'.format(opt.model, opt.dataset, opt.dataset_source, opt.name)
+    else:
+        results_path = opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name)
 
-
-    if os.path.isfile(opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name)):
-        f_test = open(opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name), 'a')
+    if os.path.isfile(results_path):
+        f_test = open(results_path, 'a')
         writer_test = csv.writer(f_test)
     else:
-        f_test = open(opt.results_path + '{}/{}/{}_test_results.csv'.format(opt.model, opt.dataset, opt.name), 'w')
+        f_test = open(results_path, 'w')
         # create the csv writer
         writer_test = csv.writer(f_test)
         header_test = ['training_iteration', 'accuracy', 'roc_auc_score', 'FPR', 'FNR']

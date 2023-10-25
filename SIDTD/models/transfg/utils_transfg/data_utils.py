@@ -139,7 +139,10 @@ def get_loader_test(args, training_iteration):
     # function to load csv with image paths and labels groundtruths of test set in memory
     if args.static == 'no':
         if args.type_split == 'kfold':
-            test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
+            if args.inf_domain_change == 'yes':
+                test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_0.csv".format(args.dataset, args.dataset))
+            else:
+                test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, training_iteration))
         elif args.type_split =='cross':
             test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
     else:

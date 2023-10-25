@@ -139,7 +139,10 @@ def test(opt, save_model_path, iteration):
     # You can use different type of data: templates, clips or cropped clips.
     if opt.static == 'no':
         if opt.type_split == 'kfold':
-            path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+            if opt.inf_domain_change == 'yes':
+                path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_0.csv".format(opt.dataset, opt.dataset)
+            else:
+                path_test = os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
         elif opt.type_split =='cross':
             path_test = os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(opt.dataset, opt.dataset)
     else:
@@ -182,9 +185,15 @@ def test(opt, save_model_path, iteration):
     # Load trained models.
     # Choose model depending on if you want to choose a custom trained model or perform inference with our models
     if opt.pretrained == 'no':
-        discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
-        resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
-        coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+        if opt.inf_domain_change == 'yes':
+            discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset_source, opt.name, iteration)))
+            resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset_source, opt.name, iteration)))
+            coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset_source, opt.name, iteration)))
+        else:
+            discriminator.load_state_dict(torch.load(save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+            resNet.load_state_dict(torch.load(save_model_path + '/{}_{}_fcn_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+            coAtten.load_state_dict(torch.load(save_model_path + '/{}_{}_coatten_best_accuracy_n{}.pth'.format(opt.dataset, opt.name, iteration)))
+        
         discriminator.eval()
         resNet.eval()
         coAtten.eval()
@@ -262,9 +271,12 @@ def test_coAttn_models(opt, iteration=0) -> None:
         elif opt.type_data == 'clips':
             save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/coattention_trained_models/"
     else:
-        save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
+        if opt.inf_domain_change == 'yes':
+            save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset_source + "/"
+        else:
+            save_model_path = opt.save_model_path + opt.model + "_trained_models/" + opt.dataset + "/"
     
-        
+
     acc_test, test_auc, FPR, FNR = test(opt, save_model_path, iteration)
     
     #save results on the output cvs file

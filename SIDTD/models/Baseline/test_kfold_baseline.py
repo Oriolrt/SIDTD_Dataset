@@ -77,12 +77,16 @@ def test_baseline_models(args, LOGGER, iteration=0):
     
     # Load existing csv results file if it exist otherwise, create the results file
     if args.save_results:
-        print("Results file: ", args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name))
-        if os.path.isfile(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name)):
-            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'a')
+        if args.inf_domain_change =='yes':
+            results_path = args.results_path + '{}/{}/trained_{}_{}_test_results.csv'.format(args.model, args.dataset, args.dataset_source, args.name)
+        else:
+            results_path = args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name)
+        print("Results file: ", results_path)
+        if os.path.isfile(results_path):
+            f_test = open(results_path, 'a')
             writer_test = csv.writer(f_test)
         else:
-            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'w')
+            f_test = open(results_path, 'w')
             # create the csv writer
             writer_test = csv.writer(f_test)
             header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score', 'FPR', 'FNR']
@@ -116,11 +120,19 @@ def test_baseline_models(args, LOGGER, iteration=0):
     # You can use different type of data: templates, clips or cropped clips.
     if args.static == 'no':
         if args.type_split == 'kfold':
-            if os.path.exists(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
-                print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
-                test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+            if args.inf_domain_change == 'yes':
+                if os.path.exists(os.getcwd() + "/split_kfold/{}/test_split_{}_it_0.csv".format(args.dataset, args.dataset)):
+                    print("Loading existing partition: ", "test_split_{}_it_0".format(args.dataset))
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_0.csv".format(args.dataset, args.dataset))
+                else:
+                    print('ERROR : WRONG PATH')
+            
             else:
-                print('ERROR : WRONG PATH')
+                if os.path.exists(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration)):
+                    print("Loading existing partition: ", "split_{}_it_{}".format(args.dataset, iteration))
+                    test_metadata_split = pd.read_csv(os.getcwd() + "/split_kfold/{}/test_split_{}_it_{}.csv".format(args.dataset, args.dataset, iteration))
+                else:
+                    print('ERROR : WRONG PATH')
         elif args.type_split =='cross':
             if os.path.exists(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset)):
                 test_metadata_split = pd.read_csv(os.getcwd() + "/split_normal/{}/test_split_{}.csv".format(args.dataset, args.dataset))
@@ -185,8 +197,12 @@ def test_baseline_models(args, LOGGER, iteration=0):
     # Choose model depending on if you want to choose a custom trained model or perform inference with our models
     if args.pretrained == 'no':
         print('Test with your own trained models.')
-        save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
-        PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
+        if args.inf_domain_change == 'yes':
+            save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset_source + "/"
+            PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset_source, args.name, iteration)
+        else:
+            save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
+            PATH = save_model_path + '/{}_{}_best_accuracy_n{}.pth'.format(args.dataset, args.name, iteration)
     else:
         print('Test with SIDTD trained models.')
         if args.type_data == 'clips':

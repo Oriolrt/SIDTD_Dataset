@@ -116,13 +116,17 @@ def test_transfg_models(args, LOGGER, iteration=0):
         if not os.path.exists(args.results_path + '{}/{}/'.format(args.model, args.dataset)):
             os.makedirs(args.results_path + '{}/{}/'.format(args.model, args.dataset))
         
-        print("Results file: ", args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name))
+        if args.inf_domain_change=='yes':
+            results_path = args.results_path + '{}/{}/trained_{}_{}_test_results.csv'.format(args.model, args.dataset, args.dataset_source, args.name)
+        else:
+            results_path = args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name)
+        print("Results file: ", results_path)
         
-        if os.path.isfile(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name)):
-            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'a')
+        if os.path.isfile(results_path):
+            f_test = open(results_path, 'a')
             writer_test = csv.writer(f_test)
         else:
-            f_test = open(args.results_path + '{}/{}/{}_test_results.csv'.format(args.model, args.dataset, args.name), 'w')
+            f_test = open(results_path, 'w')
             # create the csv writer
             writer_test = csv.writer(f_test)
             header_test = ['iteration', 'loss', 'accuracy', 'roc_auc_score', 'FPR', 'FNR']
@@ -152,8 +156,15 @@ def test_transfg_models(args, LOGGER, iteration=0):
             model_checkpoint = os.path.join(save_model_path,
                                     'MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
     else:
-        save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
-        model_checkpoint = os.path.join(save_model_path,
+        if args.inf_domain_change == 'yes':
+            save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset_source + "/"
+            model_checkpoint = os.path.join(save_model_path,
+                                    '{}_{}_best_accuracy_n{}.pth'.format(args.dataset_source,
+                                                              args.name,
+                                                              iteration))
+        else: 
+            save_model_path = args.save_model_path + args.model + "_trained_models/" + args.dataset + "/"
+            model_checkpoint = os.path.join(save_model_path,
                                     '{}_{}_best_accuracy_n{}.pth'.format(args.dataset,
                                                               args.name,
                                                               iteration))
