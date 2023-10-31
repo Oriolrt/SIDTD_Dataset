@@ -147,7 +147,7 @@ class coatten_fcn_model(load_models):
             arc_name = "/coattention_trained_models.zip"
         elif weights == "clips_cropped":
             base_folder = "unbalanced_clip_cropped_SIDTD"
-            arc_name = "/coattention_trained_models.zip"
+            arc_name = "/coatten_fcn_model_trained_models.zip"
         else:
             raise "You need to choose among [templates, clips, clips_cropped]"
 
