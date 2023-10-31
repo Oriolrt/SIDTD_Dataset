@@ -52,7 +52,7 @@ class efficientnet_b3(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path, base_folder)
+        self._abs_path_model = os.path.join(self._holder_path)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/efficientnet-b3_trained_models.zip"
 
@@ -76,7 +76,7 @@ class resnet50(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path, base_folder)
+        self._abs_path_model = os.path.join(self._holder_path)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/resnet50_trained_models.zip"
 
@@ -100,7 +100,7 @@ class vit_large_patch16_224(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path, base_folder)
+        self._abs_path_model = os.path.join(self._holder_path)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/vit_large_patch16_224_trained_models.zip"
 
@@ -124,7 +124,7 @@ class trans_fg(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path, base_folder)
+        self._abs_path_model = os.path.join(self._holder_path)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/trans_fg_trained_models.zip"
 
@@ -152,7 +152,7 @@ class coatten_fcn_model(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path, base_folder)
+        self._abs_path_model = os.path.join(self._holder_path)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + arc_name
 

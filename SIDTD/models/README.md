@@ -40,7 +40,7 @@ efficientnet_model.download()
 ```
 ```bash
 # by default the weights are trained with clips
-  python SIDTD/models/load_models.py --model efficientnet_b3
+  python load_models.py --model efficientnet --weights clips --path /path/to/save/models/
 ```
 
 
@@ -52,7 +52,7 @@ resnet_model.download()
 
 ```bash
 # by default the weights are trained with clips
-  python SIDTD/models/load_models.py  --model resnet50 --weights templates --path /path/to/save/models/
+  python load_models.py  --model resnet50 --weights clips --path /path/to/save/models/
 ```
 
 # Transformer (ViT and TransFG)
@@ -81,7 +81,7 @@ vit_model.download()
 
 ```bash
 # by default the weights are trained with clips
-  python SIDTD/models/load_models.py --model vit_large_patch16_224 --weights clips_cropped
+  python load_models.py --model vit --weights clips --path /path/to/save/models/
 ```
 
 
@@ -93,7 +93,7 @@ transfg_model.download()
 
 ```bash
 # by default the weights are trained with clips
-  python SIDTD/models/load_models.py --model trans_fg
+  python load_models.py --model transfg --weights clips --path /path/to/save/models
 ```
 
 
@@ -154,7 +154,7 @@ coatten_model.download()
 
 ```bash
 # by default the weights are trained with clips
-  python SIDTD/models/load_models.py --model coatten_fcn_model
+  python load_models.py --model coatten --weights clips --path /path/to/save/models
 ```
 
 
