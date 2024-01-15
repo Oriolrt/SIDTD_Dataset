@@ -40,29 +40,28 @@ new_df['label'] = new_df['label'].map({'reals':0,
                                       na_action=None)
                                       
 # Window to split the dataset in training/validation/testing set for the 10-fold
-if not os.path.exists('split_kfold/'):
-        os.makedirs('split_kfold/')
-
 print('Splitting dataset into {}-folds partition with train/validation/test sets...'.format(args.kfold))    
 dataset = args.dataset_name
 k = len(new_df)/args.kfold
 shuffled_df = shuffle(new_df)
+if not os.path.exists('split_kfold/'+ dataset):
+        os.makedirs('split_kfold/'+ dataset)
 for iteration in range(args.kfold):
     b_low = int(iteration*k)
     b_high = int((1 + iteration)*k)
     df_test = shuffled_df[b_low:b_high]
-    df_test.to_csv('split_kfold/test_split_'+ dataset + '_it_' + str(iteration) + '.csv',index=False)
+    df_test.to_csv('split_kfold/'+ dataset +'/test_split_'+ dataset + '_it_' + str(iteration) + '.csv',index=False)
     df_val_train = shuffled_df.drop(shuffled_df.index[b_low:b_high])
     if iteration == args.kfold -1 :
         b_high = int(k)
         df_val = df_val_train[:b_high]
-        df_val.to_csv('split_kfold/val_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
+        df_val.to_csv('split_kfold/'+ dataset +'/val_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
         df_train = df_val_train.drop(df_val_train.index[:b_high])
-        df_train.to_csv('split_kfold/train_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
+        df_train.to_csv('split_kfold/'+ dataset +'/train_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
     else:
         df_val = df_val_train[b_low:b_high]
-        df_val.to_csv('split_kfold/val_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
+        df_val.to_csv('split_kfold/'+ dataset +'/val_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
         df_train = df_val_train.drop(df_val_train.index[b_low:b_high])
-        df_train.to_csv('split_kfold/train_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
+        df_train.to_csv('split_kfold/'+ dataset +'/train_split_'+ dataset + '_it_' + str(iteration) + '.csv', index=False)
 
 print('Directory split_kfold created.')
