@@ -7,7 +7,7 @@ def CoAARNOptions(parser):
     """
 
     parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
-    parser.add_argument('--imageSize', type=int, default=224, help='the height / width of the input image to ARC')
+    parser.add_argument('--imageSize', type=int, default=299, help='the height / width of the input image to ARC')
     parser.add_argument('--glimpseSize', type=int, default=8, help='the height / width of glimpse seen by ARC')
     parser.add_argument('--numStates', type=int, default=128, help='number of hidden states in ARC controller')
     parser.add_argument('--numGlimpses', type=int, default=6, help='the number glimpses of each image in pair seen by ARC')

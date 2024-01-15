@@ -341,7 +341,7 @@ class CustomResNet50(nn.Module):
 
 
 class CoAttn(nn.Module):
-    def __init__(self, size = (14,14), num_filters = 1024, typeActivation = 'sum_abs', p = 2):
+    def __init__(self, size = (19,19), num_filters = 1024, typeActivation = 'sum_abs', p = 2):
         """
         Initializes the naive ARC 
         """

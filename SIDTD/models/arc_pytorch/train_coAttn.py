@@ -89,7 +89,7 @@ def train(opt, save_model_path, iteration):
             df = pd.read_csv(path_val)   # load validation set csv file with image paths and labels
             n_val = len(df)
         else:
-            df = pd.read_csv(path_train)   # load validation set csv file with image paths and labels
+            df = pd.read_csv(path_train)   # load train set csv file with image paths and labels
             path_images = list(df.image_path.values)
         for key in ['reals','fakes']:
             imgs_path = list(df[df['label_name']==key].image_path.values)   # save image path from the same label
@@ -98,6 +98,7 @@ def train(opt, save_model_path, iteration):
             for path_image in imgs_path:
                 image = cv2.imread(path_image)
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                image = cv2.resize(image, (299,299))
                 array_img.append(image)
             paths_splits[d_set][key]['img'] = list(array_img)    # save image array in dictionnary along the corresponding label and data set
             paths_splits[d_set][key]['path'] = list(imgs_path)   # save image PATH in dictionnary along the corresponding label and data set

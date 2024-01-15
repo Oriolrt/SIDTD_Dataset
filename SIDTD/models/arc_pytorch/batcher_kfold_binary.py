@@ -82,7 +82,7 @@ class Binary(object):
 
 class Batcher(Binary):
     def __init__(self, opt, paths_splits, path_img):
-        Binary.__init__(self, 128, 224)
+        Binary.__init__(self, opt.batchSize, opt.imageSize)
 
         self.paths_splits = paths_splits
         self.faker_data_augmentation = opt.faker_data_augmentation
