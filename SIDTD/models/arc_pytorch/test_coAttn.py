@@ -174,6 +174,7 @@ def test(opt, save_model_path, iteration):
         for path_image in imgs_path:
             image = cv2.imread(path_image)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = cv2.resize(image, (224,224))
             array_img.append(image)
 
         paths_splits[d_set][key]['img'] = list(array_img)    # save image array in dictionnary along the corresponding label and data set
