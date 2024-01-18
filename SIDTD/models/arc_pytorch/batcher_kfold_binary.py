@@ -135,39 +135,39 @@ class Batcher(Binary):
         y = np.zeros((batch_size, 1), dtype='int32')
         
         for i in range(batch_size):
-            idx1 = choice(np.arange(len(paths_splits['reals']['img'])))
-            img_real = paths_splits['reals']['img'][idx1]
-            X[i] = self.reshape_img(img_real, image_size)
+            idx1 = choice(np.arange(len(paths_splits['reals']['path'])))
+            img_real = paths_splits['reals']['path'][idx1]
+            X[i] = self.read_image(img_real, image_size)
             if i < batch_size//2 : 
                 # choose one real image
-                idx2 = choice(np.arange(len(paths_splits['reals']['img'])))
-                img_real = paths_splits['reals']['img'][idx2]
-                X[i + batch_size] = self.reshape_img(img_real, image_size)
+                idx2 = choice(np.arange(len(paths_splits['reals']['path'])))
+                img_real = paths_splits['reals']['path'][idx2]
+                X[i + batch_size] = self.read_image(img_real, image_size)
                 y[i] = 0
 
             elif (i >= batch_size//2) and (i < (3*batch_size//4)): 
                 # choose one fake image
-                idx2 = choice(np.arange(len(paths_splits['fakes']['img'])))
-                img_fake = paths_splits['fakes']['img'][idx2]
-                X[i + batch_size] = self.reshape_img(img_fake, image_size)
+                idx2 = choice(np.arange(len(paths_splits['fakes']['path'])))
+                img_fake = paths_splits['fakes']['path'][idx2]
+                X[i + batch_size] = self.read_image(img_fake, image_size)
                 y[i] = 1
             
             else:
                 # choose one fake image
                 if not self.faker_data_augmentation:
-                    idx2 = choice(np.arange(len(paths_splits['fakes']['img'])))
-                    img_fake = paths_splits['fakes']['img'][idx2]
+                    idx2 = choice(np.arange(len(paths_splits['fakes']['path'])))
+                    img_fake = paths_splits['fakes']['path'][idx2]
                 
                 else:
                     # choose one fake image
                     if part == 'val':
-                        idx2 = choice(np.arange(len(paths_splits['fakes']['img'])))
-                        img_fake = paths_splits['fakes']['img'][idx2]
+                        idx2 = choice(np.arange(len(paths_splits['fakes']['path'])))
+                        img_fake = paths_splits['fakes']['path'][idx2]
                     # PERFORM FORGERY AUGMENTATION ON GENUINE DOCUMENT
                     else:
-                        idx2 = choice(np.arange(len(paths_splits['reals']['img'])))   # choose one genuine image to falsify on-the-fly
-                        img_real = paths_splits['reals']['img'][idx2]
+                        idx2 = choice(np.arange(len(paths_splits['reals']['path'])))   # choose one genuine image to falsify on-the-fly
                         path_img_real = paths_splits['reals']['path'][idx2]
+                        img_real = cv2.imread(path_img_real)
                         
                         id_country = path_img_real.split('/')[-1][:3]    # ID's country
                         path = 'split_kfold/clip_cropped_MIDV2020/annotations/annotation_' + id_country + '.json' 
@@ -210,7 +210,7 @@ class Batcher(Binary):
                         
 
                 
-                X[i + batch_size] = self.reshape_img(img_fake, image_size)   # reshape image to fix image size
+                X[i + batch_size] = self.read_image(img_fake, image_size)   # reshape image to fix image size
                 y[i] = 1
 
         if part == 'train':
@@ -241,9 +241,9 @@ class Batcher(Binary):
         y = np.zeros((batch_size, 1), dtype='int32')
         i = 0 
         for lbl, img in zip(labels, image_paths):
-            idx = choice(np.arange(len(paths_splits['reals']['img'])))
-            img_real = paths_splits['reals']['img'][idx]
-            X[i] = self.reshape_img(img_real, image_size)
+            idx = choice(np.arange(len(paths_splits['reals']['path'])))
+            img_real = paths_splits['reals']['path'][idx]
+            X[i] = self.read_image(img_real, image_size)
             X[i + batch_size] = self.read_image(img, image_size)
             if lbl == 'reals':
                 y[i] = 0

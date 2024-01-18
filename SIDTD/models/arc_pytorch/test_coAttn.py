@@ -169,15 +169,6 @@ def test(opt, save_model_path, iteration):
     path_images = list(df.image_path.values)
     for key in ['reals','fakes']:
         imgs_path = list(df[df['label_name']==key].image_path.values)   # save image path from the same label
-        array_img = []
-        # Loop over all image from the same label, read image and convert it to RGB image
-        for path_image in imgs_path:
-            image = cv2.imread(path_image)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            image = cv2.resize(image, (224,224))
-            array_img.append(image)
-
-        paths_splits[d_set][key]['img'] = list(array_img)    # save image array in dictionnary along the corresponding label and data set
         paths_splits[d_set][key]['path'] = list(imgs_path)   # save image PATH in dictionnary along the corresponding label and data set
     loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)   # load batch generator
     
