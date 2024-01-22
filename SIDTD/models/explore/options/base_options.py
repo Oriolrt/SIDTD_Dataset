@@ -29,4 +29,5 @@ def BaseOptions():
     parser.add_argument('--faker_data_augmentation', action='store_true', help='Apply data augmentation with generation of new fakes on-the-fly')
     parser.add_argument("--shift_crop", "-scr", type=int, default=10, help= "shifting constant for crop and replace")
     parser.add_argument("--shift_copy", "-sco", type=int, default=10, help= "shifting constant for copy paste")
+    parser.add_argument("--init_partition", type=int, default=0, help= "Partition number you want to start from")
     return parser

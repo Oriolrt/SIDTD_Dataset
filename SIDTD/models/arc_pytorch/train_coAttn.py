@@ -40,22 +40,14 @@ def train(opt, save_model_path, iteration):
     if opt.device=='cuda':
         bce = bce.cuda()
 
-    print('Optimizer before')
-
     optim_params = []
     optim_params.append(list(discriminator.parameters()))
     optim_params.append(list(resNet.parameters()))
     optim_params.append(list(coAtten.parameters()))
-
-    print('Optimizer append')
         
     flat_params = [item for sublist in optim_params for item in sublist]
-
-    print('Optimizer flat')
-    
+   
     optimizer = torch.optim.Adam(params=flat_params, lr=opt.lr)
-
-    print('Adam')
 
     # Load dataset paths that will be used by the batch generator
     # You can use static path csv to replicate results or choose your own random partitionning
@@ -65,9 +57,6 @@ def train(opt, save_model_path, iteration):
         if opt.type_split =='kfold':
             path_train = os.getcwd() + "/split_kfold/{}/train_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
             path_val = os.getcwd() + "/split_kfold/{}/val_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
-            print('LOAD PATH CORRECTLY')
-            print(os.path.exists(path_train))
-            print(os.path.exists(path_val))
         elif opt.type_split =='cross':
             path_train = os.getcwd() + "/split_normal/{}/train_split_{}.csv".format(opt.dataset, opt.dataset)
             path_val = os.getcwd() + "/split_normal/{}/val_split_{}.csv".format(opt.dataset, opt.dataset)
@@ -107,9 +96,7 @@ def train(opt, save_model_path, iteration):
             imgs_path = list(df[df['label_name']==key].image_path.values)   # save image path from the same label
             # Loop over all image from the same label, read image and convert it to RGB image
             paths_splits[d_set][key]['path'] = list(imgs_path)   # save image PATH in dictionnary along the corresponding label and data set
-    print('LOAD PATH COMPLETED')
     loader = Batcher(opt = opt, paths_splits = paths_splits, path_img = path_images)   # load batch generator
-    print('LOAD BATCHER')
 
     # ready to train ...
     best_validation_loss = None
@@ -153,8 +140,6 @@ def train(opt, save_model_path, iteration):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-        print('Start Evaluation after 50epochs...')
         
         # Evaluation on validation set every 50 epochs
         if training_iteration % 50 == 0:

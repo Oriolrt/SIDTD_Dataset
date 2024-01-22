@@ -32,7 +32,7 @@ def main(args):
             
         # train model on all partition
         if args.type_split =='kfold':
-            for iteration in range(args.nsplits):
+            for iteration in range(args.init_partition,args.nsplits):
                 train_baseline_models(args, LOGGER, iteration)
         
         # train model on a specific partition
@@ -44,7 +44,7 @@ def main(args):
             
         # train model on all partition
         if args.type_split =='kfold':
-            for iteration in range(args.nsplits):
+            for iteration in range(args.init_partition,args.nsplits):
                 train_transfg_models(args, LOGGER, iteration)
         
         # train model on a specific partition
@@ -55,7 +55,7 @@ def main(args):
 
         # train model on all partition
         if args.type_split =='kfold':
-            for iteration in range(args.nsplits):
+            for iteration in range(args.init_partition,args.nsplits):
                 train_coAttn_models(args, iteration)
         
         # train model on a specific partition
