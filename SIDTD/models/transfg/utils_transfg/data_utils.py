@@ -109,13 +109,13 @@ def get_loader(args, training_iteration):
     train_loader = DataLoader(trainset,
                               shuffle=True,
                               batch_size=args.train_batch_size,
-                              num_workers=4,
+                              num_workers=0,
                               drop_last=True,
                               pin_memory=True)
     val_loader = DataLoader(valset,
                             shuffle=True,
                             batch_size=args.eval_batch_size,
-                            num_workers=4,
+                            num_workers=0,
                             pin_memory=True) if valset is not None else None
     
 
@@ -173,7 +173,7 @@ def get_loader_test(args, training_iteration):
     test_loader = DataLoader(testset,
                              shuffle=True,
                              batch_size=args.eval_batch_size,
-                             num_workers=4,
+                             num_workers=0,
                              pin_memory=True) if testset is not None else None
 
     return test_loader
