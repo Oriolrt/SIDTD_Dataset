@@ -40,14 +40,22 @@ def train(opt, save_model_path, iteration):
     if opt.device=='cuda':
         bce = bce.cuda()
 
+    print('Optimizer before')
+
     optim_params = []
     optim_params.append(list(discriminator.parameters()))
     optim_params.append(list(resNet.parameters()))
     optim_params.append(list(coAtten.parameters()))
+
+    print('Optimizer append')
         
     flat_params = [item for sublist in optim_params for item in sublist]
+
+    print('Optimizer flat')
     
     optimizer = torch.optim.Adam(params=flat_params, lr=opt.lr)
+
+    print('Adam')
 
     # Load dataset paths that will be used by the batch generator
     # You can use static path csv to replicate results or choose your own random partitionning
