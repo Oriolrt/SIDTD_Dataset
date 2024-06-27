@@ -149,9 +149,9 @@ def get_loader_test(args, training_iteration):
         if args.type_split =='kfold':
             if args.type_data == 'templates':
                 test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold/test_split_SIDTD_it_{}.csv".format(training_iteration))
-            elif args.type_split =='clips_cropped':
+            elif args.type_data =='clips_cropped':
                 test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_cropped_unbalanced/test_split_clip_cropped_SIDTD_it_{}.csv".format(training_iteration))
-            elif args.type_split =='clips':
+            elif args.type_data =='clips':
                 test_metadata_split = pd.read_csv(os.getcwd() + "/static/split_kfold_unbalanced/test_split_clip_background_SIDTD_it_{}.csv".format(training_iteration))
         elif args.type_split =='cross':
             if args.type_data =='templates':

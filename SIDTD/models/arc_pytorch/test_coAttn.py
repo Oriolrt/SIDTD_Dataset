@@ -204,7 +204,7 @@ def test(opt, save_model_path, iteration):
         coAtten.eval()
     
     # Start inference...
-    path_test = opt.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
+    #path_test = opt.csv_dataset_path + "{}/test_split_{}_it_{}.csv".format(opt.dataset, opt.dataset, iteration)
     df_test = pd.read_csv(path_test)
     image_paths = df_test.image_path.values
     label_name = df_test.label_name.values

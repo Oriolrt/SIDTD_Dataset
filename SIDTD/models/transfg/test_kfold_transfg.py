@@ -146,7 +146,7 @@ def test_transfg_models(args, LOGGER, iteration=0):
         if args.type_data == 'clips_cropped':
             save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_cropped_SIDTD/trans_fg_trained_models/"
             model_checkpoint = os.path.join(save_model_path,
-                                    'clip_cropped_MIDV2020_trans_fg_best_accuracy_n{}.pth'.format(iteration))
+                                    'clip_cropped_MIDV2020_Trans_FG_best_accuracy_n{}.pth'.format(iteration))
         elif args.type_data == 'clips':
             save_model_path = os.getcwd() + "/pretrained_models/unbalanced_clip_background_SIDTD/trans_fg_trained_models/"
             model_checkpoint = os.path.join(save_model_path,
