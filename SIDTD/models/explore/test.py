@@ -52,6 +52,7 @@ def main(args):
             test_transfg_models(args, LOGGER)
 
     if args.model == 'coatten_fcn_model':
+        print('Hello')
             
         # test model on all partition
         if args.type_split in ['kfold', 'unbalanced']:

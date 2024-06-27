@@ -230,6 +230,8 @@ def test(opt, save_model_path, iteration):
     df.Label_image = df.Label_image.astype(int)
     df.Proba_label_image = df.Proba_label_image.astype(float)
     df.Pred_label_image = df.Pred_label_image.astype(float).astype(int)
+    path_save_img_results = f'{opt.results_path}/{opt.model}/{opt.dataset}/{opt.model}_{str(iteration)}fold_stats_per_image.csv'
+    df.to_csv(path_save_img_results, index=False)
 
     # Compute metrics: ROC AUC, accuracy, FPR and FNR
     test_auc = roc_auc_score(df['Label_image'],df['Proba_label_image'])
@@ -244,6 +246,7 @@ def test(opt, save_model_path, iteration):
 
 
 def test_coAttn_models(opt, iteration=0) -> None:
+    print('opt.static', opt.static)
     
     if opt.device=='cuda':
         models_binary.use_cuda = True  

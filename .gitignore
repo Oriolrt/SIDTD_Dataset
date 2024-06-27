@@ -135,3 +135,9 @@ dmypy.json
 
 # Vscode
 .vscode
+
+SIDTD/models/explore/datasets/*
+SIDTD/models/explore/pretrained_models/*
+SIDTD/models/explore/results_files/*
+SIDTD/models/explore/static/*
+SIDTD/results_files/*
