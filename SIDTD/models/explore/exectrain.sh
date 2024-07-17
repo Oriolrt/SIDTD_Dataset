@@ -11,5 +11,8 @@
 #CUDA_VISIBLE_DEVICES=0 python train.py --name='trans_fg_faker_data_augmentation' --dataset='clip_cropped_MIDV2020' --model='trans_fg' --type_split kfold --epochs 60 --nsplits 1  --faker_data_augmentation
 
 # Train Co-Attention ARC model
-CUDA_VISIBLE_DEVICES=0 python train.py --name='coatten_fcn_model' --dataset 'clip_cropped_MIDV2020' --model='coatten_fcn_model' --type_split kfold --nsplits 1 --n_its 1000 --batchSize 128 #> test_github_coatten_fcn_model_detailed.log &
+#CUDA_VISIBLE_DEVICES=0 python train.py --name='coatten_fcn_model' --dataset 'clip_cropped_MIDV2020' --model='coatten_fcn_model' --type_split kfold --nsplits 1 --n_its 1000 --batchSize 128 #> test_github_coatten_fcn_model_detailed.log &
 
+CUDA_VISIBLE_DEVICES=0 nohup python train.py --n_its 5000 --name='coatten_fcn_model' --type_split kfold --nsplits 1 --static='yes' --type_data templates  --dataset='SIDTD' --model='coatten_fcn_model' --batchSize 128 > log_info_coatten_fcn_model_templates.log &
+
+#CUDA_VISIBLE_DEVICES=1 nohup python train.py --n_its 5000 --name='coatten_fcn_model' --type_split kfold --nsplits 10 --static='yes' --type_data clips_cropped  --dataset='clip_cropped_SIDTD' --model='coatten_fcn_model' --batchSize 128 > log_info_coatten_fcn_model_clips_cropped.log &

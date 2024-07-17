@@ -142,3 +142,5 @@ SIDTD/models/explore/results_files/*
 SIDTD/models/explore/static/*
 SIDTD/results_files/*
 SIDTD/models/transfg/transfg_pretrained/*
+SIDTD/models/explore/plots/*
+SIDTD/models/explore/trained_models/*
