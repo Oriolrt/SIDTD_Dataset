@@ -28,8 +28,8 @@ from SIDTD.models.fsl_model.models_binary import ArcBinaryClassifier, CustomResN
 
 def plot_loss(args, training_loss_list, training_acc_list, validation_acc_list, training_roc_auc_list, validation_roc_auc_list, training_iteration_list, nb_rep):
 
-    if not os.path.exists('plots/{}/{}'.format(args.dataset, args.model)):
-        os.makedirs('plots/{}/{}'.format(args.dataset, args.model))
+    if not os.path.exists(f'plots/{args.model}/{args.dataset}'):
+        os.makedirs(f'plots/{args.model}/{args.dataset}')
             
     plt.figure()
     plt.title("Loss")
@@ -37,7 +37,7 @@ def plot_loss(args, training_loss_list, training_acc_list, validation_acc_list, 
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.legend()
-    plt.savefig('plots/{}/{}/loss_{}_nb_iteration_{}.jpg'.format(args.dataset, args.model, args.name, nb_rep))
+    plt.savefig(f'plots/{args.model}/{args.dataset}/fsl_loss_{args.name}_nb_iteration_{str(nb_rep)}.jpg')
     plt.close()
     
     plt.figure()
@@ -47,7 +47,7 @@ def plot_loss(args, training_loss_list, training_acc_list, validation_acc_list, 
     plt.xlabel("epoch")
     plt.ylabel("accuracy")
     plt.legend()
-    plt.savefig('plots/{}/{}/accuracy_{}_nb_iteration_{}.jpg'.format(args.dataset, args.model, args.name, nb_rep))
+    plt.savefig(f'plots/{args.model}/{args.dataset}/fsl_accuracy_{args.name}_nb_iteration_{str(nb_rep)}.jpg')
     plt.close()
 
     plt.figure()
@@ -57,7 +57,7 @@ def plot_loss(args, training_loss_list, training_acc_list, validation_acc_list, 
     plt.xlabel("epoch")
     plt.ylabel("ROC AUC")
     plt.legend()
-    plt.savefig('plots/{}/{}/roc_auc_{}_nb_iteration_{}.jpg'.format(args.dataset, args.model, args.name, nb_rep))
+    plt.savefig(f'plots/{args.model}/{args.dataset}/fsl_lroc_auc_{args.name}_nb_iteration_{str(nb_rep)}.jpg')
     plt.close()
 
 
