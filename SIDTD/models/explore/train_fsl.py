@@ -393,6 +393,8 @@ def main(args):
         )
 
         # Train the model
+        if not os.path.exists(f"/trained_models/fsl_model/{args.dataset}/{args.model}"):
+            os.makedirs(f"/trained_models/fsl_model/{args.dataset}/{args.model}")
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
         best_accuracy = 0
