@@ -282,7 +282,7 @@ def main(args):
         training_loss_list, training_acc_list, validation_acc_list, training_roc_auc_list, validation_roc_auc_list, training_iteration_list = [],[],[],[], [], []
 
 
-        model.load_state_dict(torch.load(f"/trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_pretrained_{args.pretrained_dataset}_iteration_{name_repetition}.pth"))
+        model.load_state_dict(torch.load(f"/trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
 
         print("\nAccuracy Per Classes\n!")
         episodes = 100
@@ -343,7 +343,6 @@ if __name__ == "__main__":
     parser.add_argument('--k_shot',    default=5,         type=int,   help='number of shots')
     parser.add_argument('--q_shot',    default=5,         type=int,   help='number of query')
     parser.add_argument('--name', default='few_shot_setting', help='Custom name for this configuration. Needed for saving model score in a separate folder.')
-    parser.add_argument('--pretrained_dataset', choices = ['banknotes', 'dogs', 'df20m', 'imagenet'], default='imagenet', help='Choose on what dataset the models have been pretrained.')
     parser.add_argument('--smoothap', action="store_true", help='enables smoothap loss')
     parser.add_argument('--w_alpha', default=2, type=float, help='Smooth AP weight (named alpha) for the combined loss with Cross Entropy loss and Smooth AP loss: tot_loss = alpha * SmoothAP + beta * CE loss')
     parser.add_argument('--w_beta', default=0.5, type=float, help='Cross Entropy weight (named beta) for the combined loss with Cross Entropy loss and Smooth AP loss: tot_loss = alpha * SmoothAP + beta * CE loss')
