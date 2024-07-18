@@ -282,7 +282,7 @@ def main(args):
         training_loss_list, training_acc_list, validation_acc_list, training_roc_auc_list, validation_roc_auc_list, training_iteration_list = [],[],[],[], [], []
 
 
-        model.load_state_dict(torch.load(f"/trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
+        model.load_state_dict(torch.load(f"trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
 
         print("\nAccuracy Per Classes\n!")
         episodes = 100

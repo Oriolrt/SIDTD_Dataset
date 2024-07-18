@@ -393,8 +393,8 @@ def main(args):
         )
 
         # Train the model
-        if not os.path.exists(f"/trained_models/fsl_model/{args.dataset}/{args.model}"):
-            os.makedirs(f"/trained_models/fsl_model/{args.dataset}/{args.model}")
+        if not os.path.exists(f"trained_models/fsl_model/{args.dataset}/{args.model}"):
+            os.makedirs(f"trained_models/fsl_model/{args.dataset}/{args.model}")
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
         best_accuracy = 0
@@ -428,10 +428,10 @@ def main(args):
                     tqdm_train.set_postfix(acc=accuracy)
                     if accuracy > best_accuracy:
                         best_accuracy = accuracy
-                        torch.save(model.state_dict(), f"/trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth")
+                        torch.save(model.state_dict(), f"trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth")
         print("\nTraining Complete\n!")
 
-        model.load_state_dict(torch.load(f"/trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
+        model.load_state_dict(torch.load(f"trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
         accuracy, roc_auc_score = evaluate(test_loader, N_QUERY)
 
 
