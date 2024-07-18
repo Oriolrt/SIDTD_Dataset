@@ -11,19 +11,19 @@ from PIL import Image
 import json
 import argparse
 # from utils.data_tools_clip import TaskSampler, EasySet
-from SIDTD.models.fsl_model.utils.data_tools import TaskSampler, TaskSamplerCoAARC, EasySetRandom, EasySetCoAARCRandom
-from SIDTD.models.fsl_model.utils.utils import sliding_average
+from SIDTD.models.fsl_models.utils.data_tools import TaskSampler, TaskSamplerCoAARC, EasySetRandom, EasySetCoAARCRandom
+from SIDTD.models.fsl_models.utils.utils import sliding_average
 from matplotlib import pyplot as plt
 import torchvision
 import torchvision.models as models 
 from efficientnet_pytorch import EfficientNet
-from SIDTD.models.fsl_model.models.modeling import VisionTransformer, CONFIGS
+from SIDTD.models.fsl_models.models.modeling import VisionTransformer, CONFIGS
 import timm
 import os
 from torch.nn import Linear
 import numpy as np
 import csv 
-from SIDTD.models.fsl_model.models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
+from SIDTD.models.fsl_models.models_binary import ArcBinaryClassifier, CustomResNet50, CoAttn
 
 
 def plot_loss(args, training_loss_list, training_acc_list, validation_acc_list, training_roc_auc_list, validation_roc_auc_list, training_iteration_list, nb_rep):

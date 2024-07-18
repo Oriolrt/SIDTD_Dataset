@@ -15,7 +15,6 @@ except ImportError:
 
 import random
 from numpy.random import choice
-from .data_augm_utils import forgery_augmentation
 import glob
 import cv2
 import numpy as np
