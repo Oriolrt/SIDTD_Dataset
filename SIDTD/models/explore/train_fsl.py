@@ -249,8 +249,7 @@ def main(args):
                     query_images,
                     query_labels,
                     class_ids,
-                    #         ) in tqdm(enumerate(data_loader), total=len(data_loader)):
-            ) in enumerate(data_loader):
+                    ) in enumerate(data_loader):
                 y_preds = model(support_images.cuda(), support_labels.cuda(), query_images.cuda())
                 
                 preds = preds + list(y_preds.detach().data.argmax(1).to('cpu').numpy())

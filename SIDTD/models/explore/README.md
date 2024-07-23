@@ -157,3 +157,7 @@ You can choose the model with the flag --model, but be careful to write without 
 
 Other inference options are also possible: inference with trained model and reproduce results. For that type of inference, no needs to do the first three steps, just adapt the inference flags according to your needs. Hence, for inference with trained models, set --pretrained flag as no and for reproducing results, set --static flag to yes. 
 
+
+# Few shot setting
+
+It is also possible to train and test with few-shot setting. 
