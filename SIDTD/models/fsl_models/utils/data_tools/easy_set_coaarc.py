@@ -93,7 +93,7 @@ class EasySetCoAARCRandom(Dataset):
                     class_id = 0
                 else:
                     class_id = 1
-                path_img = glob.glob(f'/data/users/soteria/{dataset_name}/{label}/{country}*')
+                path_img = glob.glob(f'datasets/SIDTD/clips_cropped/Images/{label}/{country}*')
                 images += path_img
                 if class_id == 0:
                     images_real = path_img*8
