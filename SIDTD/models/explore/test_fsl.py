@@ -282,7 +282,10 @@ def main(args):
         training_loss_list, training_acc_list, validation_acc_list, training_roc_auc_list, validation_roc_auc_list, training_iteration_list = [],[],[],[], [], []
 
 
-        model.load_state_dict(torch.load(f"trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
+        if args.pretrained_model:
+            model.load_state_dict(torch.load(f"pretrained_models/fsl_setting/{args.model}/few_shot_setting_github_{args.model}_kshot_{str(args.k_shot)}_pretrained_imagenet_iteration_{str(nb_rep)}.pth"))
+        else:
+            model.load_state_dict(torch.load(f"trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
 
         print("\nAccuracy Per Classes\n!")
         episodes = 100
@@ -291,19 +294,17 @@ def main(args):
         reals = []
         acc = []
         l_preds = []
-        l_paths_query = []
 
         for episode in tqdm(range(episodes)):
 
-            (example_support_images, example_support_labels, example_support_paths, example_query_images,
-            example_query_labels, example_query_paths, example_class_ids) = next(iter(test_loader))
+            (example_support_images, example_support_labels, example_query_images,
+            example_query_labels, example_class_ids) = next(iter(test_loader))
 
             example_scores = model(example_support_images.cuda(), example_support_labels.cuda(), example_query_images.cuda())
             preds = torch.argmax(example_scores.detach().data, dim=-1)
             p_pred = F.softmax(example_scores.detach().data, dim=1)
             p_preds.extend(p_pred[:,1].to('cpu').numpy())
             reals = reals + list(example_query_labels.to('cpu').numpy())
-            l_paths_query = l_paths_query + list(example_query_paths)
             
             _, example_predicted_labels = torch.max(example_scores.detach().data, 1)
             l_preds = l_preds + list(preds.to('cpu').numpy())
@@ -336,7 +337,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-
+    parser.add_argument('--pretrained_model', action="store_true", help='use trained models on clip cropped SIDTD')
     parser.add_argument("--model", choices = ['vit_large_patch16_224', 'vit_small_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coaarc'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
     parser.add_argument('--embed_dim',    default=1000,         type=int,   help='Embedding dimensionality of the network')
     parser.add_argument('--dataset', default='MIDV2020', choices = ['obvio_MIDV2020','MIDV2020', 'clip_cropped_MIDV2020'], help='Dataset name for this configuration. Needed for saving model score in a separate folder.')
