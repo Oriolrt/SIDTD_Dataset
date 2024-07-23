@@ -47,6 +47,8 @@ class efficientnet_b3(load_models):
             base_folder = "unbalanced_clip_background_SIDTD"
         elif weights == "clips_cropped":
             base_folder = "unbalanced_clip_cropped_SIDTD"
+        elif weights == "fsl_setting":
+            base_folder = "fsl_clip_cropped_SIDTD"
 
         else:
             raise "You need to choose among [templates, clips, clips_cropped]"
@@ -72,6 +74,8 @@ class resnet50(load_models):
             base_folder = "unbalanced_clip_background_SIDTD"
         elif weights == "clips_cropped":
             base_folder = "unbalanced_clip_cropped_SIDTD"
+        elif weights == "fsl_setting":
+            base_folder = "fsl_clip_cropped_SIDTD"
         else:
             raise "You need to choose among [templates, clips, clips_cropped]"
 
@@ -96,6 +100,8 @@ class vit_large_patch16_224(load_models):
             base_folder = "unbalanced_clip_background_SIDTD"
         elif weights == "clips_cropped":
             base_folder = "unbalanced_clip_cropped_SIDTD"
+        elif weights == "fsl_setting":
+            base_folder = "fsl_clip_cropped_SIDTD"
         else:
             raise "You need to choose among [templates, clips, clips_cropped]"
 
@@ -120,6 +126,8 @@ class trans_fg(load_models):
             base_folder = "unbalanced_clip_background_SIDTD"
         elif weights == "clips_cropped":
             base_folder = "unbalanced_clip_cropped_SIDTD"
+        elif weights == "fsl_setting":
+            base_folder = "fsl_clip_cropped_SIDTD"
         else:
             raise "You need to choose among [templates, clips, clips_cropped]"
 
@@ -148,6 +156,9 @@ class coatten_fcn_model(load_models):
         elif weights == "clips_cropped":
             base_folder = "unbalanced_clip_cropped_SIDTD"
             arc_name = "/coatten_fcn_model_trained_models.zip"
+        elif weights == "fsl_setting":
+            base_folder = "fsl_clip_cropped_SIDTD"
+            arc_name = "/coatten_fcn_model_trained_models.zip"
         else:
             raise "You need to choose among [templates, clips, clips_cropped]"
 
@@ -163,7 +174,7 @@ class coatten_fcn_model(load_models):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Model Downloader")
     parser.add_argument("--model", choices=["efficientnet", "resnet50", "vit", "transfg", "coatten"], required=True, help="Model to download")
-    parser.add_argument("--weights", choices=["templates", "clips", "clips_cropped"], default="clips", help="Type of weights to download")
+    parser.add_argument("--weights", choices=["templates", "clips", "clips_cropped", "fsl_setting"], default="clips", help="Type of weights to download")
     parser.add_argument("--path", default=None, help="Path to save the downloaded model (default: current directory)")
 
     args = parser.parse_args()

@@ -7,6 +7,7 @@ Weights options:
 * **templates**: Corresponds to a model trained on balanced templates.
 * **clips**: Corresponds to a model trained on unbalanced clip backgrounds.
 * **clips_cropped**: Corresponds to a model trained on unbalanced cropped clips.
+* **fsl_setting**: Corresponds to a model trained on unbalanced cropped clips with few-shot learning setting.
 
 Please note that you can modify the **model_path** variable to specify the desired path where the models should be saved.
 
