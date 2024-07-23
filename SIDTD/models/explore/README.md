@@ -140,7 +140,7 @@ You can choose the model with the flag --model, but be careful to write without 
 + ResNet -> 'resnet50'
 + ViT -> 'vit_large_patch16_224'
 + Trans FG -> 'trans_fg'
-+ CoAARC 'coatten_fcn_model' 
++ CoAARC -> 'coatten_fcn_model' 
 
 ### 6. Inference options: flags
 
@@ -160,4 +160,35 @@ Other inference options are also possible: inference with trained model and repr
 
 # Few shot setting
 
-It is also possible to train and test with few-shot setting. It can be trained and test only on clip cropped from SIDTD. 
+It is also possible to train and test with few-shot setting. It can be trained and test only on clip cropped from SIDTD. For that it is quite simple. First, you just need to download the clip cropped SIDTD dataset (more info for the download procedure in SIDTD_Dataset/SIDTD/data/DataLoader directory).
+
+
+### Models
+
+For training and testing, you can choose the model with the flag --model, but be careful to write without typo the model name that correspond to your chosen model:  
++ EfficientNet -> 'efficientnet-b3'
++ ResNet -> 'resnet50'
++ ViT -> 'vit_large_patch16_224'
++ Trans FG -> 'trans_fg'
++ CoAARC -> 'coaarc' 
+
+### Training Few shot
+
+Once clip cropped SIDTD dataset downloaded, you just have to specify the model desired along with the flags for the name of your experiment (--name), number of episodes (--episodes), number of repetitions (--repetition, up to 10 repetitions maximum) and run the train_fsl.py file. Here you have an exemple of how to run the fsl script, with resnet, 10 repetitions of 10000 episodes each:
+
+```
+python train_fsl.py --model resnet50 --name first_train_fsl --episodes 10000 --repetition 10
+```
+
+It is also possible to specify the k-shot (--k_shot), q-shot (--q_shot) and embedding dimension size (--embed_dim).
+
+
+### Testing Few shot
+
+For testing, you just have to specify the model desired along with the flags for the name of your experiment (--name), number of episodes (--episodes), number of repetitions (--repetition, up to 10 repetitions maximum) and run the test_fsl.py file. You can add the flag --pretrained_model, in order to use the already trained fsl models and then reproduce the results showed in the article. Here you have an exemple of how to run the fsl script, with the trained resnet, 10 repetitions of 10000 episodes each:
+
+```
+python test_fsl.py --model resnet50 --name first_test_fsl --repetition 10
+```
+
+Specify the same k-shot (--k_shot), q-shot (--q_shot) and embedding dimension size (--embed_dim), as the one used in training. Do not specify, if you use the the flag --pretrained_model.
