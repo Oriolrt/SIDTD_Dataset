@@ -160,4 +160,4 @@ Other inference options are also possible: inference with trained model and repr
 
 # Few shot setting
 
-It is also possible to train and test with few-shot setting. 
+It is also possible to train and test with few-shot setting. It can be trained and test only on clip cropped from SIDTD. 

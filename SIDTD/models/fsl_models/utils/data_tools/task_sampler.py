@@ -12,7 +12,7 @@ class TaskSampler(Sampler):
     """
 
     def __init__(
-        self, dataset: Dataset, n_way: int, n_shot: int, n_query: int, n_tasks: int, random_sample :bool = True, forged_data_augm : bool = False, training: bool = True
+        self, dataset: Dataset, n_way: int, n_shot: int, n_query: int, n_tasks: int, random_sample :bool = True, training: bool = True
     ):
         """
         Args:
@@ -29,7 +29,6 @@ class TaskSampler(Sampler):
         self.n_query = n_query
         self.n_tasks = n_tasks
         self.random_sample = random_sample
-        self.forged_data_augm = forged_data_augm
         self.training = training
 
         self.items_per_label = {}
@@ -46,10 +45,7 @@ class TaskSampler(Sampler):
 
     def __iter__(self):
         for _ in range(self.n_tasks):
-            if (self.forged_data_augm) and (self.training):
-                label_set = [0,2]
-            else: 
-                label_set = [0,1]
+            label_set = [0,1]
             if self.random_sample:
                 label_set = random.sample(label_set, self.n_way)
             

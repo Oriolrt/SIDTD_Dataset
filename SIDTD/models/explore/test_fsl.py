@@ -262,7 +262,7 @@ def main(args):
 
         else:
             test_sampler = TaskSampler(
-                test_set, n_way=N_WAY, n_shot=K_SHOT, n_query=N_QUERY, n_tasks=N_EVALUATION_TASKS, random_sample=random_sample, forged_data_augm = args.forged_data_augm, training = False
+                test_set, n_way=N_WAY, n_shot=K_SHOT, n_query=N_QUERY, n_tasks=N_EVALUATION_TASKS, random_sample=random_sample, training = False
             )
 
         test_loader = DataLoader(
@@ -338,16 +338,12 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--pretrained_model', action="store_true", help='use trained models on clip cropped SIDTD')
-    parser.add_argument("--model", choices = ['vit_large_patch16_224', 'vit_small_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coaarc'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
+    parser.add_argument("--model", choices = ['vit_large_patch16_224', 'efficientnet-b3', 'resnet50', 'trans_fg', 'coaarc'], default = 'resnet50', type=str, help= "Model used to perform the training. The model name will also be used to identify the csv/plot results for each model.")
     parser.add_argument('--embed_dim',    default=1000,         type=int,   help='Embedding dimensionality of the network')
-    parser.add_argument('--dataset', default='MIDV2020', choices = ['obvio_MIDV2020','MIDV2020', 'clip_cropped_MIDV2020'], help='Dataset name for this configuration. Needed for saving model score in a separate folder.')
+    parser.add_argument('--dataset', default='clip_cropped_MIDV2020', choices = ['clip_cropped_MIDV2020'], help='Dataset name for this configuration. Needed for saving model score in a separate folder.')
     parser.add_argument('--k_shot',    default=5,         type=int,   help='number of shots')
     parser.add_argument('--q_shot',    default=5,         type=int,   help='number of query')
     parser.add_argument('--name', default='few_shot_setting', help='Custom name for this configuration. Needed for saving model score in a separate folder.')
-    parser.add_argument('--smoothap', action="store_true", help='enables smoothap loss')
-    parser.add_argument('--w_alpha', default=2, type=float, help='Smooth AP weight (named alpha) for the combined loss with Cross Entropy loss and Smooth AP loss: tot_loss = alpha * SmoothAP + beta * CE loss')
-    parser.add_argument('--w_beta', default=0.5, type=float, help='Cross Entropy weight (named beta) for the combined loss with Cross Entropy loss and Smooth AP loss: tot_loss = alpha * SmoothAP + beta * CE loss')
-    parser.add_argument('--forged_data_augm', action="store_true", help='enables forgery augmentation')
     parser.add_argument('--repetition',    default=10,         type=int,   help='number of repetition')
     args = parser.parse_args()
         
