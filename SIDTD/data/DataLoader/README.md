@@ -44,49 +44,56 @@ Our Data Loader allows you to download and prepare datasets for training models.
 ## Usage
 
 ```bash
-python data_loader.py [--dataset DATASET] [--kind KIND] [--download_static] [--type_split TYPE_SPLIT] [--unbalanced] [-c|--cropped]
+python data/DataLoader/Loader_Modules.py [--dataset DATASET] [--kind KIND] [--download_static] [--type_split TYPE_SPLIT] [--unbalanced] [-c|--cropped]
 ```
 
 ## Arguments
-        --dataset: Specify the dataset to download. Available options: "SIDTD", "Dogs", "Fungus", "Findit", "Banknotes". (default: "SIDTD")
 
-        --kind: Specify the type of benchmark data to download. Available options: "templates", "clips", "clips_cropped", "no". If "no" is selected, the dataset will not be downloaded. (default: "templates")
+- **--dataset**: Specify the dataset to download. Available options: "SIDTD", "Dogs", "Fungus", "Findit", "Banknotes". (default: "SIDTD")
 
-        --download_static: Set this flag if you want to download the static CSV for reproducibility of the models.
+- **--kind**: Specify the type of benchmark data to download. Available options: "templates", "clips", "clips_cropped", "no". If "no" is selected, the dataset will not be downloaded. (default: "templates")
 
-        --type_split: Specify the type of data split to train the models. Available options: "hold_out", "kfold", "few_shot". (default: "hold_out")
+- **--download_static**: Set this flag if you want to download the static CSV for reproducibility of the models.
 
-        --unbalanced: Flag to prepare the unbalanced partition.
+- **--type_split**: Specify the type of data split to train the models. Available options: "hold_out", "kfold", "few_shot". (default: "hold_out")
 
-        -c|--clips_cropped: Flag to use the cropped version of clips.
+- **--unbalanced**: Flag to prepare the unbalanced partition.
+
+- **-c | --clips_cropped**: Flag to use the cropped version of clips.
+
 
 ## Split Types
 ### Hold-out Split
+- **If --type_split** hold_out is selected, the following argument is required:
 
-*   If --type_split hold_out is selected, the following argument is required:
-
-        --hold_out_split: Define the split ratios for hold-out validation.
-                            This argument should be a list containing three elements that sum up to 1.  
-                            For example, --hold_out_split 0.8 0.1 0.1 will result in a split of 80% training, 10% validation, and 10% testing.Few-shot Split
+- **--hold_out_split**: Define the split ratios for hold-out validation. This argument should be a list containing three elements that sum up to 1.  
 
 
-*    If --type_split few_shot is selected, the following arguments are required:
 
-    --few_shot_split: Define the split behavior for few-shot learning. 
-                      The first value must be either "random" or "ranked", and the following values specify the proportions.
-                      For example, --few_shot_split random 0.75 0.25 will perform a random few-shot split with 75% metatrain and 25% metatest.
-    
-    --metaclasses: Define the second level to group the metatrain and the metatest. This argument should be a list of metacategories. 
-                   For example, --metaclasses id passport will group the metatrain and metatest based on the "id" and "passport" metacategories.
+### Few-Shot
+- **If --type_split** few_shot is selected, the following arguments are required:
+
+- **--few_shot_split**: Define the split behavior for few-shot learning. 
+The first value must be either "random" or "ranked", and the following values specify the proportions.
+
+- **--metaclasses**: Define the second level to group the metatrain and the metatest. This argument should be a list of metacategories. 
+
+   For example:  --metaclasses= [id, passport] will group the metatrain and metatest based on the "id" and "passport" metacategories.
+
 
 ### K-fold Split
 
-* If --type_split kfold is selected, the following argument is required:
+- **If --type_split** kfold is selected, the following argument is required:
 
-        --kfold_split: Define the number of folds for k-fold validation.
-                       For example, --kfold_split 10 will perform 10-fold validation.
+- **--kfold_split**: Define the number of folds for k-fold validation.
 
-## Run Example
+   For example:  --kfold_split 10 will perform 10-fold validation.
+
+
+## Run Example Python Script
+```bash
+cd SIDTD
+```
 
 Templates
 ```python   

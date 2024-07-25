@@ -27,7 +27,7 @@ class load_models(ABC):
         self._holder_path = value
 
 
-    def download(self, server_path:Path, local_path:Path):
+    def download(self, server_path, local_path):
         os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=2 -nH -P {} {}'".format(local_path,server_path))
         zip_filename = server_path.split("/")[-1]
         with zipfile.ZipFile(os.path.join(local_path, zip_filename), 'r') as zip_ref:
@@ -54,7 +54,7 @@ class efficientnet_b3(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path)
+        self._abs_path_model = os.path.join(self._holder_path, base_folder)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/efficientnet-b3_trained_models.zip"
 
@@ -80,7 +80,7 @@ class resnet50(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path)
+        self._abs_path_model = os.path.join(self._holder_path, base_folder)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/resnet50_trained_models.zip"
 
@@ -106,7 +106,7 @@ class vit_large_patch16_224(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path)
+        self._abs_path_model = os.path.join(self._holder_path, base_folder)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/vit_large_patch16_224_trained_models.zip"
 
@@ -132,7 +132,7 @@ class trans_fg(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path)
+        self._abs_path_model = os.path.join(self._holder_path, base_folder)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + "/trans_fg_trained_models.zip"
 
@@ -163,7 +163,7 @@ class coatten_fcn_model(load_models):
             raise "You need to choose among [templates, clips, clips_cropped]"
 
         # path where to put the pretrained model
-        self._abs_path_model = os.path.join(self._holder_path)
+        self._abs_path_model = os.path.join(self._holder_path, base_folder)
         # the path where the model is in the server
         self._server_path_model = os.path.join(self._url, base_folder) + arc_name
 

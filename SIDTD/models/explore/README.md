@@ -45,7 +45,7 @@ During training, the model is saved in the *trained_models* folder. The model wi
 To train one of the five models with CUDA on your custom dataset, you should run the line below that correspond to the model you want to train with the corresponding name of the dataset used:
 ```
 # Train EfficientNet model
-CUDA_VISIBLE_DEVICES=0 python train.py -- name --dataset {DATASET_NAME} --model='efficientnet-b3'
+CUDA_VISIBLE_DEVICES=0 python train.py --name --dataset {DATASET_NAME} --model='efficientnet-b3'
 ```
 train.py --name='EfficientNet_faker_data_augmentation' --dataset='clip_cropped_MIDV2020' --model='efficientnet-b3' --type_split kfold --epochs 2 --nsplits 1 --faker_data_augmentation
 
@@ -58,14 +58,24 @@ You can choose the model with the flag --model, but be careful to write without 
 + Trans FG -> 'trans_fg'
 + CoAARC 'coatten_fcn_model' 
 
--- name : important to choose a different name to each experiment your are working on. It will allow to save weight models and results in different files.
--- dataset : You can choose to train on the dataset of your choice with this flag. The name of the dataset must be the exact same name as the one of the folder that store the dataset you want to use. 
---faker_data_augmentation : write this flag to perform forgery augmentation during training.
---nsplits : You can choose the number of partition you want to train. 10 is set as default.
---device cpu : run training with CPU. Default option is --device cuda to use a GPU.
---static : If yes, use static CSV file to reproduce training. Else,  if no, set as default, use *your own* CSV file with image paths.
--td or --type_data : If static flag is set to 'yes', choose type of SIDTD data to train on. Choose among: "templates", "clips", "clips_cropped". "templates" is set as default.
--ts, --type_split : Choose the type of partitionning to perform training: "cross" and "kfold". "kfold", stands for k-fold cross validation. "cross" stands for train, validation and test split. "kfold" is set as default.
+#### training  arguments
+
+- **name**: Important to choose a different name for each experiment you are working on. This will allow you to save weight models and results in different files.
+
+- **dataset**: You can choose to train on the dataset of your choice with this flag. The name of the dataset must be the exact same name as the folder that stores the dataset you want to use.
+
+- **faker_data_augmentation**: Write this flag to perform forgery augmentation during training.
+
+- **nsplits**: You can choose the number of partitions you want to train. 10 is set as default.
+
+- **device cpu**: Run training with CPU. The default option is `--device cuda` to use a GPU.
+
+- **static**: If yes, use static CSV file to reproduce training. Else, if no (set as default), use *your own* CSV file with image paths.
+
+- **td or --type_data**: If the static flag is set to 'yes', choose the type of SIDTD data to train on. Choose among: "templates", "clips", "clips_cropped". "templates" is set as default.
+
+- **ts or --type_split**: Choose the type of partitioning to perform training: "cross" and "kfold". "kfold" stands for k-fold cross-validation. "cross" stands for train, validation, and test split. "kfold" is set as default.
+
 
 Please, remember to train according to the static CSV you have downloaded. For instance, if you have downloaded the k-fold cross validation version of cropped clips you should mentionned the flags such that: --type_data='clips_cropped' --type_split='kfold'.
 
@@ -144,14 +154,22 @@ You can choose the model with the flag --model, but be careful to write without 
 
 ### 6. Inference options: flags
 
--- name : important to choose a different name to each experiment your are working on. It will allow to save weight models and results in different files. Also, between train and test, it should be the same name for the test than the training you performed earlier in order to use the same trained models.
--- dataset : You can choose to test on the dataset of your choice with this flag. The name of the dataset must be the exact same name as the one of the folder that store the dataset you want to use. 
---nsplits : You can choose the number of partition you want to perform inference on.
---device cpu : run inference with CPU. Default option is the use of GPU.
---pretrained : If no, use *your* trained models. Else, if yes, use *our* pretrained models.
---static : If yes, use static CSV file to reproduce results. Else, if no, use *your own* CSV file with image paths.
--td or --type_data : If static flag is set to 'yes', choose type of SIDTD data to perform inference on. If pretrained flag is set to 'yes', choose the type of SIDTD the model has been trained on. Choose among: "templates", "clips", "clips_cropped".
--ts, --type_split : Choose the type of partition chosen to perform inference among: "cross" and "kfold". "kfold", stands for k-fold cross validation. "cross" stands for train, validation and test split.
+- **name**: Important to choose a different name for each experiment you are working on. This will allow you to save weight models and results in different files. Also, between train and test, it should be the same name for the test as the training you performed earlier in order to use the same trained models.
+
+- **dataset**: You can choose to test on the dataset of your choice with this flag. The name of the dataset must be the exact same name as the folder that stores the dataset you want to use.
+
+- **nsplits**: You can choose the number of partitions you want to perform inference on.
+
+- **device cpu**: Run inference with CPU. The default option is the use of GPU.
+
+- **pretrained**: If no, use *your* trained models. Else, if yes, use *our* pretrained models.
+
+- **static**: If yes, use a static CSV file to reproduce results. Else, if no, use *your own* CSV file with image paths.
+
+- **td or --type_data**: If the static flag is set to 'yes', choose the type of SIDTD data to perform inference on. If the pretrained flag is set to 'yes', choose the type of SIDTD the model has been trained on. Choose among: "templates", "clips", "clips_cropped".
+
+- **ts or --type_split**: Choose the type of partition chosen to perform inference among: "cross" and "kfold". "kfold" stands for k-fold cross-validation. "cross" stands for train, validation, and test split.
+
 
 ## Other type of inference
 

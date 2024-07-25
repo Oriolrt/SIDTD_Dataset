@@ -32,7 +32,7 @@ DataGenerator
 │       │   Template_Generator.py
 │       │   Video_Generator.py (beta)
 |
-|______Midv500
+|______Midv500 (beta)
 |       |   Template_Generator
 |       |   Video_Generator.py (beta)
 ```
@@ -46,7 +46,7 @@ To generate more new fake data you need to have the structure that is depicted a
 A test example with our downloading function is...
 ```python
 
-    from Fake_Generator.Fake_Loader.Midv2020 import Template_Generator
+    from  SIDTD.data.DataGenerator.Midv2020.Template_Generator import Template_Generator
     from SIDTD.data.DataLoader.Datasets import *
 
     ## Downloadign our data just as an example
@@ -55,7 +55,7 @@ A test example with our downloading function is...
     # get the abosulte path where the data is stored following the structure depicted above
     
     # you need to go where the data is 
-    path_dataset = "~/SIDTD_Dataset/datasets/SIDTD/templates/"
+    path_dataset = "path to the downloaded dataset"
     
     # generating the data
     gen = Template_Generator.Template_Generator(absolute_path=path_dataset))
@@ -66,4 +66,6 @@ A test example with our downloading function is...
 
 ```
 
-You can also specify a concrete metadata structure. If not the default metadata is used. This default can be found in Midv.py
+**We strongly recomend to generate new data with  Templates**
+
+*You can also specify a concrete metadata structure. If not the default metadata is used. This default can be found in Midv.py*

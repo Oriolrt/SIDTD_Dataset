@@ -17,4 +17,4 @@
 
 #CUDA_VISIBLE_DEVICES=1 nohup python train.py --n_its 5000 --name='coatten_fcn_model' --type_split kfold --nsplits 10 --static='yes' --type_data clips_cropped  --dataset='clip_cropped_SIDTD' --model='coatten_fcn_model' --batchSize 128 > log_info_coatten_fcn_model_clips_cropped.log &
 
-CUDA_VISIBLE_DEVICES=1 python train_fsl.py --model resnet50 --name few_shot_setting_github --episodes 2000 --repetition 10
+CUDA_VISIBLE_DEVICES=1 python train_fsl.py --model efficientnet-b3 --name few_shot_basic_test --episodes 200 --repetition 1

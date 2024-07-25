@@ -32,6 +32,7 @@ class Midv():
     
     
     def get_template_path(self):
+        print(self._absolute_path)
         assert os.path.exists(os.path.join(self.absoulute_path, "Images")), "There's not any image folder in this directory"
         return os.path.join(self.absoulute_path, "Images")
 

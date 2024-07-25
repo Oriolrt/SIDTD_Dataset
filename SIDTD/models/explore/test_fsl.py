@@ -283,7 +283,11 @@ def main(args):
 
 
         if args.pretrained_model:
-            model.load_state_dict(torch.load(f"pretrained_models/fsl_setting/{args.model}/few_shot_setting_github_{args.model}_kshot_{str(args.k_shot)}_pretrained_imagenet_iteration_{str(nb_rep)}.pth"))
+            if args.model == 'coaarc':
+                model_name = 'coatten_fcn_model'
+            else:
+                model_name = args.model
+            model.load_state_dict(torch.load(f"pretrained_models/fsl_clip_cropped_SIDTD/{model_name}_trained_models/few_shot_setting_github_{model_name}_kshot_{str(args.k_shot)}_pretrained_imagenet_iteration_{str(nb_rep)}.pth"))
         else:
             model.load_state_dict(torch.load(f"trained_models/fsl_model/{args.dataset}/{args.model}/{args.name}_{args.model}_kshot_{args.k_shot}_iteration_{name_repetition}.pth"))
 

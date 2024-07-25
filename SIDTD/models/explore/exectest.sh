@@ -10,4 +10,10 @@
 
 #CUDA_VISIBLE_DEVICES=1 python test.py --name='coatten_fcn_model' --type_split kfold --nsplits 10 --static='yes' --pretrained no --type_data clips_cropped  --dataset='clip_cropped_SIDTD' --model='coatten_fcn_model' --batchSize 128
 
-CUDA_VISIBLE_DEVICES=1 python test_fsl.py --model resnet50 --name first_test_fsl --repetition 1 --pretrained_model
+CUDA_VISIBLE_DEVICES=1 python test_fsl.py --model efficientnet-b3 --name first_test_fsl --repetition 10 --pretrained_model
+
+CUDA_VISIBLE_DEVICES=1 python test_fsl.py --model vit_large_patch16_224 --name first_test_fsl --repetition 10 --pretrained_model
+
+CUDA_VISIBLE_DEVICES=1 python test_fsl.py --model trans_fg --name first_test_fsl --repetition 10 --pretrained_model
+
+CUDA_VISIBLE_DEVICES=1 python test_fsl.py --model coaarc --name first_test_fsl --repetition 10 --pretrained_model
