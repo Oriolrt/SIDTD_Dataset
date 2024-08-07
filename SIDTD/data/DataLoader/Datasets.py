@@ -84,13 +84,13 @@ class SIDTD(Dataset):
 
         ## static Csv
 
-        self._uri_static_kfold_templates = os.path.join(self._uri, 'split_kfold.zip')
-        self._uri_static_kfold_clips = os.path.join(self._uri,"split_kfold_unbalanced.zip")
-        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,"split_kfold_cropped_unbalanced.zip")
-        self._uri_static_normal_templates = os.path.join(self._uri,'split_normal.zip')
-        self._uri_static_normal_clips = os.path.join(self._uri,'cross_val_unbalanced.zip')
-        self._uri_static_shot_templates = os.path.join(self._uri, 'split_shot.zip')
-        self._uri_static_shot_clips = os.path.join(self._uri, 'split_shot_unbalanced.zip')
+        self._uri_static_kfold_templates = os.path.join(self._uri, 'kfold_split_templates.zip')
+        self._uri_static_kfold_clips = os.path.join(self._uri,"kfold_split_clips.zip")
+        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,"kfold_split_clips_cropped.zip")
+        self._uri_static_normal_templates = os.path.join(self._uri,'hold_out_split.zip')
+        self._uri_static_normal_clips = os.path.join(self._uri,'unbalanced_hold_out_split.zip')
+        self._uri_static_shot_templates = os.path.join(self._uri, 'few_shot_split_templates.zip')
+        self._uri_static_shot_clips = os.path.join(self._uri, 'few_shot_split_clips_cropped.zip')
         
 
 
