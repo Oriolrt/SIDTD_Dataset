@@ -129,7 +129,7 @@ class SIDTD(Dataset):
         self._original_clips_ann_path  = os.path.join(self._original_clips_path, "annotations")
         
     def download_static_csv(self, partition_kind:str="hold_out", type_download:str = "templates"):
-        os.system(f"""mkdir -p {self._abs_path}""")
+        os.system(f"""mkdir  {self._abs_path}""")
 
         if partition_kind == "kfold":
             if type_download=="templates":                    
@@ -166,7 +166,7 @@ class SIDTD(Dataset):
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
     def download_dataset(self, type_download: str = "templates"):
-        os.system(f"""mkdir -p {self._abs_path}""")
+        os.system(f"""mkdir  {self._abs_path}""")
 
         if type_download == "all_dataset":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._uri))
