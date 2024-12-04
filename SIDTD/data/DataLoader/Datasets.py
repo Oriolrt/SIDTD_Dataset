@@ -76,21 +76,21 @@ class SIDTD(Dataset):
         
         
         ###### Static links
-        self._uri = self._cluster_link + "/SIDTD/"
-        self._images_path = os.path.join(self._uri,"templates.zip")
-        self._clips_path = os.path.join(self._uri,"clips.zip")
-        self._clips_cropped_path = os.path.join(self._uri,"clips_cropped.zip")
-        self._videos_path = os.path.join(self._uri,"videos.zip")
+        self._uri = self._cluster_link + "/SIDTD"
+        self._images_path = os.path.join(self._uri,"/templates.zip")
+        self._clips_path = os.path.join(self._uri,"/clips.zip")
+        self._clips_cropped_path = os.path.join(self._uri,"/clips_cropped.zip")
+        self._videos_path = os.path.join(self._uri,"/videos.zip")
 
         ## static Csv
 
-        self._uri_static_kfold_templates = os.path.join(self._uri, 'kfold_split_templates.zip')
-        self._uri_static_kfold_clips = os.path.join(self._uri,"kfold_split_clips.zip")
-        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,"kfold_split_clips_cropped.zip")
-        self._uri_static_normal_templates = os.path.join(self._uri,'hold_out_split.zip')
-        self._uri_static_normal_clips = os.path.join(self._uri,'unbalanced_hold_out_split.zip')
-        self._uri_static_shot_templates = os.path.join(self._uri, 'few_shot_split_templates.zip')
-        self._uri_static_shot_clips = os.path.join(self._uri, 'few_shot_split_clips_cropped.zip')
+        self._uri_static_kfold_templates = os.path.join(self._uri, '/kfold_split_templates.zip')
+        self._uri_static_kfold_clips = os.path.join(self._uri,"/kfold_split_clips.zip")
+        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,"/kfold_split_clips_cropped.zip")
+        self._uri_static_normal_templates = os.path.join(self._uri,'/hold_out_split.zip')
+        self._uri_static_normal_clips = os.path.join(self._uri,'/unbalanced_hold_out_split.zip')
+        self._uri_static_shot_templates = os.path.join(self._uri, '/few_shot_split_templates.zip')
+        self._uri_static_shot_clips = os.path.join(self._uri, '/few_shot_split_clips_cropped.zip')
         
 
 
