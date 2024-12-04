@@ -76,7 +76,7 @@ class SIDTD(Dataset):
         
         
         ###### Static links
-        self._uri = self._cluster_link + "/SIDTD"
+        self._uri = self._cluster_link + "/SIDTD/"
         self._images_path = os.path.join(self._uri,"templates.zip")
         self._clips_path = os.path.join(self._uri,"clips.zip")
         self._clips_cropped_path = os.path.join(self._uri,"clips_cropped.zip")
