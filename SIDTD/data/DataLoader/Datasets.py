@@ -107,6 +107,8 @@ class SIDTD(Dataset):
 
 
         self._abs_path = os.path.join(self._path_to_download,os.path.basename(self._uri)) # cwd/datasets/SIDTD/...
+        os.system(f"""mkdir -p {self._abs_path}""")
+        
 
         self.abs_path_code_ex_csv = os.path.join(os.getcwd(), "models", "explore", "static")
 
