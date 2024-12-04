@@ -17,7 +17,7 @@ setup(
     name="SIDTD",
     version=VERSION,
     author="Carlos Boned, Oriol Ramos, Maxime Talarmain",
-    author_email="<cboned,oriolrt,mtalarmain(@cvc.uab.cat)>",
+    author_email="{cboned,oriolrt,mtalarmain}@cvc.uab.cat",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=long_description,
