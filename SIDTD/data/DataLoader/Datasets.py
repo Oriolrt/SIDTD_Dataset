@@ -238,6 +238,7 @@ class SIDTD(Dataset):
 
         elif type_download == "templates":
             cmd =  f"bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {self._abs_path} {self._images_path}'"
+            print(cmd)
             os.system(cmd)
             with zipfile.ZipFile(self._abs_path + self._separator + "templates.zip", 'r') as zip_ref:
                 logging.warning("Starting to decompress the data you actually downloaded, It may spend a lot of time")
