@@ -70,27 +70,36 @@ class SIDTD(Dataset):
     def __init__(self,download_original:bool =False, custom_path_to_download:Optional[str]=None) -> None:
         
         super().__init__()
+
+        # Identify the operating system
+        operating_system = os.name
+        
+        # Define the folder separator
+        if operating_system == 'nt':  # 'nt' indicates Windows
+            self._separator = '\\'
+        else:  # 'posix' indicates Unix/Linux/MacOS
+            self._separator = '/'
         
         ######### Conditioned and original structure variables
         self._download_original = download_original
         
         
         ###### Static links
-        self._uri = self._cluster_link + "/SIDTD"
-        self._images_path = os.path.join(self._uri,"/templates.zip")
-        self._clips_path = os.path.join(self._uri,"/clips.zip")
-        self._clips_cropped_path = os.path.join(self._uri,"/clips_cropped.zip")
-        self._videos_path = os.path.join(self._uri,"/videos.zip")
+        self._uri = self._cluster_link + self._separator + "SIDTD"
+        self._images_path = os.path.join(self._uri,self._separator + "templates.zip")
+        self._clips_path = os.path.join(self._uri,self._separator + "clips.zip")
+        self._clips_cropped_path = os.path.join(self._uri,self._separator + "clips_cropped.zip")
+        self._videos_path = os.path.join(self._uri,self._separator + "videos.zip")
 
         ## static Csv
 
-        self._uri_static_kfold_templates = os.path.join(self._uri, '/kfold_split_templates.zip')
-        self._uri_static_kfold_clips = os.path.join(self._uri,"/kfold_split_clips.zip")
-        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,"/kfold_split_clips_cropped.zip")
-        self._uri_static_normal_templates = os.path.join(self._uri,'/hold_out_split.zip')
-        self._uri_static_normal_clips = os.path.join(self._uri,'/unbalanced_hold_out_split.zip')
-        self._uri_static_shot_templates = os.path.join(self._uri, '/few_shot_split_templates.zip')
-        self._uri_static_shot_clips = os.path.join(self._uri, '/few_shot_split_clips_cropped.zip')
+        self._uri_static_kfold_templates = os.path.join(self._uri, self._separator + 'kfold_split_templates.zip')
+        self._uri_static_kfold_clips = os.path.join(self._uri,self._separator + "kfold_split_clips.zip")
+        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,self._separator + "kfold_split_clips_cropped.zip")
+        self._uri_static_normal_templates = os.path.join(self._uri,self._separator + "hold_out_split.zip")
+        self._uri_static_normal_clips = os.path.join(self._uri,self._separator + "unbalanced_hold_out_split.zip")
+        self._uri_static_shot_templates = os.path.join(self._uri, self._separator + "few_shot_split_templates.zip")
+        self._uri_static_shot_clips = os.path.join(self._uri, self._separator + "few_shot_split_clips_cropped.zip")
         
 
 
@@ -116,7 +125,7 @@ class SIDTD(Dataset):
     def _define_paths(self) ->None:        
         ## Path to reconstruct the original structure
         ##images
-        self._original_abs_imgs_path = "MIDV2020/templates"
+        self._original_abs_imgs_path = "MIDV2020"+ self._separator + "templates"
         self._original_imgs_path = os.path.join(self._original_abs_imgs_path, "images")
         self._original_ann_path  = os.path.join(self._original_abs_imgs_path, "annotations")
         
@@ -187,14 +196,14 @@ class SIDTD(Dataset):
                     except zipfile.error as e:
                         pass
 
-            os.remove(self._abs_path + "/clips_cropped.zip")
+            os.remove(self._abs_path + self._separator + "clips_cropped.zip")
 
             if self._download_original: raise NotImplementedError
 
         elif type_download == "clips":
             os.system(
                 "bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._clips_path))
-            with zipfile.ZipFile(self._abs_path + "/clips.zip", 'r') as zip_ref:
+            with zipfile.ZipFile(self._abs_path + self._separator + "clips.zip", 'r') as zip_ref:
                 print(
                     "Starting to decompress the data you actually downloaded, It may spend a lot of time")
 
@@ -204,14 +213,14 @@ class SIDTD(Dataset):
                     except zipfile.error as e:
                         pass
 
-            os.remove(self._abs_path + "/clips.zip")
+            os.remove(self._abs_path + self._separator + "clips.zip")
 
             if self._download_original: raise NotImplementedError
 
         elif type_download == "videos":
             os.system(
                 "bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._videos_path))
-            with zipfile.ZipFile(self._abs_path + "/videos.zip", 'r') as zip_ref:
+            with zipfile.ZipFile(self._abs_path + self._separator + "videos.zip", 'r') as zip_ref:
                 print(
                     "Starting to decompress the data you actually downloaded, It may spend a lot of time")
 
@@ -228,7 +237,7 @@ class SIDTD(Dataset):
         elif type_download == "templates":
             os.system(
                 "bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._images_path))
-            with zipfile.ZipFile(self._abs_path + "/templates.zip", 'r') as zip_ref:
+            with zipfile.ZipFile(self._abs_path + self._separator + "templates.zip", 'r') as zip_ref:
                 logging.warning("Starting to decompress the data you actually downloaded, It may spend a lot of time")
 
                 for member in tqdm.tqdm(zip_ref.infolist(), desc='Extracting '):
@@ -237,7 +246,7 @@ class SIDTD(Dataset):
                     except zipfile.error as e:
                         pass
 
-            os.remove(self._abs_path + "/templates.zip")
+            os.remove(self._abs_path +self._separator + "templates.zip")
 
             if self._download_original: self.create_structure_images()
 
