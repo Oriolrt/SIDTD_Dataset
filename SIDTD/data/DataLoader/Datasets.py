@@ -237,8 +237,8 @@ class SIDTD(Dataset):
             if self._download_original: raise NotImplementedError
 
         elif type_download == "templates":
-            os.system(
-                "bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._images_path))
+            cmd =  f"bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {self._abs_path} {self._images_path}'"
+            os.system(cmd)
             with zipfile.ZipFile(self._abs_path + self._separator + "templates.zip", 'r') as zip_ref:
                 logging.warning("Starting to decompress the data you actually downloaded, It may spend a lot of time")
 
