@@ -85,21 +85,21 @@ class SIDTD(Dataset):
         
         
         ###### Static links
-        self._uri = self._cluster_link + self._separator + "SIDTD"
-        self._images_path = os.path.join(self._uri,self._separator + "templates.zip")
-        self._clips_path = os.path.join(self._uri,self._separator + "clips.zip")
-        self._clips_cropped_path = os.path.join(self._uri,self._separator + "clips_cropped.zip")
-        self._videos_path = os.path.join(self._uri,self._separator + "videos.zip")
+        self._uri = self._cluster_link +  "/SIDTD"
+        self._images_path = os.path.join(self._uri,"/templates.zip")
+        self._clips_path = os.path.join(self._uri,"/clips.zip")
+        self._clips_cropped_path = os.path.join(self._uri,"/clips_cropped.zip")
+        self._videos_path = os.path.join(self._uri,"/videos.zip")
 
         ## static Csv
 
-        self._uri_static_kfold_templates = os.path.join(self._uri, self._separator + 'kfold_split_templates.zip')
-        self._uri_static_kfold_clips = os.path.join(self._uri,self._separator + "kfold_split_clips.zip")
-        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,self._separator + "kfold_split_clips_cropped.zip")
-        self._uri_static_normal_templates = os.path.join(self._uri,self._separator + "hold_out_split.zip")
-        self._uri_static_normal_clips = os.path.join(self._uri,self._separator + "unbalanced_hold_out_split.zip")
-        self._uri_static_shot_templates = os.path.join(self._uri, self._separator + "few_shot_split_templates.zip")
-        self._uri_static_shot_clips = os.path.join(self._uri, self._separator + "few_shot_split_clips_cropped.zip")
+        self._uri_static_kfold_templates = os.path.join(self._uri, '/kfold_split_templates.zip')
+        self._uri_static_kfold_clips = os.path.join(self._uri,"/kfold_split_clips.zip")
+        self._uri_static_kfold_cropped_clips = os.path.join(self._uri,"/kfold_split_clips_cropped.zip")
+        self._uri_static_normal_templates = os.path.join(self._uri,"/hold_out_split.zip")
+        self._uri_static_normal_clips = os.path.join(self._uri,"/unbalanced_hold_out_split.zip")
+        self._uri_static_shot_templates = os.path.join(self._uri, "/few_shot_split_templates.zip")
+        self._uri_static_shot_clips = os.path.join(self._uri, "/few_shot_split_clips_cropped.zip")
         
 
 
@@ -138,44 +138,46 @@ class SIDTD(Dataset):
         self._original_clips_ann_path  = os.path.join(self._original_clips_path, "annotations")
         
     def download_static_csv(self, partition_kind:str="hold_out", type_download:str = "templates"):
-        os.system(f"""mkdir  {self._abs_path}""")
+        if not os.path.exists(self._abs_path):
+            os.makedirs(self._abs_path)
 
         if partition_kind == "kfold":
             if type_download=="templates":                    
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_templates))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+self._separator +"split_kfold.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
             elif type_download=="clips":
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_clips))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_unbalanced.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+self._separator +"split_kfold_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
             elif type_download=="clips_cropped":    
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_kfold_cropped_clips))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_kfold_cropped_unbalanced.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+self._separator +"split_kfold_cropped_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
         elif partition_kind == "hold_out":
             if type_download=="templates": 
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal_templates))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_normal.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+self._separator +"split_normal.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
             elif type_download=="clip":
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_normal_clips))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/cross_val_unbalanced.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+self._separator +"cross_val_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
         else:
             if type_download=="templates":
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_shot_templates))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_shot.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+self._separator +"split_shot.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
             elif type_download=="clip":
                 os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self.abs_path_code_ex_csv,self._uri_static_shot_clips))
-                with zipfile.ZipFile(self.abs_path_code_ex_csv+"/split_shot_unbalanced.zip", 'r') as zip_ref:
+                with zipfile.ZipFile(self.abs_path_code_ex_csv+self._separator +"split_shot_unbalanced.zip", 'r') as zip_ref:
                     zip_ref.extractall(self.abs_path_code_ex_csv)
 
     def download_dataset(self, type_download: str = "templates"):
-        os.system(f"""mkdir  {self._abs_path}""")
+        if not os.path.exists(self._abs_path):
+            os.makedirs(self._abs_path)
 
         if type_download == "all_dataset":
             os.system("bash -c 'wget -erobots=off -m -k --cut-dirs=1 -nH -P {} {}'".format(self._abs_path, self._uri))
@@ -186,7 +188,7 @@ class SIDTD(Dataset):
                                                                                            self._clips_cropped_path))
 
 
-            with zipfile.ZipFile(self._abs_path + "/clips_cropped.zip", 'r') as zip_ref:
+            with zipfile.ZipFile(self._abs_path + self._separator +"clips_cropped.zip", 'r') as zip_ref:
                 print(
                     "Starting to decompress the data you actually downloaded, It may spend a lot of time")
 
@@ -230,7 +232,7 @@ class SIDTD(Dataset):
                     except zipfile.error as e:
                         pass
 
-            os.remove(self._abs_path + "/videos.zip")
+            os.remove(self._abs_path + self._separator + "videos.zip")
 
             if self._download_original: raise NotImplementedError
 
